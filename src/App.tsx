@@ -19,6 +19,7 @@ import AttendanceReports from "./pages/AttendanceReports";
 import AdditionalReports from "./pages/AdditionalReports";
 import OrganizationChart from "./pages/OrganizationChart";
 import Settings from "./pages/Settings";
+import ReportScheduler from "./pages/ReportScheduler";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import React from "react";
@@ -53,6 +54,7 @@ const App = () => (
                   <Route path="leave-approvals" element={<LeaveApprovals />} />
                   <Route path="organization-chart" element={<OrganizationChart />} />
                   <Route path="settings" element={<Settings />} />
+                  <Route path="report-scheduler" element={<ReportScheduler />} />
                 </Route>
               </Route>
               
