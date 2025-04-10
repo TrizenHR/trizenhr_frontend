@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import AttendanceReports from "./pages/AttendanceReports";
 import AdditionalReports from "./pages/AdditionalReports";
+import OrganizationChart from "./pages/OrganizationChart";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import React from "react";
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="additional-reports" element={<AdditionalReports />} />
                   <Route path="approvals" element={<RequestApprovals />} />
                   <Route path="leave-approvals" element={<LeaveApprovals />} />
+                  <Route path="organization-chart" element={<OrganizationChart />} />
                   <Route path="report-scheduler" element={<Navigate to="/admin/dashboard" />} />
                 </Route>
               </Route>
