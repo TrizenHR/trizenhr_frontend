@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, FileSpreadsheet, FilePdf, FileText, Filter, ChevronDown, Eye } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, FileSpreadsheet, FileUp, FileText, Filter, ChevronDown, Eye } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,7 +100,7 @@ const AttendanceReports: React.FC = () => {
                 Export as Excel
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                <FilePdf className="mr-2 h-4 w-4" />
+                <FileUp className="mr-2 h-4 w-4" />
                 Export as PDF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('csv')}>
