@@ -1,8 +1,16 @@
 
 import React from 'react';
-import { Bell, ChevronDown } from 'lucide-react';
+import { Bell, ChevronDown, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,33 +19,36 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Navigation items
   const navItems = [
-    { name: 'Dashboard', path: '/' },
-    { name: 'Attendance', path: '/attendance' },
-    { name: 'Request and Approvals', path: '/approvals' },
-    { name: 'Leave Approvals', path: '/leave-approvals' },
-    { name: 'Employee Management', path: '/employee-list' },
-    { name: 'Report Scheduler', path: '/report-scheduler' },
-    { name: 'Attendance Reports', path: '/attendance-reports' },
-    { name: 'Additional Reports', path: '/additional-reports' },
-    { name: 'Organization Chart', path: '/organization-chart' },
-    { name: 'Regularization', path: '/' },
-    { name: 'Settings', path: '/settings' },
+    { name: 'Dashboard', path: '/admin/dashboard' },
+    { name: 'Attendance', path: '/admin/dashboard/attendance' },
+    { name: 'Request and Approvals', path: '/admin/dashboard/approvals' },
+    { name: 'Leave Approvals', path: '/admin/dashboard/leave-approvals' },
+    { name: 'Employee Management', path: '/admin/dashboard/employee-list' },
+    { name: 'Report Scheduler', path: '/admin/dashboard/report-scheduler' },
+    { name: 'Attendance Reports', path: '/admin/dashboard/attendance-reports' },
+    { name: 'Additional Reports', path: '/admin/dashboard/additional-reports' },
+    { name: 'Organization Chart', path: '/admin/dashboard/organization-chart' },
+    { name: 'Regularization', path: '/admin/dashboard' },
+    { name: 'Settings', path: '/admin/dashboard/settings' },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/employee-list' && location.pathname === '/create-employee') {
+    if (path === '/admin/dashboard/employee-list' && 
+        (location.pathname === '/admin/dashboard/create-employee' || 
+         location.pathname === '/admin/dashboard/employee-list')) {
       return true;
     }
     return location.pathname === path;
   };
 
   const handleNavClick = (path: string, name: string) => {
-    // Handle the special case for Regularization which should go to the root (Index.tsx)
+    // Handle the special case for Regularization which should go to the root admin dashboard
     if (name === 'Regularization') {
-      navigate('/');
+      navigate('/admin/dashboard');
       return;
     }
     
@@ -51,13 +62,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="text-lg font-bold">NOQU-TAM</div>
         <div className="flex items-center gap-4">
           <Bell className="text-gray-500" />
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Hello, NOQU DEMO</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-            <Avatar className="h-8 w-8 bg-orange-500">
-              <AvatarFallback>N</AvatarFallback>
-            </Avatar>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2 p-1">
+                <span className="text-sm">Hello, NOQU DEMO</span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <Avatar className="h-8 w-8 bg-orange-500">
+                  <AvatarFallback>N</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
