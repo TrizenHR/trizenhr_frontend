@@ -71,6 +71,13 @@ export default {
 					wfh: '#3498db', // Blue
 					weekoff: '#7f8c8d', // Gray
 					holiday: '#9b59b6', // Purple
+				},
+				// Trizen brand colors
+				trizen: {
+					primary: '#3b2ba1', // Trizen primary purple
+					secondary: '#2a1f76', // Darker shade for hover
+					background: '#fef7e0', // Light yellowish background
+					text: '#1b2a4e', // Dark blue text
 				}
 			},
 			borderRadius: {
@@ -99,7 +106,10 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+			},
+			fontFamily: {
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
