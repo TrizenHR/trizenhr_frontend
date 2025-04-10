@@ -1,47 +1,48 @@
 
 import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
 
 import { cn } from "@/lib/utils"
 
-const Progress = React.forwardRef<
-  React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
-    variant?: "default" | "warning" | "danger" | "success"
-  }
->(({ className, value, variant = "default", ...props }, ref) => {
-  const getIndicatorColor = () => {
-    switch (variant) {
-      case "warning":
-        return "bg-yellow-500"
-      case "danger":
-        return "bg-red-500"
-      case "success":
-        return "bg-green-500"
-      default:
-        return "bg-primary"
+interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
+  value?: number
+  variant?: 'default' | 'destructive' | 'warning'
+}
+
+const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
+  ({ className, value, variant = 'default', ...props }, ref) => {
+    const getVariantStyle = () => {
+      switch (variant) {
+        case 'destructive':
+          return 'bg-destructive'
+        case 'warning':
+          return 'bg-amber-500'
+        default:
+          return 'bg-primary'
+      }
     }
-  }
-  
-  return (
-    <ProgressPrimitive.Root
-      ref={ref}
-      className={cn(
-        "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
-        className
-      )}
-      {...props}
-    >
-      <ProgressPrimitive.Indicator
+
+    return (
+      <div
+        ref={ref}
         className={cn(
-          "h-full w-full flex-1 transition-all",
-          getIndicatorColor()
+          "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+          className
         )}
-        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-      />
-    </ProgressPrimitive.Root>
-  )
-})
-Progress.displayName = ProgressPrimitive.Root.displayName
+        {...props}
+      >
+        <div
+          className={cn(
+            "h-full w-full flex-1 transition-all",
+            getVariantStyle()
+          )}
+          style={{
+            transform: `translateX(-${100 - (value || 0)}%)`,
+          }}
+        />
+      </div>
+    )
+  }
+)
+Progress.displayName = "Progress"
 
 export { Progress }
