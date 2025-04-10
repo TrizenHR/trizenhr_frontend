@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DateRange } from "react-day-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -226,7 +225,7 @@ const RequestApprovals: React.FC = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
@@ -239,7 +238,7 @@ const RequestApprovals: React.FC = () => {
                   <SelectValue placeholder="Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Departments</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   <SelectItem value="engineering">Engineering</SelectItem>
                   <SelectItem value="hr">HR</SelectItem>
                   <SelectItem value="marketing">Marketing</SelectItem>
@@ -253,7 +252,7 @@ const RequestApprovals: React.FC = () => {
                   <SelectValue placeholder="Request Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="wfh">Work From Home</SelectItem>
                   <SelectItem value="shift change">Shift Change</SelectItem>
                   <SelectItem value="od">On-Duty</SelectItem>

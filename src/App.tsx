@@ -53,7 +53,6 @@ const App = () => (
                   <Route path="leave-approvals" element={<LeaveApprovals />} />
                   <Route path="organization-chart" element={<OrganizationChart />} />
                   <Route path="settings" element={<Settings />} />
-                  <Route path="report-scheduler" element={<Navigate to="/admin/dashboard" />} />
                 </Route>
               </Route>
               
