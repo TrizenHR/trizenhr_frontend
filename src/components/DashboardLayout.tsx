@@ -25,11 +25,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navItems = [
     { name: 'Dashboard', path: '/admin/dashboard' },
     { name: 'Attendance', path: '/admin/dashboard/attendance' },
+    { name: 'Attendance Reports', path: '/admin/dashboard/attendance-reports' },
     { name: 'Request and Approvals', path: '/admin/dashboard/approvals' },
     { name: 'Leave Approvals', path: '/admin/dashboard/leave-approvals' },
     { name: 'Employee Management', path: '/admin/dashboard/employee-list' },
     { name: 'Report Scheduler', path: '/admin/dashboard/report-scheduler' },
-    { name: 'Attendance Reports', path: '/admin/dashboard/attendance-reports' },
     { name: 'Additional Reports', path: '/admin/dashboard/additional-reports' },
     { name: 'Organization Chart', path: '/admin/dashboard/organization-chart' },
     { name: 'Regularization', path: '/admin/dashboard' },
