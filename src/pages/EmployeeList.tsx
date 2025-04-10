@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   ChevronLeft, 
@@ -28,8 +27,8 @@ import {
 } from '@/components/ui/table';
 import StatCard from '@/components/StatCard';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@/components/Breadcrumb';
+import { Link } from 'react-router-dom';
 
-// Sample data for the employee table
 const employeeData = [
   { id: 12024, employeeId: 'NOQ08', name: 'Gopal Test', email: 'gopalanandh11+1@gmail.com', location: 'NOQU Thousand Lights', shiftGroup: 'SPLIT SHIFT 10', mobile: '-', onboardingDate: '17-12-2024' },
   { id: 12025, employeeId: 'NOQ09', name: 'Shreya Patel', email: 'shreya.patel@example.com', location: 'NOQU Anna Nagar', shiftGroup: 'MORNING SHIFT', mobile: '9876543210', onboardingDate: '20-12-2024' },
@@ -139,9 +138,14 @@ const EmployeeList = () => {
               <Map size={16} />
               Plan Mapping
             </Button>
-            <Button className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white">
-              <Plus size={16} />
-              Create
+            <Button 
+              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white"
+              asChild
+            >
+              <Link to="/create-employee">
+                <Plus size={16} />
+                Create
+              </Link>
             </Button>
           </div>
         </div>
