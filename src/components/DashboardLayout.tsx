@@ -2,7 +2,7 @@
 import React from 'react';
 import { Bell, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Navigation items
   const navItems = [
@@ -17,20 +18,30 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Attendance', path: '/attendance' },
     { name: 'Request and Approvals', path: '/approvals' },
     { name: 'Leave Approvals', path: '/leave-approvals' },
-    { name: 'Employee Management', path: '/employee-list', active: true },
+    { name: 'Employee Management', path: '/employee-list' },
     { name: 'Report Scheduler', path: '/report-scheduler' },
     { name: 'Attendance Reports', path: '/attendance-reports' },
     { name: 'Additional Reports', path: '/additional-reports' },
     { name: 'Organization Chart', path: '/organization-chart' },
-    { name: 'Regularization', path: '/regularization' },
+    { name: 'Regularization', path: '/' },
     { name: 'Settings', path: '/settings' },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/employee-list' && location.pathname === '/employee-list') {
+    if (path === '/employee-list' && location.pathname === '/create-employee') {
       return true;
     }
     return location.pathname === path;
+  };
+
+  const handleNavClick = (path: string, name: string) => {
+    // Handle the special case for Regularization which should go to the root (Index.tsx)
+    if (name === 'Regularization') {
+      navigate('/');
+      return;
+    }
+    
+    navigate(path);
   };
 
   return (
@@ -59,16 +70,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <ul className="space-y-1">
               {navItems.map((item) => (
                 <li key={item.name}>
-                  <Link 
-                    to={item.path}
-                    className={`px-5 py-2.5 block hover:bg-[#1E3A8A] uppercase font-medium ${
-                      isActive(item.path) || item.active 
+                  <button 
+                    onClick={() => handleNavClick(item.path, item.name)}
+                    className={`px-5 py-2.5 block hover:bg-[#1E3A8A] uppercase font-medium w-full text-left ${
+                      isActive(item.path) 
                         ? 'text-yellow-400 bg-[#1E3A8A]' 
                         : 'text-white'
                     }`}
                   >
                     {item.name}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
