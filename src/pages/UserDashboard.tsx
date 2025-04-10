@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, Plus, Clock, Calendar } from 'lucide-react';
+import { ChevronDown, Plus, Clock, Calendar, AlertTriangle } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from 'recharts';
 
@@ -22,7 +23,7 @@ const holidays = [
   { date: '02 Jun', day: 'Mon', name: 'Telangana Formation Day', type: 'Holiday' },
   { date: '15 Aug', day: 'Fri', name: 'Independence Day', type: 'National Holiday' },
   { date: '27 Aug', day: 'Wed', name: 'Ganesh Chaturthi', type: 'Holiday' },
-  { date: '02 Oct', day: 'Thu', name: 'Mahatma Gandhi Jayanti/Dussehra', type: 'National Holiday' },
+  { date: '02 Oct', day: 'Thu', name: 'Mahatma Gandhi Jayanti', type: 'National Holiday' },
 ];
 
 const chartConfig = {
@@ -48,6 +49,7 @@ const UserDashboard: React.FC = () => {
   const { logout } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedTimeframe, setSelectedTimeframe] = useState("Week");
+  const [progressValue, setProgressValue] = useState(70); // Example progress value
 
   // Update the time every second
   useEffect(() => {
@@ -73,7 +75,7 @@ const UserDashboard: React.FC = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b px-6 py-3 flex justify-between items-center">
-        <div className="text-lg font-bold">NOQU-TAM - User Dashboard</div>
+        <div className="text-lg font-bold">User Dashboard</div>
         <Button 
           variant="outline"
           onClick={logout}
@@ -114,8 +116,7 @@ const UserDashboard: React.FC = () => {
               <h2 className="text-lg font-medium text-gray-800">Attendance Metrics</h2>
               <Button 
                 variant="ghost" 
-                className="text-gray-600 flex items-center"
-                onClick={() => {}}
+                className="text-gray-600 flex items-center border border-gray-200 rounded-md px-3 py-1"
               >
                 {selectedTimeframe} <ChevronDown size={16} className="ml-1" />
               </Button>
@@ -182,30 +183,26 @@ const UserDashboard: React.FC = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-800">Leave Balances</h2>
-              <Button variant="link" className="text-blue-500">
+              <Button variant="link" className="text-blue-500 p-0 h-auto">
                 View All
               </Button>
             </div>
 
             <Card className="shadow-sm">
               <CardContent className="p-4">
-                <div className="mb-6">
+                <div className="mb-4">
                   <div className="text-4xl font-semibold text-gray-800">3</div>
                   <div className="text-sm text-gray-600">Annual Leaves</div>
                 </div>
                 <div className="flex items-center text-red-500">
-                  <div className="mr-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#EF4444"/>
-                    </svg>
-                  </div>
+                  <AlertTriangle size={16} className="mr-2" />
                   <span className="text-sm">Loss of Pay</span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Decorative mountain chart */}
-            <div className="h-48 mt-auto">
+            <div className="h-48 mt-4">
               <svg viewBox="0 0 400 200" className="w-full h-full">
                 <path d="M0,150 L20,140 L40,145 L60,135 L80,140 L100,120 L120,130 L140,110 L160,120 L180,100 L200,110 L220,95 L240,105 L260,85 L280,95 L300,75 L320,85 L340,70 L360,80 L380,60 L400,70 L400,200 L0,200 Z" fill="#3B82F6" opacity="0.8" />
                 <path d="M0,160 L20,155 L40,165 L60,150 L80,160 L100,140 L120,150 L140,135 L160,145 L180,125 L200,135 L220,115 L240,125 L260,105 L280,115 L300,95 L320,105 L340,90 L360,100 L380,80 L400,90 L400,200 L0,200 Z" fill="#1E40AF" opacity="0.6" />
@@ -225,10 +222,10 @@ const UserDashboard: React.FC = () => {
                 <div className="text-3xl font-bold text-center my-4">
                   {formatTime(currentTime)}
                 </div>
-                <div className="bg-green-100 h-1 w-full rounded-full mb-4"></div>
+                <Progress value={progressValue} className="h-1 bg-green-100 mb-4" />
                 <div className="flex justify-between text-sm mb-2">
-                  <div className="text-gray-600">
-                    <Clock size={14} className="inline mr-1" />
+                  <div className="text-gray-600 flex items-center">
+                    <Clock size={14} className="mr-1" />
                     10:21:04
                   </div>
                   <div className="text-gray-600">
@@ -250,7 +247,7 @@ const UserDashboard: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-800">Upcoming Time Off</h3>
-                <Button variant="link" className="text-blue-500">
+                <Button variant="link" className="text-blue-500 p-0 h-auto">
                   View All
                 </Button>
               </div>
