@@ -14,44 +14,48 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import React from "react";
 
+// Create a client
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected admin routes */}
-            <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin" />}>
-              <Route element={<AdminDashboard />}>
-                <Route index element={<Index />} />
-                <Route path="employee-list" element={<EmployeeList />} />
-                <Route path="create-employee" element={<CreateEmployee />} />
-                <Route path="attendance" element={<Attendance />} />
-                <Route path="report-scheduler" element={<Navigate to="/admin/dashboard" />} />
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Navigate to="/login" />} />
+              <Route path="/login" element={<Login />} />
+              
+              {/* Protected admin routes */}
+              <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin" />}>
+                <Route element={<AdminDashboard />}>
+                  <Route index element={<Index />} />
+                  <Route path="employee-list" element={<EmployeeList />} />
+                  <Route path="create-employee" element={<CreateEmployee />} />
+                  <Route path="attendance" element={<Attendance />} />
+                  <Route path="report-scheduler" element={<Navigate to="/admin/dashboard" />} />
+                </Route>
               </Route>
-            </Route>
-            
-            {/* Protected user routes */}
-            <Route path="/user/dashboard" element={<ProtectedRoute requiredRole="user" />}>
-              <Route index element={<UserDashboard />} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+              
+              {/* Protected user routes */}
+              <Route path="/user/dashboard" element={<ProtectedRoute requiredRole="user" />}>
+                <Route index element={<UserDashboard />} />
+              </Route>
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
