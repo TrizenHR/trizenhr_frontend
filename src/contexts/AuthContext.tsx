@@ -30,9 +30,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedUser = localStorage.getItem('auth_user');
     if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setIsAuthenticated(true);
-      setUserRole(user.role);
+      try {
+        const user = JSON.parse(storedUser);
+        setIsAuthenticated(true);
+        // Fix: Cast the role to Role type to ensure it's a valid Role
+        const role = user.role as Role;
+        setUserRole(role);
+      } catch (error) {
+        // Handle potential JSON parse error
+        console.error('Failed to parse user data from localStorage', error);
+        // Clean up invalid data
+        localStorage.removeItem('auth_user');
+      }
     }
   }, []);
 
@@ -46,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (user) {
       setIsAuthenticated(true);
-      setUserRole(user.role);
+      setUserRole(user.role as Role);
       
       // Store user info in localStorage
       localStorage.setItem('auth_user', JSON.stringify({
