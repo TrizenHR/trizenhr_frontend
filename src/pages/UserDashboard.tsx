@@ -99,13 +99,13 @@ const UserDashboard: React.FC = () => {
         <div className="mb-6">
           <h2 className="text-lg font-medium text-gray-800 mb-4">Pending Requests</h2>
           <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
-            <img 
-              src="/lovable-uploads/a607618b-4d3d-4024-b728-4d2d5ee2f3c0.png" 
-              alt="No pending requests" 
-              className="w-40 h-40 object-contain mb-4"
-            />
+           {/*  // <img 
+            //   src="/lovable-uploads/a607618b-4d3d-4024-b728-4d2d5ee2f3c0.png" 
+            //   alt="No pending requests" 
+            //   className="w-40 h-40 object-contain mb-4"
+            // /> */}
             <p className="text-gray-600">There are no pending requests</p>
-          </div>
+          </div> 
         </div>
 
         {/* Three Column Layout */}
