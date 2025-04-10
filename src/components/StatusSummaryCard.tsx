@@ -6,19 +6,26 @@ interface StatusSummaryCardProps {
   label: string;
   count: number;
   color: string;
+  bgColor: string;
   className?: string;
 }
 
-const StatusSummaryCard: React.FC<StatusSummaryCardProps> = ({ label, count, color, className }) => {
+const StatusSummaryCard: React.FC<StatusSummaryCardProps> = ({ 
+  label, 
+  count, 
+  color, 
+  bgColor, 
+  className 
+}) => {
   return (
     <div 
       className={cn(
-        "flex flex-col justify-center items-center rounded-md py-3 px-5", 
+        "flex flex-col justify-center items-center rounded-md py-4 px-5 text-center", 
         className
       )}
-      style={{ backgroundColor: `${color}10` }} // Light background with opacity
+      style={{ backgroundColor: bgColor }}
     >
-      <span className="font-semibold text-sm" style={{ color }}>
+      <span className="font-semibold text-md mb-1" style={{ color }}>
         {label}
       </span>
       <span className="text-2xl font-bold" style={{ color }}>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface DashboardLayoutProps {
@@ -17,6 +17,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <Bell className="text-gray-500" />
           <div className="flex items-center gap-2">
             <span className="text-sm">Hello, NOQU DEMO</span>
+            <ChevronDown className="h-4 w-4 text-gray-500" />
             <Avatar className="h-8 w-8 bg-orange-500">
               <AvatarFallback>N</AvatarFallback>
             </Avatar>
@@ -27,21 +28,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Main Content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <aside className="w-48 bg-slate-800 text-white">
-          <div className="p-4 font-bold">NOQU DEMO</div>
+        <aside className="w-56 bg-[#1E2A38] text-white">
+          <div className="p-5 font-semibold uppercase">NOQU DEMO</div>
           <nav className="mt-4">
-            <ul>
-              <li className="px-4 py-2 hover:bg-slate-700">Dashboard</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Attendance</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Request and Approvals</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Leave Approvals</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Employee Management</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Report Scheduler</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Attendance Reports</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Additional Reports</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Organization Chart</li>
-              <li className="px-4 py-2 bg-slate-900">Regularization</li>
-              <li className="px-4 py-2 hover:bg-slate-700">Settings</li>
+            <ul className="space-y-1">
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Dashboard</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Attendance</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Request and Approvals</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Leave Approvals</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Employee Management</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Report Scheduler</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Attendance Reports</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Additional Reports</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Organization Chart</li>
+              <li className="px-5 py-2.5 bg-[#283747] uppercase font-medium">Regularization</li>
+              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Settings</li>
             </ul>
           </nav>
         </aside>

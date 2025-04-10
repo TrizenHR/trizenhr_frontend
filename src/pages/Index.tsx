@@ -17,7 +17,7 @@ const Index = () => {
       <div className="space-y-6">
         {/* Page Title */}
         <div>
-          <h1 className="text-2xl font-semibold">Regularization</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Regularization</h1>
         </div>
         
         {/* Status Summary Cards */}
@@ -26,31 +26,37 @@ const Index = () => {
             label="Present" 
             count={summaryData.present} 
             color="#2ecc71" 
+            bgColor="#eafaf1"
           />
           <StatusSummaryCard 
             label="Absent" 
             count={summaryData.absent} 
             color="#e74c3c" 
+            bgColor="#fdedec"
           />
           <StatusSummaryCard 
             label="On Leave" 
             count={summaryData.leave} 
             color="#f1c40f" 
+            bgColor="#fef9e7"
           />
           <StatusSummaryCard 
             label="Holiday" 
             count={summaryData.holiday} 
             color="#9b59b6" 
+            bgColor="#f5eef8"
           />
           <StatusSummaryCard 
             label="Week off" 
             count={summaryData.weekOff} 
             color="#7f8c8d" 
+            bgColor="#ecf0f1"
           />
           <StatusSummaryCard 
             label="Regularized" 
             count={summaryData.regularized} 
             color="#3498db" 
+            bgColor="#d6eaf8"
           />
         </div>
         
@@ -67,14 +73,14 @@ const Index = () => {
           <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-gray-700"
             >
               <SlidersHorizontal size={16} />
               Customize Column
             </Button>
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-gray-700"
             >
               <Filter size={16} />
               Filter

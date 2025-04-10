@@ -32,6 +32,7 @@ export const DatePickerWithButton: React.FC<DatePickerWithButtonProps> = ({
               !date && "text-muted-foreground"
             )}
           >
+            <CalendarIcon className="mr-2 h-4 w-4" />
             {date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
@@ -46,7 +47,7 @@ export const DatePickerWithButton: React.FC<DatePickerWithButtonProps> = ({
         </PopoverContent>
       </Popover>
       <Button 
-        className="bg-amber-500 hover:bg-amber-600 text-white"
+        className="bg-[#f5b041] hover:bg-[#f39c12] text-white font-medium"
       >
         Apply
       </Button>
