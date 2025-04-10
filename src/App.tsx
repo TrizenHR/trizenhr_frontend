@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import CreateEmployee from "./pages/CreateEmployee";
 import EmployeeList from "./pages/EmployeeList";
 import Attendance from "./pages/Attendance";
+import RequestApprovals from "./pages/RequestApprovals";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -39,6 +40,7 @@ const App = () => (
                   <Route path="employee-list" element={<EmployeeList />} />
                   <Route path="create-employee" element={<CreateEmployee />} />
                   <Route path="attendance" element={<Attendance />} />
+                  <Route path="approvals" element={<RequestApprovals />} />
                   <Route path="report-scheduler" element={<Navigate to="/admin/dashboard" />} />
                 </Route>
               </Route>
