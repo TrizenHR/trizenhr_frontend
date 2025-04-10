@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom attendance status colors
+				status: {
+					present: '#2ecc71', // Green
+					absent: '#e74c3c', // Red
+					leave: '#f1c40f', // Yellow
+					wfh: '#3498db', // Blue
+					weekoff: '#7f8c8d', // Gray
+					holiday: '#9b59b6', // Purple
 				}
 			},
 			borderRadius: {
