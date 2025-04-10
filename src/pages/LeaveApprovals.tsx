@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { LeaveSummary } from '@/components/LeaveSummary';
@@ -14,10 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, FileText, Check, X, Eye, Calendar, ChevronDown, Download, AlertTriangle } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Check, X, Eye, ChevronDown, Download, AlertTriangle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { mockLeaveRequests, mockLeaveBalances, getLeaveHistory, getTeamOverlaps, LeaveRequest } from '@/services/mockLeaveData';
 import { toast } from '@/hooks/use-toast';
+import { DateRange } from 'react-day-picker';
 
 const LeaveApprovals: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("all");
@@ -25,7 +25,7 @@ const LeaveApprovals: React.FC = () => {
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
@@ -68,7 +68,7 @@ const LeaveApprovals: React.FC = () => {
     }
     
     // Filter by date range
-    if (dateRange.from && dateRange.to) {
+    if (dateRange?.from && dateRange?.to) {
       const leaveStart = new Date(leave.fromDate);
       const leaveEnd = new Date(leave.toDate);
       if (
@@ -86,7 +86,7 @@ const LeaveApprovals: React.FC = () => {
     setDepartmentFilter("all");
     setLeaveTypeFilter("all");
     setStatusFilter("all");
-    setDateRange({ from: undefined, to: undefined });
+    setDateRange(undefined);
   };
 
   const handleViewLeave = (leave: LeaveRequest) => {
@@ -227,7 +227,7 @@ const LeaveApprovals: React.FC = () => {
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
+                  {dateRange?.from ? (
                     dateRange.to ? (
                       <>
                         {format(dateRange.from, "LLL dd, y")} -{" "}
@@ -245,11 +245,9 @@ const LeaveApprovals: React.FC = () => {
                 <Calendar
                   mode="range"
                   selected={dateRange}
-                  onSelect={(range) => {
-                    setDateRange(range || { from: undefined, to: undefined });
-                    if (range?.to) setIsCalendarOpen(false);
-                  }}
+                  onSelect={setDateRange}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
