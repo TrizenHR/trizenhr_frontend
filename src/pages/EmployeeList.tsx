@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   ChevronLeft, 
@@ -26,6 +27,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import StatCard from '@/components/StatCard';
+import StatusSummaryCard from '@/components/StatusSummaryCard';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@/components/Breadcrumb';
 import { Link } from 'react-router-dom';
 
@@ -70,41 +72,41 @@ const EmployeeList = () => {
           <h1 className="text-2xl font-bold text-gray-800">Employee List</h1>
         </div>
         
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard 
+        {/* Stats Cards - Updated to match the image */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <StatusSummaryCard 
             icon={<Users size={20} />} 
             label="Total Employee" 
             count={58} 
-            color="#6B7280" 
+            color="#0B2447" 
             bgColor="white"
-            hasBorder={true}
+            className="border border-gray-200 shadow-sm"
           />
-          <StatCard 
+          <StatusSummaryCard 
             icon={<UserCheck size={20} />} 
-            label="Active" 
+            label="Active Employee" 
             count={51} 
             color="#16A34A" 
-            bgColor="#DCFCE7"
+            bgColor="#F2FCE2"
           />
-          <StatCard 
-            icon={<Clock size={20} />} 
-            label="On Notice Period" 
-            count={2} 
-            color="#CA8A04" 
-            bgColor="#FEF9C3"
-          />
-          <StatCard 
+          <StatusSummaryCard 
             icon={<UserX size={20} />} 
-            label="Suspended" 
+            label="Inactive Employee" 
+            count={3} 
+            color="#EA580C" 
+            bgColor="#FFF1F0"
+          />
+          <StatusSummaryCard 
+            icon={<Clock size={20} />} 
+            label="Inactive-Suspended" 
             count={3} 
             color="#7E22CE" 
-            bgColor="#F3E8FF"
+            bgColor="#E5DEFF"
           />
-          <StatCard 
+          <StatusSummaryCard 
             icon={<User size={20} />} 
-            label="Relieved" 
-            count={2} 
+            label="Inactive-Relieved" 
+            count={1} 
             color="#EA580C" 
             bgColor="#FFEDD5"
           />

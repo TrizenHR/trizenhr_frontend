@@ -27,7 +27,7 @@ const StatusSummaryCard: React.FC<StatusSummaryCardProps> = ({
       )}
       style={{ backgroundColor: bgColor }}
     >
-      {icon && <div className="mr-3">{icon}</div>}
+      {icon && <div className="mr-3" style={{ color }}>{icon}</div>}
       <div className="flex items-center justify-between flex-1">
         <span className="font-medium text-sm" style={{ color }}>
           {label}
