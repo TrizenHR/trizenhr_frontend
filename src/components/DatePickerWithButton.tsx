@@ -22,35 +22,36 @@ export const DatePickerWithButton: React.FC<DatePickerWithButtonProps> = ({
 }) => {
   return (
     <div className="flex items-center gap-2">
-      <div className="text-sm font-medium">Date</div>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-[140px] justify-start text-left text-sm font-normal",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            initialFocus
-            className="p-3 pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
-      <Button 
-        className="bg-[#f5b041] hover:bg-[#f39c12] text-white font-medium"
-      >
-        Apply
-      </Button>
+      <div className="text-sm text-gray-500 mr-1">Date</div>
+      <div className="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-[140px] justify-start text-left text-sm font-normal bg-white",
+                !date && "text-muted-foreground"
+              )}
+            >
+              {date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
+        <Button 
+          className="bg-[#f5b041] hover:bg-[#f39c12] text-white font-medium"
+        >
+          Apply
+        </Button>
+      </div>
     </div>
   );
 };

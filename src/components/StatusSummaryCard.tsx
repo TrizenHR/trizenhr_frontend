@@ -7,6 +7,7 @@ interface StatusSummaryCardProps {
   count: number;
   color: string;
   bgColor: string;
+  icon?: React.ReactNode;
   className?: string;
 }
 
@@ -15,22 +16,28 @@ const StatusSummaryCard: React.FC<StatusSummaryCardProps> = ({
   count, 
   color, 
   bgColor, 
+  icon,
   className 
 }) => {
   return (
     <div 
       className={cn(
-        "flex flex-col justify-center items-center rounded-md py-4 px-5 text-center", 
+        "flex items-start rounded-md p-4 border border-[#e7ecef]", 
         className
       )}
       style={{ backgroundColor: bgColor }}
     >
-      <span className="font-semibold text-md mb-1" style={{ color }}>
-        {label}
-      </span>
-      <span className="text-2xl font-bold" style={{ color }}>
-        {count}
-      </span>
+      {icon && <div className="mr-3">{icon}</div>}
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm" style={{ color }}>
+            {label}
+          </span>
+        </div>
+        <span className="text-3xl font-bold mt-1" style={{ color }}>
+          {count}
+        </span>
+      </div>
     </div>
   );
 };
