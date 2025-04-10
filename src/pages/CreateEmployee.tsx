@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -117,7 +118,7 @@ export default function CreateEmployee() {
                 name="employeeName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Employee Name<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
@@ -137,7 +138,7 @@ export default function CreateEmployee() {
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Gender<span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
@@ -167,7 +168,7 @@ export default function CreateEmployee() {
                 name="emailId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Email ID
                     </FormLabel>
                     <FormControl>
@@ -188,7 +189,7 @@ export default function CreateEmployee() {
                 name="mobileNumberType"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Mobile Number Type
                     </FormLabel>
                     <FormControl>
@@ -217,7 +218,7 @@ export default function CreateEmployee() {
                 name="department"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Department<span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
@@ -247,7 +248,7 @@ export default function CreateEmployee() {
                 name="shiftGroup"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Shift Group<span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
@@ -277,7 +278,7 @@ export default function CreateEmployee() {
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Role<span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
@@ -307,7 +308,7 @@ export default function CreateEmployee() {
                 name="subscriptionPlan"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Subscription Plan
                     </FormLabel>
                     <Select
@@ -339,7 +340,7 @@ export default function CreateEmployee() {
                 name="employeeId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Employee ID<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
@@ -359,7 +360,7 @@ export default function CreateEmployee() {
                 name="employeeType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Employee Type<span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
@@ -389,7 +390,7 @@ export default function CreateEmployee() {
                 name="mobileNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Mobile Number<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
@@ -422,7 +423,7 @@ export default function CreateEmployee() {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Location<span className="text-red-500">*</span>
                     </FormLabel>
                     <Select
@@ -452,7 +453,7 @@ export default function CreateEmployee() {
                 name="subDepartment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Sub-Department
                     </FormLabel>
                     <Select
@@ -482,7 +483,7 @@ export default function CreateEmployee() {
                 name="designation"
                 render={({ field }) => (
                   <FormItem className="relative">
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-sm font-medium text-blue-600">
                       Designation<span className="text-red-500">*</span>
                     </FormLabel>
                     <div className="relative">
