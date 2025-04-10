@@ -2,12 +2,37 @@
 import React from 'react';
 import { Bell, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link, useLocation } from 'react-router-dom';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const location = useLocation();
+
+  // Navigation items
+  const navItems = [
+    { name: 'Dashboard', path: '/' },
+    { name: 'Attendance', path: '/attendance' },
+    { name: 'Request and Approvals', path: '/approvals' },
+    { name: 'Leave Approvals', path: '/leave-approvals' },
+    { name: 'Employee Management', path: '/employee-list', active: true },
+    { name: 'Report Scheduler', path: '/report-scheduler' },
+    { name: 'Attendance Reports', path: '/attendance-reports' },
+    { name: 'Additional Reports', path: '/additional-reports' },
+    { name: 'Organization Chart', path: '/organization-chart' },
+    { name: 'Regularization', path: '/regularization' },
+    { name: 'Settings', path: '/settings' },
+  ];
+
+  const isActive = (path: string) => {
+    if (path === '/employee-list' && location.pathname === '/employee-list') {
+      return true;
+    }
+    return location.pathname === path;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -28,27 +53,30 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Main Content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <aside className="w-56 bg-[#1E2A38] text-white">
+        <aside className="w-64 bg-[#0B2447] text-white">
           <div className="p-5 font-semibold uppercase">NOQU DEMO</div>
           <nav className="mt-4">
             <ul className="space-y-1">
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Dashboard</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Attendance</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Request and Approvals</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Leave Approvals</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Employee Management</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Report Scheduler</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Attendance Reports</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Additional Reports</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Organization Chart</li>
-              <li className="px-5 py-2.5 bg-[#283747] uppercase font-medium">Regularization</li>
-              <li className="px-5 py-2.5 hover:bg-[#2c3e50] uppercase font-medium">Settings</li>
+              {navItems.map((item) => (
+                <li key={item.name}>
+                  <Link 
+                    to={item.path}
+                    className={`px-5 py-2.5 block hover:bg-[#1E3A8A] uppercase font-medium ${
+                      isActive(item.path) || item.active 
+                        ? 'text-yellow-400 bg-[#1E3A8A]' 
+                        : 'text-white'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1">
           {children}
         </main>
       </div>
