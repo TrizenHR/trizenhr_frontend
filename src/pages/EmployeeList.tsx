@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   ChevronLeft, 
@@ -29,7 +28,7 @@ import {
 import StatCard from '@/components/StatCard';
 import StatusSummaryCard from '@/components/StatusSummaryCard';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@/components/Breadcrumb';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const employeeData = [
   { id: 12024, employeeId: 'NOQ08', name: 'Gopal Test', email: 'gopalanandh11+1@gmail.com', location: 'NOQU Thousand Lights', shiftGroup: 'SPLIT SHIFT 10', mobile: '-', onboardingDate: '17-12-2024' },
@@ -49,6 +48,7 @@ const EmployeeList = () => {
   const itemsPerPage = 10;
   const totalItems = 58; // Total employees as per spec
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const navigate = useNavigate();
   
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -57,7 +57,6 @@ const EmployeeList = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        {/* Breadcrumbs */}
         <Breadcrumb>
           <BreadcrumbItem>
             <BreadcrumbLink href="#">Employee Management</BreadcrumbLink>
@@ -67,12 +66,10 @@ const EmployeeList = () => {
           </BreadcrumbItem>
         </Breadcrumb>
 
-        {/* Title */}
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Employee List</h1>
         </div>
         
-        {/* Stats Cards - Updated to match the image */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <StatusSummaryCard 
             icon={<Users size={20} />} 
@@ -112,7 +109,6 @@ const EmployeeList = () => {
           />
         </div>
         
-        {/* Search and Controls */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="relative w-full md:w-[320px]">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
@@ -142,17 +138,14 @@ const EmployeeList = () => {
             </Button>
             <Button 
               className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white"
-              asChild
+              onClick={() => navigate('/admin/dashboard/create-employee')}
             >
-              <Link to="/create-employee">
-                <Plus size={16} />
-                Create
-              </Link>
+              <Plus size={16} />
+              Create
             </Button>
           </div>
         </div>
         
-        {/* Employee Table */}
         <div className="overflow-x-auto bg-white rounded-md shadow-sm">
           <Table className="min-w-full">
             <TableHeader>
@@ -184,7 +177,6 @@ const EmployeeList = () => {
           </Table>
         </div>
         
-        {/* Pagination */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <span className="text-sm text-gray-500">
             Showing 1 to 10 of {totalItems} entries

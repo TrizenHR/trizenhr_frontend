@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 
 const AdminDashboard: React.FC = () => {
@@ -12,11 +11,7 @@ const AdminDashboard: React.FC = () => {
     return <div>Not authorized</div>;
   }
 
-  return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
-  );
+  return <Outlet />;
 };
 
 export default AdminDashboard;
