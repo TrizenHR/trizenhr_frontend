@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, FileSpreadsheet, FileUp, FileText, Filter, ChevronDown, BarChart2, PieChart, Clock, ArrowDownLeft, ArrowUpRight, Calendar, UserMinus, Timer, Coffee, UserX } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, FileSpreadsheet, FileUp, FileText, Filter, ChevronDown, BarChart2, Clock, ArrowDownLeft, ArrowUpRight, Calendar, UserMinus, Timer, Coffee, UserX } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +35,6 @@ const AdditionalReports: React.FC = () => {
   const [leaveType, setLeaveType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Mock data for reports
   const lateComingData = [
     { id: 'N2712', name: 'John Smith', date: '2025-04-08', inTime: '09:45 AM', outTime: '06:30 PM', lateArrival: 'Yes', earlyExit: 'No', remarks: 'Traffic congestion' },
     { id: 'N2161', name: 'Emma Johnson', date: '2025-04-09', inTime: '09:30 AM', outTime: '05:45 PM', lateArrival: 'No', earlyExit: 'Yes', remarks: 'Doctor appointment' },
@@ -94,7 +92,6 @@ const AdditionalReports: React.FC = () => {
     { id: 'N2555', name: 'Daniel Garcia', lastAttendanceDate: '2025-03-25', status: 'On Long Leave', department: 'Operations' }
   ];
 
-  // Chart data
   const lateArrivalsChartData = [
     { day: 'Mon', count: 12 },
     { day: 'Tue', count: 8 },
@@ -124,7 +121,6 @@ const AdditionalReports: React.FC = () => {
       description: `Your ${selectedTab} report is being prepared as ${format.toUpperCase()}. It will download shortly.`,
     });
     
-    // In a real app, this would trigger an API call to generate the report
     setTimeout(() => {
       toast({
         title: "Report Downloaded",
@@ -195,7 +191,6 @@ const AdditionalReports: React.FC = () => {
           </DropdownMenu>
         </div>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="flex flex-col items-center justify-center p-6">
@@ -227,7 +222,6 @@ const AdditionalReports: React.FC = () => {
           </Card>
         </div>
 
-        {/* Filters */}
         <div className="bg-white rounded-lg border p-4 mb-6">
           <div className="flex items-center mb-4">
             <Filter className="mr-2 h-5 w-5 text-gray-500" />
@@ -332,7 +326,6 @@ const AdditionalReports: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabs and Content */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="bg-white rounded-lg border p-4">
           <TabsList className="grid grid-cols-4 mb-4 lg:w-[800px] mx-auto">
             <TabsTrigger value="late-report">
