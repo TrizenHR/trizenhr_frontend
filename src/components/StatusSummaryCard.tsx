@@ -22,19 +22,17 @@ const StatusSummaryCard: React.FC<StatusSummaryCardProps> = ({
   return (
     <div 
       className={cn(
-        "flex items-start rounded-md p-4 border border-[#e7ecef]", 
+        "flex items-center rounded-md p-3 border border-[#e7ecef]", 
         className
       )}
       style={{ backgroundColor: bgColor }}
     >
       {icon && <div className="mr-3">{icon}</div>}
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-sm" style={{ color }}>
-            {label}
-          </span>
-        </div>
-        <span className="text-3xl font-bold mt-1" style={{ color }}>
+      <div className="flex items-center justify-between flex-1">
+        <span className="font-medium text-sm" style={{ color }}>
+          {label}
+        </span>
+        <span className="text-xl font-bold" style={{ color }}>
           {count}
         </span>
       </div>
