@@ -16,6 +16,7 @@ import LeaveApprovals from "./pages/LeaveApprovals";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import AttendanceReports from "./pages/AttendanceReports";
+import AdditionalReports from "./pages/AdditionalReports";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import React from "react";
@@ -45,6 +46,7 @@ const App = () => (
                   <Route path="edit-employee/:id" element={<EditEmployee />} />
                   <Route path="attendance" element={<Attendance />} />
                   <Route path="attendance-reports" element={<AttendanceReports />} />
+                  <Route path="additional-reports" element={<AdditionalReports />} />
                   <Route path="approvals" element={<RequestApprovals />} />
                   <Route path="leave-approvals" element={<LeaveApprovals />} />
                   <Route path="report-scheduler" element={<Navigate to="/admin/dashboard" />} />
