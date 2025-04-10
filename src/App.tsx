@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import CreateEmployee from "./pages/CreateEmployee";
 import EmployeeList from "./pages/EmployeeList";
+import EditEmployee from "./pages/EditEmployee";
 import Attendance from "./pages/Attendance";
 import RequestApprovals from "./pages/RequestApprovals";
 import LeaveApprovals from "./pages/LeaveApprovals";
@@ -40,6 +41,7 @@ const App = () => (
                   <Route index element={<Index />} />
                   <Route path="employee-list" element={<EmployeeList />} />
                   <Route path="create-employee" element={<CreateEmployee />} />
+                  <Route path="edit-employee/:id" element={<EditEmployee />} />
                   <Route path="attendance" element={<Attendance />} />
                   <Route path="approvals" element={<RequestApprovals />} />
                   <Route path="leave-approvals" element={<LeaveApprovals />} />
