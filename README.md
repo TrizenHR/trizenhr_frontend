@@ -1,73 +1,159 @@
-# Welcome to your Lovable project
+# AttendEase - Attendance ERP
 
-## Project info
+A production-ready MERN stack attendance management system with enterprise-grade architecture.
 
-**URL**: https://lovable.dev/projects/cac0eae1-8f9e-4d8b-bdb7-2ff1d3dcb91e
+## Tech Stack
 
-## How can I edit this code?
+### Frontend (Client)
+- **Framework**: Next.js 16 with App Router
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS 4
+- **UI Components**: shadcn/ui (Radix-based)
+- **Linting**: ESLint + Prettier
 
-There are several ways of editing your application.
+### Backend (Server)
+- **Runtime**: Node.js
+- **Framework**: Express 5
+- **Language**: TypeScript (strict mode)
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT
+- **Linting**: ESLint + Prettier
 
-**Use Lovable**
+## Project Structure
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/cac0eae1-8f9e-4d8b-bdb7-2ff1d3dcb91e) and start prompting.
+```
+attendease-dashboard-ui/
+├── client/                 # Next.js frontend
+│   ├── src/
+│   │   ├── app/           # App Router pages
+│   │   ├── components/    # UI components
+│   │   │   └── ui/        # shadcn/ui components
+│   │   ├── features/      # Feature modules
+│   │   ├── hooks/         # Custom React hooks
+│   │   └── lib/           # Utilities
+│   └── ...
+├── server/                 # Express backend
+│   ├── src/
+│   │   ├── config/        # Configuration
+│   │   ├── controllers/   # Route handlers
+│   │   ├── middleware/    # Express middleware
+│   │   ├── models/        # Mongoose models
+│   │   ├── routes/        # API routes
+│   │   ├── services/      # Business logic
+│   │   ├── types/         # TypeScript types
+│   │   └── utils/         # Utilities
+│   └── ...
+└── README.md
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+## Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+
+- npm or yarn
+- MongoDB (local or Atlas)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 1. Clone the Repository
 
-Follow these steps:
+```bash
+git clone <repository-url>
+cd attendease-dashboard-ui
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 2. Setup Client
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+cd client
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Copy environment file
+cp .env.example .env.local
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The client will be available at `http://localhost:3000`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 3. Setup Server
 
-**Use GitHub Codespaces**
+```bash
+cd server
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Install dependencies
+npm install
 
-## What technologies are used for this project?
+# Copy environment file
+cp .env.example .env
 
-This project is built with:
+# Start development server
+npm run dev
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The server will be available at `http://localhost:5000`
 
-## How can I deploy this project?
+### 4. Verify Setup
 
-Simply open [Lovable](https://lovable.dev/projects/cac0eae1-8f9e-4d8b-bdb7-2ff1d3dcb91e) and click on Share -> Publish.
+- **Frontend**: Open `http://localhost:3000` in your browser
+- **Backend**: Access `http://localhost:5000/api/health`
 
-## Can I connect a custom domain to my Lovable project?
+## Available Scripts
 
-Yes it is!
+### Client
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Fix ESLint errors |
+| `npm run format` | Format code with Prettier |
+| `npm run type-check` | Run TypeScript type checking |
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Server
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Compile TypeScript |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Fix ESLint errors |
+| `npm run format` | Format code with Prettier |
+| `npm run type-check` | Run TypeScript type checking |
+
+## Environment Variables
+
+### Client (.env.local)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:5000/api` |
+| `NEXT_PUBLIC_APP_ENV` | Application environment | `development` |
+
+### Server (.env)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | `5000` |
+| `NODE_ENV` | Environment | `development` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/attendease` |
+| `JWT_SECRET` | JWT signing secret | - |
+| `JWT_EXPIRES_IN` | JWT expiration | `7d` |
+| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:3000` |
+
+## Architecture Highlights
+
+- **Strict TypeScript**: No `any` types allowed, strict mode enabled
+- **Centralized Error Handling**: Custom error classes with proper HTTP status codes
+- **JWT Authentication**: Ready-to-use auth middleware with role-based authorization
+- **Multi-tenant Ready**: Architecture supports RBAC expansion
+- **Production Security**: Helmet, CORS, and security best practices
+
+## License
+
+ISC
