@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'AttendEase - Attendance ERP',
+  title: 'Attendance Dashboard',
   description: 'Enterprise attendance management system',
 };
 
