@@ -1,27 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { useRequireAuth } from '@/hooks/use-auth';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simple auth check for demo purposes
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      router.push('/login');
-    } else {
-      setIsLoading(false);
-    }
-  }, [router]);
+  const { isLoading } = useRequireAuth();
 
   if (isLoading) {
     return (

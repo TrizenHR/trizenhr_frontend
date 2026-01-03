@@ -2,51 +2,57 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/features/auth-context';
+import { LoginFormData, loginSchema } from '@/lib/validations';
+import { toast } from 'sonner';
 
-// Test credentials for demo purposes
-const TEST_CREDENTIALS = {
-  email: 'demo@trizenventures.com',
-  password: 'demo123',
-};
+// Test credentials for all roles
+const TEST_CREDENTIALS = [
+  { role: 'Super Admin', email: 'demo@trizenventures.com', password: 'demo123' },
+  { role: 'Admin', email: 'admin@trizenventures.com', password: 'admin123' },
+  { role: 'HR', email: 'hr@trizenventures.com', password: 'hr1234' },
+  { role: 'Supervisor', email: 'supervisor@trizenventures.com', password: 'supervisor123' },
+  { role: 'Employee', email: 'employee@trizenventures.com', password: 'employee123' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Check test credentials
-    if (email === TEST_CREDENTIALS.email && password === TEST_CREDENTIALS.password) {
-      // Store auth state in localStorage for demo
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify({ email, name: 'Demo User', role: 'admin' }));
+    try {
+      await login(data.email, data.password);
       router.push('/dashboard');
-    } else {
-      setError('Invalid email or password. Use the test credentials below.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Invalid email or password');
       setIsLoading(false);
     }
   };
 
-  const fillTestCredentials = () => {
-    setEmail(TEST_CREDENTIALS.email);
-    setPassword(TEST_CREDENTIALS.password);
-    setError('');
+  const fillCredentials = (email: string, password: string) => {
+    setValue('email', email);
+    setValue('password', password);
   };
 
   return (
@@ -97,25 +103,20 @@ export default function LoginPage() {
             <CardDescription>Enter your credentials to access your dashboard</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  {...register('email')}
                   disabled={isLoading}
+                  className={errors.email ? 'border-red-500' : ''}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -132,11 +133,13 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register('password')}
                   disabled={isLoading}
+                  className={errors.password ? 'border-red-500' : ''}
                 />
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
@@ -151,26 +154,24 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Test Credentials Box */}
+            {/* Test Credentials - All Roles */}
             <div className="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-              <p className="mb-2 text-sm font-medium text-gray-700">Test Credentials</p>
-              <div className="space-y-1 text-sm text-gray-600">
-                <p>
-                  Email: <code className="rounded bg-gray-200 px-1.5 py-0.5">{TEST_CREDENTIALS.email}</code>
-                </p>
-                <p>
-                  Password: <code className="rounded bg-gray-200 px-1.5 py-0.5">{TEST_CREDENTIALS.password}</code>
-                </p>
+              <p className="mb-3 text-sm font-medium text-gray-700">Quick Login (Test Accounts)</p>
+              <div className="grid grid-cols-1 gap-2">
+                {TEST_CREDENTIALS.map((cred) => (
+                  <Button
+                    key={cred.role}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-between"
+                    onClick={() => fillCredentials(cred.email, cred.password)}
+                  >
+                    <span className="font-medium">{cred.role}</span>
+                    <span className="text-xs text-gray-500">{cred.email}</span>
+                  </Button>
+                ))}
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3 w-full"
-                onClick={fillTestCredentials}
-              >
-                Fill Test Credentials
-              </Button>
             </div>
 
             <p className="mt-6 text-center text-sm text-gray-500">

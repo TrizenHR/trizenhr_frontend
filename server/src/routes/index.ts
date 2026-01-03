@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
+import authRoutes from './auth.routes';
+import userRoutes from './user.routes';
 
 const router = Router();
 
 // Mount routes
 router.use('/health', healthRoutes);
-
-// Future routes will be added here:
-// router.use('/auth', authRoutes);
-// router.use('/users', userRoutes);
-// router.use('/attendance', attendanceRoutes);
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 
 export default router;

@@ -11,13 +11,18 @@ import {
   FileText,
   Settings,
   HelpCircle,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { UserRole } from '@/lib/types';
+import { hasAnyRole } from '@/lib/permissions';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  roles?: UserRole[]; // If specified, only these roles can see this item
 }
 
 const mainNavItems: NavItem[] = [
@@ -26,6 +31,12 @@ const mainNavItems: NavItem[] = [
   { label: 'Employees', href: '/dashboard/employees', icon: Users },
   { label: 'Leave', href: '/dashboard/leave', icon: Calendar },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText },
+  {
+    label: 'Users',
+    href: '/dashboard/users',
+    icon: UserCog,
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+  },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -35,6 +46,14 @@ const bottomNavItems: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  // Filter navigation items based on user role
+  const visibleMainNavItems = mainNavItems.filter((item) => {
+    if (!item.roles) return true; // No role restriction
+    if (!user) return false; // Not authenticated
+    return hasAnyRole(user.role as UserRole, item.roles);
+  });
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
@@ -47,9 +66,9 @@ export function Sidebar() {
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-1">
-          {mainNavItems.map((item) => (
+          {visibleMainNavItems.map((item) => (
             <li key={item.href}>
-              <NavLink item={item} isActive={pathname === item.href} />
+              <NavLink item={item} isActive={pathname === item.href || pathname.startsWith(item.href + '/')} />
             </li>
           ))}
         </ul>

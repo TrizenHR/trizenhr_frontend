@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -12,19 +11,27 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Bell, LogOut, User, Settings } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { getRoleDisplayName } from '@/lib/permissions';
 
 interface HeaderProps {
   title?: string;
 }
 
 export function Header({ title = 'Dashboard' }: HeaderProps) {
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
+    logout();
     router.push('/login');
   };
+
+  // Get user initials
+  const initials = user
+    ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
+    : 'U';
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
@@ -43,10 +50,15 @@ export function Header({ title = 'Dashboard' }: HeaderProps) {
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-gray-200 text-sm font-medium text-gray-700">
-                  DU
+                  {initials}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden text-sm font-medium text-gray-700 md:inline">Demo User</span>
+              <div className="hidden flex-col items-start md:flex">
+                <span className="text-sm font-medium text-gray-700">{user?.fullName || user?.email}</span>
+                <span className="text-xs text-gray-500">
+                  {user?.role && getRoleDisplayName(user.role as any)}
+                </span>
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
