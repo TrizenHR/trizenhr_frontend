@@ -6,6 +6,10 @@ import {
   CreateUserPayload,
   UpdateUserPayload,
   ChangePasswordPayload,
+  Attendance,
+  AttendanceStatus,
+  AttendanceStats,
+  AttendancePagination,
 } from './types';
 
 // Create axios instance
@@ -134,6 +138,124 @@ export const userApi = {
   getUserStats: async (): Promise<any> => {
     const response = await api.get<ApiResponse<any>>('/users/stats');
     return response.data.data!;
+  },
+};
+
+// Attendance API
+export const attendanceApi = {
+  /**
+   * Mark check-in for current user
+   */
+  checkIn: async (photoData?: string): Promise<Attendance> => {
+    const response = await api.post<ApiResponse<Attendance>>('/attendance/check-in', {
+      photoData,
+    });
+    return response.data.data!;
+  },
+
+  /**
+   * Mark check-out for current user
+   */
+  checkOut: async (): Promise<Attendance> => {
+    const response = await api.post<ApiResponse<Attendance>>('/attendance/check-out');
+    return response.data.data!;
+  },
+
+  /**
+   * Get today's attendance status
+   */
+  getTodayStatus: async (): Promise<Attendance | null> => {
+    const response = await api.get<ApiResponse<Attendance>>('/attendance/today');
+    return response.data.data || null;
+  },
+
+  /**
+   * Get current user's attendance history
+   */
+  getMyAttendance: async (filters?: {
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    limit?: number;
+  }): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
+    const response = await api.get<
+      ApiResponse<Attendance[]> & { pagination: AttendancePagination }
+    >('/attendance/my-attendance', {
+      params: {
+        ...filters,
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
+   * Get current user's attendance statistics
+   */
+  getMyStats: async (month?: number, year?: number): Promise<AttendanceStats> => {
+    const response = await api.get<ApiResponse<AttendanceStats>>('/attendance/my-stats', {
+      params: { month, year },
+    });
+    return response.data.data!;
+  },
+
+  /**
+   * Get all attendance records (Admin/HR only)
+   */
+  getAllAttendance: async (filters?: {
+    date?: Date;
+    startDate?: Date;
+    endDate?: Date;
+    status?: AttendanceStatus;
+    department?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
+    const response = await api.get<
+      ApiResponse<Attendance[]> & { pagination: AttendancePagination }
+    >('/attendance/all', {
+      params: {
+        ...filters,
+        date: filters?.date?.toISOString(),
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
+   * Get specific user's attendance (Admin/HR/Supervisor)
+   */
+  getUserAttendance: async (
+    userId: string,
+    filters?: {
+      startDate?: Date;
+      endDate?: Date;
+      page?: number;
+      limit?: number;
+    }
+  ): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
+    const response = await api.get<
+      ApiResponse<Attendance[]> & { pagination: AttendancePagination }
+    >(`/attendance/user/${userId}`, {
+      params: {
+        ...filters,
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
   },
 };
 

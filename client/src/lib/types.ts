@@ -71,3 +71,61 @@ export interface ChangePasswordPayload {
   oldPassword: string;
   newPassword: string;
 }
+
+// Attendance Types
+export enum AttendanceStatus {
+  PRESENT = 'present',
+  LATE = 'late',
+  ABSENT = 'absent',
+  HALF_DAY = 'half_day',
+  ON_LEAVE = 'on_leave',
+}
+
+export interface Attendance {
+  id: string;
+  userId: string;
+  date: string;
+  checkIn?: string;
+  checkOut?: string;
+  status: AttendanceStatus;
+  workingHours?: number;
+  notes?: string;
+  isApproved: boolean;
+  approvedBy?: string;
+  photoUrl?: string; // Photo captured during check-in
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TodayStatus {
+  hasCheckedIn: boolean;
+  hasCheckedOut: boolean;
+  attendance?: Attendance;
+}
+
+export interface AttendanceStats {
+  totalDays: number;
+  presentDays: number;
+  absentDays: number;
+  lateDays: number;
+  halfDays: number;
+  leaveDays: number;
+  totalWorkingHours: number;
+  averageWorkingHours: number;
+}
+
+export interface AttendancePagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AttendanceFilters {
+  startDate?: Date;
+  endDate?: Date;
+  status?: AttendanceStatus;
+  department?: string;
+  page?: number;
+  limit?: number;
+}
