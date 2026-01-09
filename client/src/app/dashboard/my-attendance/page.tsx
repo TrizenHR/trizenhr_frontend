@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { attendanceApi } from '@/lib/api';
-import { Attendance } from '@/lib/types';
+import { Attendance, AttendanceStatus, AttendanceStats } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AttendanceStatsCard, AttendanceTable, AttendanceFilters } from '@/components/attendance';
 import { useCamera } from '@/hooks/useCamera';
 import { Camera, X, Check, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -18,6 +19,29 @@ export default function MyAttendancePage() {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+
+  // History & Stats state
+  const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
+  const [stats, setStats] = useState<AttendanceStats | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
+  const [filters, setFilters] = useState<{
+    startDate: Date | null;
+    endDate: Date | null;
+    status: AttendanceStatus | null;
+  }>({
+    startDate: null,
+    endDate: null,
+    status: null,
+  });
 
   const {
     photoData,
@@ -36,6 +60,16 @@ export default function MyAttendancePage() {
   useEffect(() => {
     loadTodayStatus();
   }, []);
+
+  // Load attendance history when filters or pagination changes
+  useEffect(() => {
+    loadAttendanceHistory();
+  }, [pagination.page, filters]);
+
+  // Load monthly stats when month/year changes
+  useEffect(() => {
+    loadMonthlyStats();
+  }, [selectedMonth, selectedYear]);
 
   // Start camera when showCamera is true
   useEffect(() => {
@@ -84,6 +118,69 @@ export default function MyAttendancePage() {
     } finally {
       setIsLoadingStatus(false);
     }
+  };
+
+  const loadAttendanceHistory = async () => {
+    try {
+      setIsLoadingHistory(true);
+      const response = await attendanceApi.getMyAttendance({
+        page: pagination.page,
+        limit: pagination.limit,
+        startDate: filters.startDate?.toISOString(),
+        endDate: filters.endDate?.toISOString(),
+        status: filters.status || undefined,
+      });
+      
+      setAttendanceRecords(response.records || []);
+      setPagination({
+        page: response.pagination?.page || 1,
+        limit: response.pagination?.limit || 10,
+        total: response.pagination?.total || 0,
+        totalPages: response.pagination?.totalPages || 0,
+      });
+    } catch (error: any) {
+      console.error('Failed to load attendance history:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load attendance history',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const loadMonthlyStats = async () => {
+    try {
+      setIsLoadingStats(true);
+      const monthStats = await attendanceApi.getMyStats(selectedMonth + 1, selectedYear);
+      setStats(monthStats);
+    } catch (error: any) {
+      console.error('Failed to load stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  const handleMonthChange = (month: number) => {
+    setSelectedMonth(month);
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+  };
+
+  const handleFilterChange = (newFilters: {
+    startDate: Date | null;
+    endDate: Date | null;
+    status: AttendanceStatus | null;
+  }) => {
+    setFilters(newFilters);
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+  };
+
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, page }));
   };
 
   const handleCheckIn = () => {
@@ -359,16 +456,33 @@ export default function MyAttendancePage() {
         </div>
       )}
 
-      {/* Attendance History Section - Placeholder for now */}
+      {/* Monthly Statistics */}
+      <AttendanceStatsCard
+        stats={stats}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        onMonthChange={handleMonthChange}
+        onYearChange={handleYearChange}
+        isLoading={isLoadingStats}
+      />
+
+      {/* Attendance History Section */}
       <Card>
         <CardHeader>
           <CardTitle>Attendance History</CardTitle>
-          <CardDescription>View your past attendance records</CardDescription>
+          <CardDescription>View and filter your past attendance records</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Attendance history will be displayed here
-          </p>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <AttendanceFilters onFilterChange={handleFilterChange} />
+
+          {/* History Table */}
+          <AttendanceTable
+            records={attendanceRecords}
+            pagination={pagination}
+            onPageChange={handlePageChange}
+            isLoading={isLoadingHistory}
+          />
         </CardContent>
       </Card>
     </div>

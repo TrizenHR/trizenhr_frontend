@@ -2,11 +2,11 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { UserRole } from '@/lib/types';
-import { SuperAdminDashboard } from '@/components/dashboard/super-admin-dashboard';
-import { AdminDashboard } from '@/components/dashboard/admin-dashboard';
-import { HRDashboard } from '@/components/dashboard/hr-dashboard';
-import { SupervisorDashboard } from '@/components/dashboard/supervisor-dashboard';
-import { EmployeeDashboard } from '@/components/dashboard/employee-dashboard';
+import { SuperAdminDashboard } from '@/components/dashboard/SuperAdminDashboard';
+import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
+import { HRDashboard } from '@/components/dashboard/HRDashboard';
+import { SupervisorDashboard } from '@/components/dashboard/SupervisorDashboard';
+import { EmployeeDashboard } from '@/components/dashboard/EmployeeDashboard';
 
 export default function DashboardPage() {
   const { user } = useAuth();

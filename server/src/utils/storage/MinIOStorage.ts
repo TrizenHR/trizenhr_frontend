@@ -91,6 +91,13 @@ export class MinIOStorage extends BaseStorage {
       s3ForcePathStyle: true, // Required for MinIO
       signatureVersion: 'v4',
       region: this.region,
+      // Fast-fail timeouts to prevent blocking
+      httpOptions: {
+        timeout: 5000, // 5 second timeout for HTTP requests
+        connectTimeout: 3000, // 3 second timeout for initial connection
+      },
+      // Disable retries for faster failure
+      maxRetries: 0,
     });
 
     console.log('✅ MinIO Storage initialized', {
@@ -100,10 +107,15 @@ export class MinIOStorage extends BaseStorage {
       region: this.region,
     });
 
-    // Ensure bucket exists on initialization
-    this.ensureBucketExists().catch(error => {
-      console.warn('⚠️ Could not ensure bucket exists during initialization:', error.message);
-    });
+    // Ensure bucket exists on initialization (non-blocking, runs in background)
+    if (this.accessKeyId && this.secretAccessKey) {
+      this.ensureBucketExists().catch(error => {
+        // Silent fail - will retry on actual upload
+        console.debug('Bucket validation skipped during init:', error.message);
+      });
+    } else {
+      console.warn('⚠️ MinIO credentials not configured - photo upload will be disabled');
+    }
   }
 
   /**
@@ -115,21 +127,36 @@ export class MinIOStorage extends BaseStorage {
         throw new Error('MinIO credentials not configured');
       }
 
-      // Check if bucket exists
+      // Check if bucket exists with timeout
       try {
         await this.s3.headBucket({ Bucket: this.bucketName }).promise();
-        // Bucket exists - ensure public read policy is set
-        await this.ensureBucketPolicy();
+        // Bucket exists - try to ensure public read policy
+        try {
+          await this.ensureBucketPolicy();
+        } catch (policyError) {
+          // Ignore policy errors - not critical
+        }
         return true;
       } catch (headError: any) {
+        // Network/timeout errors - don't try to create, just fail fast
+        if (headError.code === 'NetworkingError' || headError.code === 'TimeoutError' || 
+            headError.message?.includes('ETIMEDOUT') || headError.message?.includes('ECONNREFUSED')) {
+          console.warn('⚠️ MinIO unreachable - photo uploads disabled temporarily');
+          throw new Error('MinIO service unavailable');
+        }
+        
         // Bucket doesn't exist (404/NotFound) - proceed to create it
         if (headError.statusCode === 404 || headError.code === 'NotFound') {
           try {
             console.log(`📦 Bucket '${this.bucketName}' not found. Creating it...`);
             await this.s3.createBucket({ Bucket: this.bucketName }).promise();
             
-            // Set bucket policy for public read access
-            await this.ensureBucketPolicy();
+            // Set bucket policy for public read access (ignore failures)
+            try {
+              await this.ensureBucketPolicy();
+            } catch (policyError) {
+              // Ignore policy errors - not critical
+            }
             
             console.log(`✅ Bucket '${this.bucketName}' created successfully`);
             return true;
@@ -148,6 +175,10 @@ export class MinIOStorage extends BaseStorage {
         throw headError;
       }
     } catch (error: any) {
+      // Don't log full stack trace for network errors
+      if (error.message === 'MinIO service unavailable') {
+        throw error;
+      }
       console.error('Failed to ensure bucket exists:', error.message);
       throw new Error(`Failed to ensure bucket exists: ${error.message}`);
     }
@@ -197,8 +228,15 @@ export class MinIOStorage extends BaseStorage {
         throw new Error('MinIO credentials not configured');
       }
 
-      // Ensure bucket exists before upload
-      await this.ensureBucketExists();
+      // Try to ensure bucket exists (will fail fast if unreachable)
+      try {
+        await this.ensureBucketExists();
+      } catch (bucketError: any) {
+        if (bucketError.message === 'MinIO service unavailable') {
+          throw new Error('Photo upload unavailable - storage service is not reachable');
+        }
+        throw bucketError;
+      }
 
       // Sanitize file name
       const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -234,8 +272,20 @@ export class MinIOStorage extends BaseStorage {
         bucket: this.bucketName,
       };
     } catch (error: any) {
-      console.error('Error uploading file to MinIO:', error.message);
-      throw new Error(`Failed to upload file to MinIO: ${error.message}`);
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to upload file to MinIO';
+      
+      if (error.message?.includes('unavailable') || error.message?.includes('unreachable')) {
+        errorMessage = error.message;
+      } else if (error.code === 'NetworkingError' || error.code === 'TimeoutError' ||
+                 error.message?.includes('ETIMEDOUT') || error.message?.includes('ECONNREFUSED')) {
+        errorMessage = 'Storage service is not reachable';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      console.warn('Upload failed:', errorMessage);
+      throw new Error(errorMessage);
     }
   }
 

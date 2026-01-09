@@ -82,7 +82,7 @@ export enum AttendanceStatus {
 }
 
 export interface Attendance {
-  id: string;
+  _id: string;
   userId: string;
   date: string;
   checkIn?: string;

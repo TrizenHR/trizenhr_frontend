@@ -153,7 +153,8 @@ export class AttendanceService {
    */
   async getUserStats(userId: string, month?: number, year?: number): Promise<any> {
     const now = new Date();
-    const targetMonth = month ?? now.getMonth();
+    // Month is 1-indexed from API (1 = January), convert to 0-indexed for Date constructor
+    const targetMonth = month ? month - 1 : now.getMonth();
     const targetYear = year ?? now.getFullYear();
 
     const startDate = new Date(targetYear, targetMonth, 1);
