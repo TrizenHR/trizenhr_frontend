@@ -15,6 +15,9 @@ import {
   LeaveRequestPayload,
   LeaveFilters,
   LeavePagination,
+  Holiday,
+  HolidayFormData,
+  HolidayType,
 } from './types';
 
 // Create axios instance
@@ -391,6 +394,49 @@ export const leaveApi = {
     const response = await api.patch<ApiResponse<Leave>>(
       `/leave/${id}/cancel`
     );
+    return response.data.data!;
+  },
+};
+
+// Holiday API
+export const holidayApi = {
+  create: async (data: HolidayFormData): Promise<Holiday> => {
+    const response = await api.post<ApiResponse<Holiday>>('/holidays', data);
+    return response.data.data!;
+  },
+
+  getAll: async (filters?: { year?: number; type?: HolidayType }): Promise<Holiday[]> => {
+    const response = await api.get<ApiResponse<Holiday[]>>('/holidays', {
+      params: filters,
+    });
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<Holiday> => {
+    const response = await api.get<ApiResponse<Holiday>>(`/holidays/${id}`);
+    return response.data.data!;
+  },
+
+  update: async (id: string, data: Partial<HolidayFormData>): Promise<Holiday> => {
+    const response = await api.put<ApiResponse<Holiday>>(`/holidays/${id}`, data);
+    return response.data.data!;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/holidays/${id}`);
+  },
+
+  checkDate: async (date: Date): Promise<{ isHoliday: boolean; holiday: Holiday | null }> => {
+    const response = await api.get<ApiResponse<{ isHoliday: boolean; holiday: Holiday |  null }>>(
+      `/holidays/check/${date.toISOString().split('T')[0]}`
+    );
+    return response.data.data!;
+  },
+
+  getUpcoming: async (limit?: number): Promise<Holiday[]> => {
+    const response = await api.get<ApiResponse<Holiday[]>>('/holidays/upcoming', {
+      params: { limit },
+    });
     return response.data.data!;
   },
 };

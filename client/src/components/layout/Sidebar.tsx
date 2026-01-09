@@ -78,6 +78,11 @@ const navigationSections: NavSection[] = [
         icon: ClipboardList,
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
+      { 
+        label: 'Leave Calendar', 
+        href: '/dashboard/leave-calendar', 
+        icon: Calendar,
+      },
     ],
   },
   {
@@ -113,6 +118,12 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
       },
       { 
+        label: 'Manage Holidays', 
+        href: '/dashboard/manage-holidays', 
+        icon: Calendar,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+      },
+      { 
         label: 'Reports', 
         href: '/dashboard/reports', 
         icon: FileText,
@@ -123,6 +134,7 @@ const navigationSections: NavSection[] = [
 ];
 
 const bottomNavItems: NavItem[] = [
+  { label: 'Profile', href: '/dashboard/profile', icon: UserCog },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
   { label: 'Help', href: '/dashboard/help', icon: HelpCircle },
 ];

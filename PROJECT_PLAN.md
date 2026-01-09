@@ -271,7 +271,7 @@
 
 ---
 
-### Phase 2: Leave Management (Week 2) - ✅ 95% Complete
+### Phase 2: Leave Management (Week 2) - ✅ 100% COMPLETE
 - [x] Leave request API and models
 - [x] Leave balance tracking
 - [x] My Leave page (Employee)
@@ -279,8 +279,15 @@
 - [x] Approve/Reject workflow with notes
 - [x] Balance deduction on approval
 - [x] Attendance integration (ON_LEAVE marking)
-- [ ] Leave calendar view (optional)
-- [x] Core testing completed
+- [x] Leave calendar view with attendance display
+- [x] **Holiday Management System**
+  - Complete CRUD API for holidays (Admin/HR/Super Admin)
+  - Manage Holidays page with year selector
+  - Holiday types: National, Company, Optional
+  - Recurring holiday support
+  - Indian holidays seed script (`npm run seed:holidays`)
+  - Calendar integration (holidays show with blue background)
+- [x] Complete testing and documentation
 
 ### Phase 3: Team Management (Week 3)
 - [ ] Team attendance view (Supervisor)
@@ -320,18 +327,18 @@
   - Profile page (user info display, password change)
 
 ### Current Phase 🎯
-**Phase 2: Leave Management** - ✅ 95% Complete
+**Phase 2: Leave Management** - ✅ 100% COMPLETE
 - ✅ Backend: Leave models, services, controllers, routes with RBAC
-- ✅ Frontend: Types, API client, My Leave page, Leave Approvals page
+- ✅ Frontend: Types, API client, My Leave page, Leave Approvals page, Leave Calendar
 - ✅ Complete workflow: Request → Approval → Balance deduction → Attendance marking
-- ⏳ Optional: Leave calendar view (can be added later)
+- ✅ Holiday Management: CRUD system with Indian holiday seed script (Admin/HR access)
+- ✅ Profile navigation link added to sidebar
 
 ### Next Steps ⏭️
-- Optional: Build leave calendar view component
-- Optional: Add advanced filters to leave history
+- Integrate holidays into Leave Calendar display
 - Move to Phase 3: Team Management
   - Team attendance view (Supervisor)
-  - Team leave approvals
+  - Team leave approvals  
   - Employee directory (HR)
   - Department management
 

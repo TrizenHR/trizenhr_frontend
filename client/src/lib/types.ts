@@ -218,3 +218,35 @@ export interface LeaveFilters {
   limit?: number;
 }
 
+// Holiday Types
+export enum HolidayType {
+  NATIONAL = 'national',
+  COMPANY = 'company',
+  OPTIONAL = 'optional',
+}
+
+export interface Holiday {
+  _id: string;
+  name: string;
+  date: string;
+  type: HolidayType;
+  description?: string;
+  isRecurring: boolean;
+  createdBy: string | {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HolidayFormData {
+  name: string;
+  date: Date | string;
+  type: HolidayType;
+  description?: string;
+  isRecurring: boolean;
+}
+
+

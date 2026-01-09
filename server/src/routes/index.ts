@@ -4,6 +4,7 @@ import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import attendanceRoutes from './attendance.routes';
 import leaveRoutes from './leave.routes';
+import holidayRoutes from './holiday.routes';
 
 const router = Router();
 
@@ -13,5 +14,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/leave', leaveRoutes);
+router.use('/holidays', holidayRoutes);
 
 export default router;
