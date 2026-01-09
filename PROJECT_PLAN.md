@@ -271,11 +271,16 @@
 
 ---
 
-### Phase 2: Leave Management (Week 2) - 🎯 NEXT
-- [ ] Leave request form
-- [ ] Leave approval interface
-- [ ] Leave balance tracking
-- [ ] Leave calendar
+### Phase 2: Leave Management (Week 2) - ✅ 95% Complete
+- [x] Leave request API and models
+- [x] Leave balance tracking
+- [x] My Leave page (Employee)
+- [x] Leave approval interface (Supervisor/HR/Admin)
+- [x] Approve/Reject workflow with notes
+- [x] Balance deduction on approval
+- [x] Attendance integration (ON_LEAVE marking)
+- [ ] Leave calendar view (optional)
+- [x] Core testing completed
 
 ### Phase 3: Team Management (Week 3)
 - [ ] Team attendance view (Supervisor)
@@ -315,14 +320,18 @@
   - Profile page (user info display, password change)
 
 ### Current Phase 🎯
-**Phase 2: Leave Management (Week 2)** - Ready to Start
-- Leave request form
-- Leave approval interface
-- Leave balance tracking
-- Leave calendar
+**Phase 2: Leave Management** - ✅ 95% Complete
+- ✅ Backend: Leave models, services, controllers, routes with RBAC
+- ✅ Frontend: Types, API client, My Leave page, Leave Approvals page
+- ✅ Complete workflow: Request → Approval → Balance deduction → Attendance marking
+- ⏳ Optional: Leave calendar view (can be added later)
 
 ### Next Steps ⏭️
-- Build leave request form
-- Create leave approval workflow
-- Implement leave balance system
-- Add leave calendar view
+- Optional: Build leave calendar view component
+- Optional: Add advanced filters to leave history
+- Move to Phase 3: Team Management
+  - Team attendance view (Supervisor)
+  - Team leave approvals
+  - Employee directory (HR)
+  - Department management
+

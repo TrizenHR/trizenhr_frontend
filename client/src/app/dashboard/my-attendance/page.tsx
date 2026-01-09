@@ -126,9 +126,8 @@ export default function MyAttendancePage() {
       const response = await attendanceApi.getMyAttendance({
         page: pagination.page,
         limit: pagination.limit,
-        startDate: filters.startDate?.toISOString(),
-        endDate: filters.endDate?.toISOString(),
-        status: filters.status || undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
       });
       
       setAttendanceRecords(response.records || []);

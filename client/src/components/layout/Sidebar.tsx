@@ -73,9 +73,9 @@ const navigationSections: NavSection[] = [
         icon: Calendar,
       },
       { 
-        label: 'Team Leave', 
-        href: '/dashboard/team/leave', 
-        icon: Calendar,
+        label: 'Leave Approvals', 
+        href: '/dashboard/leave-approvals', 
+        icon: ClipboardList,
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
     ],

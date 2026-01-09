@@ -129,3 +129,92 @@ export interface AttendanceFilters {
   page?: number;
   limit?: number;
 }
+
+// Leave Types
+export enum LeaveType {
+  SICK = 'sick',
+  CASUAL = 'casual',
+  VACATION = 'vacation',
+  UNPAID = 'unpaid',
+}
+
+export enum LeaveStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled',
+}
+
+export interface Leave {
+  _id: string;
+  userId: string | {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    employeeId: string;
+    department?: string;
+  };
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  reason: string;
+  status: LeaveStatus;
+  reviewedBy?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  reviewedAt?: string;
+  reviewNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeaveTypeBalance {
+  total: number;
+  used: number;
+  remaining: number;
+}
+
+export interface UnpaidLeaveBalance {
+  used: number;
+}
+
+export interface LeaveBalance {
+  _id: string;
+  userId: string;
+  year: number;
+  sickLeave: LeaveTypeBalance;
+  casualLeave: LeaveTypeBalance;
+  vacationLeave: LeaveTypeBalance;
+  unpaidLeave: UnpaidLeaveBalance;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeavePagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface LeaveRequestPayload {
+  leaveType: LeaveType;
+  startDate: Date | string;
+  endDate: Date | string;
+  reason: string;
+}
+
+export interface LeaveFilters {
+  status?: LeaveStatus;
+  leaveType?: LeaveType;
+  startDate?: Date;
+  endDate?: Date;
+  userId?: string;
+  page?: number;
+  limit?: number;
+}
+

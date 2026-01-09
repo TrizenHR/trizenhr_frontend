@@ -10,6 +10,11 @@ import {
   AttendanceStatus,
   AttendanceStats,
   AttendancePagination,
+  Leave,
+  LeaveBalance,
+  LeaveRequestPayload,
+  LeaveFilters,
+  LeavePagination,
 } from './types';
 
 // Create axios instance
@@ -256,6 +261,137 @@ export const attendanceApi = {
       records: response.data.data!,
       pagination: response.data.pagination,
     };
+  },
+};
+
+// Leave API
+export const leaveApi = {
+  /**
+   * Request new leave
+   */
+  requestLeave: async (
+    data: LeaveRequestPayload
+  ): Promise<Leave> => {
+    const response = await api.post<ApiResponse<Leave>>('/leave/request', data);
+    return response.data.data!;
+  },
+
+  /**
+   * Get current user's leaves
+   */
+  getMyLeaves: async (filters?: LeaveFilters): Promise<{
+    records: Leave[];
+    pagination: LeavePagination;
+  }> => {
+    const response = await api.get<
+      ApiResponse<Leave[]> & { pagination: LeavePagination }
+    >('/leave/my-leaves', {
+      params: {
+        ...filters,
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
+   * Get current user's leave balance
+   */
+  getMyBalance: async (year?: number): Promise<LeaveBalance> => {
+    const response = await api.get<ApiResponse<LeaveBalance>>('/leave/my-balance', {
+      params: { year },
+    });
+    return response.data.data!;
+  },
+
+  /**
+   * Get pending leaves (Supervisor/HR/Admin)
+   */
+  getPendingLeaves: async (page?: number, limit?: number): Promise<{
+    records: Leave[];
+    pagination: LeavePagination;
+  }> => {
+    const response = await api.get<
+      ApiResponse<Leave[]> & { pagination: LeavePagination }
+    >('/leave/pending', {
+      params: { page, limit },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
+   * Get all leaves with filters (HR/Admin)
+   */
+  getAllLeaves: async (filters?: LeaveFilters): Promise<{
+    records: Leave[];
+    pagination: LeavePagination;
+  }> => {
+    const response = await api.get<
+      ApiResponse<Leave[]> & { pagination: LeavePagination }
+    >('/leave/all', {
+      params: {
+        ...filters,
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
+   * Get leaves for calendar view
+   */
+  getCalendarLeaves: async (
+    month: number,
+    year: number,
+    filterUserId?: string
+  ): Promise<Leave[]> => {
+    const response = await api.get<ApiResponse<Leave[]>>('/leave/calendar', {
+      params: { month, year, filterUserId },
+    });
+    return response.data.data!;
+  },
+
+  /**
+   * Approve leave
+   */
+  approveLeave: async (id: string, notes?: string): Promise<Leave> => {
+    const response = await api.patch<ApiResponse<Leave>>(
+      `/leave/${id}/approve`,
+      { notes }
+    );
+    return response.data.data!;
+  },
+
+  /**
+   * Reject leave
+   */
+  rejectLeave: async (id: string, notes: string): Promise<Leave> => {
+    const response = await api.patch<ApiResponse<Leave>>(
+      `/leave/${id}/reject`,
+      { notes }
+    );
+    return response.data.data!;
+  },
+
+  /**
+   * Cancel leave (by employee)
+   */
+  cancelLeave: async (id: string): Promise<Leave> => {
+    const response = await api.patch<ApiResponse<Leave>>(
+      `/leave/${id}/cancel`
+    );
+    return response.data.data!;
   },
 };
 

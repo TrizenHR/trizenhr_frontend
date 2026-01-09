@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { userApi } from '@/lib/api';
+import { authApi, userApi } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +55,10 @@ export default function ProfilePage() {
 
     try {
       setIsChangingPassword(true);
-      await userApi.changePassword(passwords.oldPassword, passwords.newPassword);
+      await authApi.changePassword({
+        oldPassword: passwords.oldPassword,
+        newPassword: passwords.newPassword,
+      });
       
       toast({
         title: 'Success',
@@ -115,7 +118,7 @@ export default function ProfilePage() {
               <CardTitle className="text-2xl">{user.firstName} {user.lastName}</CardTitle>
               <CardDescription className="text-base mt-1">{user.email}</CardDescription>
               <div className="mt-2">
-                <Badge className={roleColors[user.role as keyof typeof roleColors]}>
+                <Badge className={roleColors[user.role.toUpperCase() as keyof typeof roleColors]}>
                   {user.role.replace('_', ' ')}
                 </Badge>
               </div>
