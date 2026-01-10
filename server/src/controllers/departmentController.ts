@@ -17,7 +17,18 @@ export class DepartmentController {
         return;
       }
 
+      // Use organizationId from tenant middleware or body (for Super Admin)
+      const organizationId = req.organizationId || req.body.organizationId;
+      if (!organizationId) {
+        res.status(400).json({
+          success: false,
+          message: 'Organization ID is required',
+        });
+        return;
+      }
+
       const department = await departmentService.createDepartment(
+        organizationId,
         name,
         description,
         headOfDepartment
@@ -34,7 +45,7 @@ export class DepartmentController {
       if (error.code === 11000) {
         res.status(400).json({
           success: false,
-          message: 'Department with this name already exists',
+          message: 'Department with this name already exists in this organization',
         });
         return;
       }
@@ -50,9 +61,9 @@ export class DepartmentController {
   /**
    * Get all departments
    */
-  async getAllDepartments(_: Request, res: Response): Promise<void> {
+  async getAllDepartments(req: Request, res: Response): Promise<void> {
     try {
-      const departments = await departmentService.getAllDepartments();
+      const departments = await departmentService.getAllDepartments(req.organizationId);
 
       res.status(200).json({
         success: true,
@@ -75,7 +86,7 @@ export class DepartmentController {
     try {
       const { id } = req.params;
 
-      const department = await departmentService.getDepartmentById(id);
+      const department = await departmentService.getDepartmentById(id, req.organizationId);
 
       if (!department) {
         res.status(404).json({
@@ -107,11 +118,11 @@ export class DepartmentController {
       const { id } = req.params;
       const { name, description, headOfDepartment } = req.body;
 
-      const department = await departmentService.updateDepartment(id, {
-        name,
-        description,
-        headOfDepartment,
-      });
+      const department = await departmentService.updateDepartment(
+        id,
+        { name, description, headOfDepartment },
+        req.organizationId
+      );
 
       if (!department) {
         res.status(404).json({
@@ -132,7 +143,7 @@ export class DepartmentController {
       if (error.code === 11000) {
         res.status(400).json({
           success: false,
-          message: 'Department with this name already exists',
+          message: 'Department with this name already exists in this organization',
         });
         return;
       }
@@ -152,7 +163,7 @@ export class DepartmentController {
     try {
       const { id } = req.params;
 
-      const deleted = await departmentService.deleteDepartment(id);
+      const deleted = await departmentService.deleteDepartment(id, req.organizationId);
 
       if (!deleted) {
         res.status(404).json({
@@ -192,7 +203,7 @@ export class DepartmentController {
         return;
       }
 
-      const department = await departmentService.addMemberToDepartment(id, userId);
+      const department = await departmentService.addMemberToDepartment(id, userId, req.organizationId);
 
       if (!department) {
         res.status(404).json({
@@ -224,7 +235,7 @@ export class DepartmentController {
     try {
       const { id, userId } = req.params;
 
-      const department = await departmentService.removeMemberFromDepartment(id, userId);
+      const department = await departmentService.removeMemberFromDepartment(id, userId, req.organizationId);
 
       if (!department) {
         res.status(404).json({

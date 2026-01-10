@@ -16,7 +16,11 @@ class UserController {
         throw new BadRequestError('User not authenticated');
       }
 
-      const userData: CreateUserData = req.body;
+      const userData: CreateUserData = {
+        ...req.body,
+        // Use organizationId from tenant middleware or from body (for Super Admin)
+        organizationId: req.organizationId || req.body.organizationId,
+      };
 
       // Role-based validation: prevent lower roles from creating higher roles
       if (req.user.role === UserRole.HR && userData.role !== UserRole.EMPLOYEE) {
@@ -28,6 +32,11 @@ class UserController {
         (userData.role === UserRole.SUPER_ADMIN || userData.role === UserRole.ADMIN)
       ) {
         throw new ForbiddenError('Admin cannot create super admin or other admin users');
+      }
+
+      // Super Admin must provide organizationId
+      if (req.user.role === UserRole.SUPER_ADMIN && !userData.organizationId) {
+        throw new BadRequestError('Organization ID is required for Super Admin');
       }
 
       const user = await userService.createUser(userData, req.user.userId);
@@ -63,7 +72,8 @@ class UserController {
         search: req.query.search as string | undefined,
       };
 
-      const users = await userService.getAllUsers(filters);
+      // Pass organizationId from tenant middleware
+      const users = await userService.getAllUsers(filters, req.organizationId);
 
       const response: ApiResponse<typeof users> = {
         success: true,
@@ -87,7 +97,7 @@ class UserController {
     try {
       const { dept } = req.params;
 
-      const users = await userService.getUsersByDepartment(dept);
+      const users = await userService.getUsersByDepartment(dept, req.organizationId);
 
       const response: ApiResponse<typeof users> = {
         success: true,
@@ -111,7 +121,7 @@ class UserController {
     try {
       const { supervisorId } = req.params;
 
-      const users = await userService.getTeamMembers(supervisorId);
+      const users = await userService.getTeamMembers(supervisorId, req.organizationId);
 
       const response: ApiResponse<typeof users> = {
         success: true,
@@ -135,7 +145,7 @@ class UserController {
     try {
       const { id } = req.params;
 
-      const user = await userService.getUserById(id);
+      const user = await userService.getUserById(id, req.organizationId);
 
       const response: ApiResponse<typeof user> = {
         success: true,
@@ -265,9 +275,9 @@ class UserController {
    * @desc    Get user statistics
    * @access  Private (Super Admin/Admin/HR)
    */
-  async getUserStats(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getUserStats(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const stats = await userService.getUserStats();
+      const stats = await userService.getUserStats(req.organizationId);
 
       const response: ApiResponse<typeof stats> = {
         success: true,

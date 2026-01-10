@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { attendanceController } from '../controllers/attendanceController';
 import { authenticate, authorize } from '../middleware/auth';
+import { tenantContext, allowOrganizationOverride } from '../middleware/tenantContext';
 import { UserRole } from '../models/User';
 
 const router = Router();
 
 // All attendance routes require authentication
 router.use(authenticate);
+
+// Apply tenant context middleware
+router.use(tenantContext, allowOrganizationOverride);
 
 // Personal attendance routes
 router.post('/check-in', attendanceController.checkIn);

@@ -15,6 +15,7 @@ export enum LeaveStatus {
 }
 
 export interface ILeave extends Document {
+  organizationId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   leaveType: LeaveType;
   startDate: Date;
@@ -31,6 +32,12 @@ export interface ILeave extends Document {
 
 const LeaveSchema = new Schema<ILeave>(
   {
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: [true, 'Organization ID is required'],
+      index: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -86,9 +93,10 @@ const LeaveSchema = new Schema<ILeave>(
 );
 
 // Indexes for efficient queries
-LeaveSchema.index({ userId: 1, status: 1 });
-LeaveSchema.index({ userId: 1, startDate: 1, endDate: 1 });
-LeaveSchema.index({ status: 1, createdAt: -1 });
+LeaveSchema.index({ organizationId: 1, userId: 1, status: 1 });
+LeaveSchema.index({ organizationId: 1, userId: 1, startDate: 1, endDate: 1 });
+LeaveSchema.index({ organizationId: 1, status: 1, createdAt: -1 });
+LeaveSchema.index({ organizationId: 1, startDate: 1 });
 
 // Validation: End date must be >= start date
 LeaveSchema.pre('validate', function () {

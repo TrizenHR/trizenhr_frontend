@@ -1,94 +1,143 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { organizationApi } from '@/lib/api';
+import { Organization, SubscriptionPlan } from '@/lib/types';
 import { QuickActions } from './QuickActions';
-import { TodayAttendanceSummary } from './TodayAttendanceSummary';
 import { StatCard } from './StatCard';
 import { UserRole } from '@/lib/types';
-import { Users, Shield, Activity, Database } from 'lucide-react';
+import { Building2, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export function SuperAdminDashboard() {
-  // TODO: Fetch real data in Phase 3
-  const mockStats = {
-    totalUsers: 52,
-    superAdmins: 1,
-    admins: 2,
-    hr: 3,
-    supervisors: 6,
-    employees: 40,
-    present: 42,
-    late: 4,
-    absent: 3,
-    onLeave: 3,
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadOrganizations();
+  }, []);
+
+  const loadOrganizations = async () => {
+    try {
+      const data = await organizationApi.getAll();
+      setOrganizations(data);
+    } catch (error) {
+      console.error('Failed to load organizations:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const usersByRole = [
-    { role: 'Super Admin', count: mockStats.superAdmins },
-    { role: 'Admin', count: mockStats.admins },
-    { role: 'HR', count: mockStats.hr },
-    { role: 'Supervisor', count: mockStats.supervisors },
-    { role: 'Employee', count: mockStats.employees },
-  ];
+  const stats = {
+    totalOrgs: organizations.length,
+    activeOrgs: organizations.filter((o) => o.isActive).length,
+    inactiveOrgs: organizations.filter((o) => !o.isActive).length,
+    premiumOrgs: organizations.filter((o) => 
+      o.subscriptionPlan === SubscriptionPlan.PREMIUM || 
+      o.subscriptionPlan === SubscriptionPlan.ENTERPRISE
+    ).length,
+  };
+
+  const getPlanBadgeColor = (plan: SubscriptionPlan) => {
+    const colors = {
+      [SubscriptionPlan.FREE]: 'bg-gray-100 text-gray-800',
+      [SubscriptionPlan.BASIC]: 'bg-blue-100 text-blue-800',
+      [SubscriptionPlan.PREMIUM]: 'bg-purple-100 text-purple-800',
+      [SubscriptionPlan.ENTERPRISE]: 'bg-yellow-100 text-yellow-800',
+    };
+    return colors[plan] || 'bg-gray-100 text-gray-800';
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
-        <p className="text-muted-foreground">Complete system control and monitoring</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
+          <p className="text-muted-foreground">Manage client organizations and platform</p>
+        </div>
+        <Link href="/dashboard/organizations">
+          <Button>View All Organizations</Button>
+        </Link>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
-          title="Total Users"
-          value={mockStats.totalUsers}
-          icon={Users}
-          description="All roles"
+          title="Total Organizations"
+          value={stats.totalOrgs}
+          icon={Building2}
+          description="All client orgs"
         />
         <StatCard
-          title="System Status"
-          value="Healthy"
-          icon={Activity}
-          description="All services running"
+          title="Active"
+          value={stats.activeOrgs}
+          icon={CheckCircle}
+          description="Running organizations"
         />
         <StatCard
-          title="Active Sessions"
-          value={mockStats.present}
-          icon={Shield}
+          title="Inactive"
+          value={stats.inactiveOrgs}
+          icon={XCircle}
+          description="Paused or deleted"
         />
         <StatCard
-          title="Database"
-          value="OK"
-          icon={Database}
-          description="No issues"
+          title="Premium Tier"
+          value={stats.premiumOrgs}
+          icon={TrendingUp}
+          description="Premium + Enterprise"
         />
       </div>
 
-      {/* User Distribution */}
+      {/* Organizations Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-lg font-semibold mb-4">Users by Role</h3>
-            <div className="space-y-3">
-              {usersByRole.map((item) => (
-                <div key={item.role} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{item.role}</span>
-                  <span className="text-sm font-semibold">{item.count}</span>
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Organizations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <p className="text-center text-muted-foreground py-4">Loading...</p>
+              ) : organizations.length > 0 ? (
+                <div className="space-y-3">
+                  {organizations.slice(0, 5).map((org) => (
+                    <div
+                      key={org._id}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{org.name}</p>
+                          {org.isActive ? (
+                            <Badge className="bg-green-100 text-green-800">Active</Badge>
+                          ) : (
+                            <Badge className="bg-red-100 text-red-800">Inactive</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {org.subdomain ? `${org.subdomain}.attendease.com` : 'No subdomain'}
+                        </p>
+                      </div>
+                      <Badge className={getPlanBadgeColor(org.subscriptionPlan)} variant="outline">
+                        {org.subscriptionPlan}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No organizations yet</p>
+                  <Link href="/dashboard/organizations">
+                    <Button>Create First Organization</Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-
-        <TodayAttendanceSummary
-          title="System Attendance Today"
-          stats={{
-            present: mockStats.present,
-            late: mockStats.late,
-            absent: mockStats.absent,
-            onLeave: mockStats.onLeave,
-            total: mockStats.totalUsers,
-          }}
-        />
 
         <QuickActions userRole={UserRole.SUPER_ADMIN} />
       </div>

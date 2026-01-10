@@ -9,6 +9,7 @@ export enum AttendanceStatus {
 }
 
 export interface IAttendance extends Document {
+  organizationId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   date: Date;
   checkIn?: Date;
@@ -25,6 +26,12 @@ export interface IAttendance extends Document {
 
 const AttendanceSchema = new Schema<IAttendance>(
   {
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: [true, 'Organization ID is required'],
+      index: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -73,8 +80,10 @@ const AttendanceSchema = new Schema<IAttendance>(
   }
 );
 
-// Compound index for unique attendance per user per day
-AttendanceSchema.index({ userId: 1, date: 1 }, { unique: true });
+// Compound index for unique attendance per user per day within organization
+AttendanceSchema.index({ organizationId: 1, userId: 1, date: 1 }, { unique: true });
+AttendanceSchema.index({ organizationId: 1, date: 1 });
+AttendanceSchema.index({ organizationId: 1, userId: 1 });
 
 // Pre-save hook to calculate working hours
 AttendanceSchema.pre('save', async function () {

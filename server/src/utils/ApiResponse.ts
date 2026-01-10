@@ -20,14 +20,15 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: string;
-  tenantId?: string; // For multi-tenant support
+  organizationId?: string; // For multi-tenant support (undefined for Super Admin)
 }
 
-// Express request with user attached
+// Express request with user and organization context
 declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
+      organizationId?: string; // Set by tenantContext middleware
     }
   }
 }

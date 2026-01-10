@@ -8,6 +8,7 @@ export enum UserRole {
 
 export interface User {
   _id: string;
+  organizationId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -33,6 +34,7 @@ export interface LoginResponse {
   token: string;
   user: {
     id: string;
+    organizationId?: string;
     email: string;
     firstName: string;
     lastName: string;
@@ -44,6 +46,7 @@ export interface LoginResponse {
 }
 
 export interface CreateUserPayload {
+  organizationId?: string; // For Super Admin creating users in specific organization
   email: string;
   password: string;
   firstName: string;
@@ -259,4 +262,53 @@ export interface DepartmentFormData {
   name: string;
   description?: string;
   headOfDepartment?: string;
+}
+
+// Organization Types
+export enum SubscriptionPlan {
+  FREE = 'free',
+  BASIC = 'basic',
+  PREMIUM = 'premium',
+  ENTERPRISE = 'enterprise',
+}
+
+export interface Organization {
+  _id: string;
+  name: string;
+  subdomain?: string;
+  isActive: boolean;
+  subscriptionPlan: SubscriptionPlan;
+  subscriptionExpiry?: string;
+  settings: {
+    workingHours: {
+      startTime: string;
+      endTime: string;
+    };
+    leavePolicy: {
+      sickLeave: number;
+      casualLeave: number;
+      vacationLeave: number;
+    };
+    timezone: string;
+    fiscalYearStart: number;
+  };
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrganizationPayload {
+  name: string;
+  subdomain?: string;
+  subscriptionPlan?: SubscriptionPlan;
+  subscriptionExpiry?: Date;
+  settings?: Partial<Organization['settings']>;
+}
+
+export interface OrganizationStats {
+  totalUsers: number;
+  activeUsers: number;
+  usersByRole: { role: string; count: number }[];
+  subscriptionPlan: SubscriptionPlan;
+  isActive: boolean;
 }

@@ -20,6 +20,10 @@ import {
   HolidayType,
   Department,
   DepartmentFormData,
+  Organization,
+  CreateOrganizationPayload,
+  OrganizationStats,
+  SubscriptionPlan,
 } from './types';
 
 // Create axios instance
@@ -480,6 +484,38 @@ export const departmentApi = {
     const response = await api.delete<ApiResponse<Department>>(
       `/departments/${deptId}/members/${userId}`
     );
+    return response.data.data!;
+  },
+};
+
+// Organization API (Super Admin only)
+export const organizationApi = {
+  getAll: async (): Promise<Organization[]> => {
+    const response = await api.get<ApiResponse<Organization[]>>('/organizations');
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<Organization> => {
+    const response = await api.get<ApiResponse<Organization>>(`/organizations/${id}`);
+    return response.data.data!;
+  },
+
+  create: async (data: CreateOrganizationPayload): Promise<Organization> => {
+    const response = await api.post<ApiResponse<Organization>>('/organizations', data);
+    return response.data.data!;
+  },
+
+  update: async (id: string, data: Partial<CreateOrganizationPayload>): Promise<Organization> => {
+    const response = await api.put<ApiResponse<Organization>>(`/organizations/${id}`, data);
+    return response.data.data!;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/organizations/${id}`);
+  },
+
+  getStats: async (id: string): Promise<OrganizationStats> => {
+    const response = await api.get<ApiResponse<OrganizationStats>>(`/organizations/${id}/stats`);
     return response.data.data!;
   },
 };

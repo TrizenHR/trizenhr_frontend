@@ -8,6 +8,7 @@ export interface LoginResult {
   token: string;
   user: {
     id: string;
+    organizationId?: string;
     email: string;
     firstName: string;
     lastName: string;
@@ -49,6 +50,7 @@ class AuthService {
       token,
       user: {
         id: user._id.toString(),
+        organizationId: user.organizationId?.toString(),
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -62,6 +64,8 @@ class AuthService {
 
   /**
    * Generate JWT token for user
+   * Super Admin: Token without organizationId (can access all orgs)
+   * Other roles: Token includes organizationId for tenant isolation
    */
   private generateToken(user: IUser): string {
     const payload: JwtPayload = {
@@ -69,6 +73,11 @@ class AuthService {
       email: user.email,
       role: user.role,
     };
+
+    // Only include organizationId for non-Super Admin users
+    if (user.role !== 'super_admin') {
+      payload.organizationId = user.organizationId?.toString();
+    }
 
     return jwt.sign(payload, config.jwtSecret as string, {
       expiresIn: config.jwtExpiresIn as string,

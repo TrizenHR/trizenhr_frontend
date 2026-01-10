@@ -11,6 +11,7 @@ interface UnpaidLeaveBalance {
 }
 
 export interface ILeaveBalance extends Document {
+  organizationId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   year: number;
   sickLeave: LeaveTypeBalance;
@@ -57,6 +58,12 @@ const UnpaidLeaveBalanceSchema = new Schema<UnpaidLeaveBalance>(
 
 const LeaveBalanceSchema = new Schema<ILeaveBalance>(
   {
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: [true, 'Organization ID is required'],
+      index: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -90,8 +97,8 @@ const LeaveBalanceSchema = new Schema<ILeaveBalance>(
   }
 );
 
-// Unique compound index to prevent duplicate balances for user/year
-LeaveBalanceSchema.index({ userId: 1, year: 1 }, { unique: true });
+// Unique compound index to prevent duplicate balances for user/year within organization
+LeaveBalanceSchema.index({ organizationId: 1, userId: 1, year: 1 }, { unique: true });
 
 // Pre-save hook to update remaining leave
 LeaveBalanceSchema.pre('save', function () {

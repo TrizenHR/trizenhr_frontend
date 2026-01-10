@@ -67,31 +67,37 @@ const navigationSections: NavSection[] = [
         label: 'Team Attendance', 
         href: '/dashboard/team-attendance', 
         icon: Users,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Team Leaves', 
         href: '/dashboard/team-leaves', 
         icon: Calendar,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Leave Approvals', 
         href: '/dashboard/leave-approvals', 
         icon: ClipboardList,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Employees', 
         href: '/dashboard/employees', 
         icon: Users,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+        roles: [UserRole.ADMIN, UserRole.HR],
       },
     ],
   },
   {
     title: 'Organization',
     items: [
+      {
+        label: 'Organizations',
+        href: '/dashboard/organizations',
+        icon: Building2,
+        roles: [UserRole.SUPER_ADMIN],
+      },
       { 
         label: 'Departments', 
         href: '/dashboard/departments', 
@@ -140,7 +146,17 @@ export function Sidebar() {
   };
 
   // Filter sections to only show sections with visible items
+  // Super Admin: Only show Dashboard and Organization sections (no personal/team sections)
   const visibleSections = navigationSections
+    .filter((section) => {
+      // For Super Admin, hide Personal and Team Management sections
+      if (user?.role === UserRole.SUPER_ADMIN) {
+        if (section.title === 'Personal' || section.title === 'Team Management') {
+          return false;
+        }
+      }
+      return true;
+    })
     .map((section) => ({
       ...section,
       items: filterItemsByRole(section.items),

@@ -7,6 +7,7 @@ export enum HolidayType {
 }
 
 export interface IHoliday extends Document {
+  organizationId: mongoose.Types.ObjectId;
   name: string;
   date: Date;
   type: HolidayType;
@@ -19,6 +20,12 @@ export interface IHoliday extends Document {
 
 const HolidaySchema = new Schema<IHoliday>(
   {
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: [true, 'Organization ID is required'],
+      index: true,
+    },
     name: {
       type: String,
       required: [true, 'Holiday name is required'],
@@ -57,7 +64,8 @@ const HolidaySchema = new Schema<IHoliday>(
 );
 
 // Compound index for efficient queries
-HolidaySchema.index({ date: 1, type: 1 });
+HolidaySchema.index({ organizationId: 1, date: 1, type: 1 });
+HolidaySchema.index({ organizationId: 1, date: 1 });
 
 const Holiday = mongoose.model<IHoliday>('Holiday', HolidaySchema);
 

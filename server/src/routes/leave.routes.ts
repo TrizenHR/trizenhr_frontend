@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import { leaveController } from '../controllers/leaveController';
 import { authenticate, authorize } from '../middleware/auth';
+import { tenantContext, allowOrganizationOverride } from '../middleware/tenantContext';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticate);
+
+// Apply tenant context middleware
+router.use(tenantContext, allowOrganizationOverride);
 
 // Employee routes - all authenticated users can access
 router.post('/request', leaveController.requestLeave.bind(leaveController));

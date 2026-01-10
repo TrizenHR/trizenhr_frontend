@@ -1,12 +1,17 @@
 import { Router } from 'express';
 import userController from '../controllers/userController';
 import { authenticate, authorize } from '../middleware/auth';
+import { tenantContext, allowOrganizationOverride } from '../middleware/tenantContext';
 import { UserRole } from '../models/User';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticate);
+
+// Apply tenant context middleware (extracts organizationId from JWT)
+// Allows Super Admin to override with query param
+router.use(tenantContext, allowOrganizationOverride);
 
 /**
  * @route   GET /api/users/stats

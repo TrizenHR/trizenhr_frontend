@@ -10,6 +10,7 @@ export enum UserRole {
 }
 
 export interface IUser extends Document {
+  organizationId: mongoose.Types.ObjectId;
   email: string;
   password?: string;
   firstName: string;
@@ -29,10 +30,15 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: [true, 'Organization ID is required'],
+      index: true,
+    },
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address'],
@@ -130,10 +136,11 @@ UserSchema.methods.comparePassword = async function (
 };
 
 // Index for faster queries
-UserSchema.index({ email: 1 });
-UserSchema.index({ employeeId: 1 });
-UserSchema.index({ department: 1 });
-UserSchema.index({ supervisorId: 1 });
+UserSchema.index({ organizationId: 1, email: 1 }, { unique: true });
+UserSchema.index({ organizationId: 1, employeeId: 1 }, { unique: true, sparse: true });
+UserSchema.index({ organizationId: 1, department: 1 });
+UserSchema.index({ organizationId: 1, supervisorId: 1 });
+UserSchema.index({ organizationId: 1, role: 1 });
 
 const User = mongoose.model<IUser>('User', UserSchema);
 
