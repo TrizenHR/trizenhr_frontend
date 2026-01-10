@@ -33,19 +33,23 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Users, UserPlus, X } from 'lucide-react';
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
+  const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [formData, setFormData] = useState<DepartmentFormData>({
     name: '',
     description: '',
     headOfDepartment: '',
   });
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -147,6 +151,89 @@ export default function DepartmentsPage() {
       return `${dept.headOfDepartment.firstName} ${dept.headOfDepartment.lastName}`;
     }
     return 'Unknown';
+  };
+
+  const openMembersDialog = (dept: Department) => {
+    setSelectedDept(dept);
+    setSelectedUserId('');
+    setIsMembersDialogOpen(true);
+  };
+
+  const handleAddMember = async () => {
+    if (!selectedDept || !selectedUserId) {
+      toast({
+        title: 'Error',
+        description: 'Please select an employee to add',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsAddingMember(true);
+      await departmentApi.addMember(selectedDept._id, selectedUserId);
+      toast({
+        title: 'Success',
+        description: 'Employee added to department successfully',
+      });
+      setSelectedUserId('');
+      loadData();
+      // Refresh selected department
+      const updatedDept = await departmentApi.getById(selectedDept._id);
+      setSelectedDept(updatedDept);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to add employee',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!selectedDept) return;
+
+    if (!confirm('Are you sure you want to remove this employee from the department?')) {
+      return;
+    }
+
+    try {
+      await departmentApi.removeMember(selectedDept._id, userId);
+      toast({
+        title: 'Success',
+        description: 'Employee removed from department successfully',
+      });
+      loadData();
+      // Refresh selected department
+      const updatedDept = await departmentApi.getById(selectedDept._id);
+      setSelectedDept(updatedDept);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to remove employee',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Get available employees (not already in the department)
+  const getAvailableEmployees = () => {
+    if (!selectedDept) return [];
+    const memberIds = selectedDept.members.map((m) =>
+      typeof m === 'object' ? m._id : m
+    );
+    return allUsers.filter((user) => !memberIds.includes(user._id));
+  };
+
+  // Get member name
+  const getMemberName = (member: any) => {
+    if (typeof member === 'object') {
+      return `${member.firstName} ${member.lastName}`;
+    }
+    const user = allUsers.find((u) => u._id === member);
+    return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
   };
 
   return (
@@ -252,7 +339,16 @@ export default function DepartmentsPage() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => openMembersDialog(dept)}
+                              title="Manage Members"
+                            >
+                              <Users className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => openEditDialog(dept)}
+                              title="Edit Department"
                             >
                               <Pencil className="h-3 w-3" />
                             </Button>
@@ -260,6 +356,7 @@ export default function DepartmentsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleDelete(dept._id)}
+                              title="Delete Department"
                             >
                               <Trash2 className="h-3 w-3 text-red-600" />
                             </Button>
@@ -348,6 +445,116 @@ export default function DepartmentsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Members Dialog */}
+      <Dialog open={isMembersDialogOpen} onOpenChange={setIsMembersDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Members - {selectedDept?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Add or remove employees from this department
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Current Members */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">
+                Current Members ({selectedDept?.members.length || 0})
+              </h3>
+              {selectedDept && selectedDept.members.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedDept.members.map((member, index) => {
+                    const memberId = typeof member === 'object' ? member._id : member;
+                    return (
+                      <div
+                        key={memberId || index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <Users className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{getMemberName(member)}</p>
+                            {typeof member === 'object' && member.employeeId && (
+                              <p className="text-xs text-muted-foreground">
+                                ID: {member.employeeId}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveMember(memberId)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No members in this department yet
+                </p>
+              )}
+            </div>
+
+            {/* Add Member */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3">Add Employee</h3>
+              <div className="flex gap-2">
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select an employee to add" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableEmployees().length > 0 ? (
+                      getAvailableEmployees().map((user) => (
+                        <SelectItem key={user._id} value={user._id}>
+                          {user.firstName} {user.lastName}
+                          {user.employeeId && ` (${user.employeeId})`}
+                          {user.department && ` - ${user.department}`}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        No available employees
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleAddMember}
+                  disabled={!selectedUserId || isAddingMember}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+              {getAvailableEmployees().length === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  All employees are already in this department
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsMembersDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
