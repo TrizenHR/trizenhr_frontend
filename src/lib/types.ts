@@ -8,6 +8,7 @@ export enum UserRole {
 
 export interface User {
   id: string;
+  _id?: string; // Backend may return _id when populated
   organizationId?: string;
   organization?: {
     _id: string;
@@ -21,6 +22,7 @@ export interface User {
   role: UserRole;
   department?: string;
   employeeId?: string;
+  dateOfJoining?: string; // Date when employee joined the organization
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -85,7 +87,7 @@ export enum AttendanceStatus {
 
 export interface Attendance {
   _id: string;
-  userId: string;
+  userId: string | User; // Can be string ID or populated User object
   date: string;
   checkIn?: string;
   checkOut?: string;
@@ -245,7 +247,7 @@ export interface Holiday {
 
 export interface HolidayFormData {
   name: string;
-  date: Date;
+  date: string; // HTML date input uses string format (YYYY-MM-DD)
   type: HolidayType;
   description?: string;
   isRecurring: boolean;

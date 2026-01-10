@@ -80,8 +80,12 @@ export default function TeamAttendancePage() {
       // Map users with their attendance
       const teamStatus: TeamMemberStatus[] = users.map((user) => {
         const attendance = attendanceResponse.records.find(
-          (att) => att.userId === user._id || 
-                   (typeof att.userId === 'object' && att.userId._id === user._id)
+          (att) => {
+            const userId = typeof att.userId === 'object' 
+              ? (att.userId._id || att.userId.id)
+              : att.userId;
+            return userId === user.id || userId === user._id;
+          }
         );
 
         let status: TeamMemberStatus['status'] = 'not_marked';

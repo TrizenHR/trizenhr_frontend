@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { leaveApi, holidayApi } from '@/lib/api';
 import { attendanceApi } from '@/lib/api';
 import { Leave, LeaveType, Attendance, AttendanceStatus, Holiday } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
