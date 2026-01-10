@@ -24,6 +24,12 @@ router.post(
   holidayController.createHoliday.bind(holidayController)
 );
 
+router.post(
+  '/bulk',
+  authorize('admin', 'super_admin', 'hr'),
+  holidayController.bulkCreateHolidays.bind(holidayController)
+);
+
 router.put(
   '/:id',
   authorize('admin', 'super_admin', 'hr'),

@@ -230,6 +230,77 @@ export class HolidayController {
       });
     }
   }
+
+  /**
+   * Bulk create holidays from CSV data
+   */
+  async bulkCreateHolidays(req: Request, res: Response): Promise<void> {
+    try {
+      const { holidays } = req.body;
+      const createdBy = req.user!.userId;
+
+      if (!Array.isArray(holidays) || holidays.length === 0) {
+        res.status(400).json({
+          success: false,
+          error: 'Holidays array is required and must not be empty',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Validate and transform holiday data
+      const validatedHolidays = holidays.map((holiday: any, index: number) => {
+        if (!holiday.name || !holiday.date) {
+          throw new Error(`Row ${index + 1}: Name and date are required`);
+        }
+
+        const date = new Date(holiday.date);
+        if (isNaN(date.getTime())) {
+          throw new Error(`Row ${index + 1}: Invalid date format`);
+        }
+
+        const type = holiday.type || HolidayType.COMPANY;
+        if (!Object.values(HolidayType).includes(type)) {
+          throw new Error(`Row ${index + 1}: Invalid holiday type. Must be: national, company, or optional`);
+        }
+
+        return {
+          name: holiday.name.trim(),
+          date,
+          type: type as HolidayType,
+          description: holiday.description?.trim() || undefined,
+          isRecurring: holiday.isRecurring === true || holiday.isRecurring === 'true',
+        };
+      });
+
+      const result = await holidayService.bulkCreateHolidays(
+        validatedHolidays,
+        createdBy,
+        req.organizationId!
+      );
+
+      res.status(201).json({
+        success: true,
+        message: `Successfully created ${result.created.length} holiday(s)`,
+        data: {
+          created: result.created,
+          errors: result.errors,
+          summary: {
+            total: holidays.length,
+            successful: result.created.length,
+            failed: result.errors.length,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: error.message || 'Failed to bulk create holidays',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
 }
 
 export const holidayController = new HolidayController();

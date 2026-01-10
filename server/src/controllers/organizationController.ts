@@ -188,6 +188,71 @@ class OrganizationController {
       next(error);
     }
   }
+
+  /**
+   * Get current user's organization settings (Admin/HR)
+   * GET /api/organizations/my/settings
+   */
+  async getMyOrganizationSettings(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!req.organizationId) {
+        throw new Error('No organization associated with user');
+      }
+
+      const settings = await organizationService.getOrganizationSettings(
+        req.organizationId
+      );
+
+      const response: ApiResponse<typeof settings> = {
+        success: true,
+        message: 'Organization settings retrieved successfully',
+        data: settings,
+        timestamp: new Date().toISOString(),
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Update current user's organization settings (Admin/HR)
+   * PUT /api/organizations/my/settings
+   */
+  async updateMyOrganizationSettings(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!req.organizationId) {
+        throw new Error('No organization associated with user');
+      }
+
+      const organization = await organizationService.updateOrganization(
+        req.organizationId,
+        {
+          settings: req.body.settings,
+        }
+      );
+
+      const response: ApiResponse<typeof organization> = {
+        success: true,
+        message: 'Organization settings updated successfully',
+        data: organization,
+        timestamp: new Date().toISOString(),
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new OrganizationController();

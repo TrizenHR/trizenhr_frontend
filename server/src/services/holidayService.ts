@@ -158,6 +158,62 @@ export class HolidayService {
 
     return holidays;
   }
+
+  /**
+   * Bulk create holidays
+   */
+  async bulkCreateHolidays(
+    holidays: Array<{
+      name: string;
+      date: Date;
+      type: HolidayType;
+      description?: string;
+      isRecurring?: boolean;
+    }>,
+    createdBy: string,
+    organizationId: string
+  ): Promise<{ created: IHoliday[]; errors: Array<{ row: number; error: string }> }> {
+    const created: IHoliday[] = [];
+    const errors: Array<{ row: number; error: string }> = [];
+
+    for (let i = 0; i < holidays.length; i++) {
+      const holidayData = holidays[i];
+      try {
+        // Check for duplicate date
+        const existing = await Holiday.findOne({
+          organizationId,
+          date: startOfDay(holidayData.date),
+        });
+
+        if (existing) {
+          errors.push({
+            row: i + 1,
+            error: `Holiday already exists for date ${holidayData.date.toISOString().split('T')[0]}`,
+          });
+          continue;
+        }
+
+        const holiday = await Holiday.create({
+          name: holidayData.name,
+          date: startOfDay(holidayData.date),
+          type: holidayData.type,
+          description: holidayData.description,
+          isRecurring: holidayData.isRecurring || false,
+          createdBy,
+          organizationId,
+        });
+
+        created.push(holiday);
+      } catch (error: any) {
+        errors.push({
+          row: i + 1,
+          error: error.message || 'Failed to create holiday',
+        });
+      }
+    }
+
+    return { created, errors };
+  }
 }
 
 export const holidayService = new HolidayService();
