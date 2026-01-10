@@ -232,7 +232,7 @@ export enum HolidayType {
 export interface Holiday {
   _id: string;
   name: string;
-  date: Date;
+  date: string; // ISO date string from API
   type: HolidayType;
   description?: string;
   isRecurring: boolean;

@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { UserRole } from '@/lib/types';
 
 interface TroubleshootingSectionProps {

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar as CalendarIcon, TrendingUp, Users, Clock } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isSameMonth, isAfter } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import Link from 'next/link';
 
 export default function TeamLeavesPage() {
