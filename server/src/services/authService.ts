@@ -136,14 +136,24 @@ class AuthService {
   /**
    * Get current user info
    */
-  async getCurrentUser(userId: string): Promise<IUser> {
-    const user = await User.findById(userId).populate('supervisorId', 'firstName lastName email');
+  async getCurrentUser(userId: string): Promise<any> {
+    const user = await User.findById(userId)
+      .populate('supervisorId', 'firstName lastName email')
+      .populate('organizationId', 'name subscriptionPlan')
+      .lean();
 
     if (!user) {
       throw new NotFoundError('User not found');
     }
 
-    return user;
+    // Transform organizationId to organization if populated
+    const response: any = { ...user };
+    if (user.organizationId && typeof user.organizationId === 'object') {
+      response.organization = user.organizationId;
+      response.organizationId = (user.organizationId as any)._id?.toString();
+    }
+
+    return response;
   }
 }
 

@@ -281,7 +281,7 @@ export const leaveApi = {
   requestLeave: async (
     data: LeaveRequestPayload
   ): Promise<Leave> => {
-    const response = await api.post<ApiResponse<Leave>>('/leave/request', data);
+    const response = await api.post<ApiResponse<Leave>>('/leaves/request', data);
     return response.data.data!;
   },
 
@@ -294,7 +294,7 @@ export const leaveApi = {
   }> => {
     const response = await api.get<
       ApiResponse<Leave[]> & { pagination: LeavePagination }
-    >('/leave/my-leaves', {
+    >('/leaves/my-leaves', {
       params: {
         ...filters,
         startDate: filters?.startDate?.toISOString(),
@@ -311,7 +311,7 @@ export const leaveApi = {
    * Get current user's leave balance
    */
   getMyBalance: async (year?: number): Promise<LeaveBalance> => {
-    const response = await api.get<ApiResponse<LeaveBalance>>('/leave/my-balance', {
+    const response = await api.get<ApiResponse<LeaveBalance>>('/leaves/my-balance', {
       params: { year },
     });
     return response.data.data!;
@@ -326,7 +326,7 @@ export const leaveApi = {
   }> => {
     const response = await api.get<
       ApiResponse<Leave[]> & { pagination: LeavePagination }
-    >('/leave/pending', {
+    >('/leaves/pending', {
       params: { page, limit },
     });
     return {
@@ -344,7 +344,7 @@ export const leaveApi = {
   }> => {
     const response = await api.get<
       ApiResponse<Leave[]> & { pagination: LeavePagination }
-    >('/leave/all', {
+    >('/leaves/all', {
       params: {
         ...filters,
         startDate: filters?.startDate?.toISOString(),
@@ -365,7 +365,7 @@ export const leaveApi = {
     year: number,
     filterUserId?: string
   ): Promise<Leave[]> => {
-    const response = await api.get<ApiResponse<Leave[]>>('/leave/calendar', {
+    const response = await api.get<ApiResponse<Leave[]>>('/leaves/calendar', {
       params: { month, year, filterUserId },
     });
     return response.data.data!;
@@ -376,7 +376,7 @@ export const leaveApi = {
    */
   approveLeave: async (id: string, notes?: string): Promise<Leave> => {
     const response = await api.patch<ApiResponse<Leave>>(
-      `/leave/${id}/approve`,
+      `/leaves/${id}/approve`,
       { notes }
     );
     return response.data.data!;
@@ -387,7 +387,7 @@ export const leaveApi = {
    */
   rejectLeave: async (id: string, notes: string): Promise<Leave> => {
     const response = await api.patch<ApiResponse<Leave>>(
-      `/leave/${id}/reject`,
+      `/leaves/${id}/reject`,
       { notes }
     );
     return response.data.data!;
@@ -398,7 +398,7 @@ export const leaveApi = {
    */
   cancelLeave: async (id: string): Promise<Leave> => {
     const response = await api.patch<ApiResponse<Leave>>(
-      `/leave/${id}/cancel`
+      `/leaves/${id}/cancel`
     );
     return response.data.data!;
   },

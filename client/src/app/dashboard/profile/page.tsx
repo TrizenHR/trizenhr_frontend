@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Briefcase, Shield, Calendar } from 'lucide-react';
+import { User, Mail, Briefcase, Shield, Calendar, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ProfilePage() {
@@ -186,6 +186,36 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Organization Information - Hide for Super Admin */}
+      {user.role !== 'super_admin' && user.organization && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Organization Information</CardTitle>
+            <CardDescription>Your organization details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Organization</p>
+                  <p className="font-medium">{user.organization.name}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Subscription Plan</p>
+                  <Badge className="mt-1" variant="outline">
+                    {user.organization.subscriptionPlan.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Change Password */}
       <Card>

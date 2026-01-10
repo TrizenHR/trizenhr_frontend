@@ -7,16 +7,20 @@ export enum UserRole {
 }
 
 export interface User {
-  _id: string;
+  id: string;
   organizationId?: string;
+  organization?: {
+    _id: string;
+    name: string;
+    subscriptionPlan: string;
+  };
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
+  fullName: string;
   role: UserRole;
-  employeeId?: string;
   department?: string;
-  dateOfJoining?: string;
-  avatar?: string;
+  employeeId?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

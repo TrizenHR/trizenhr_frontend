@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { organizationApi } from '@/lib/api';
 import { Organization, SubscriptionPlan, CreateOrganizationPayload } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Users, CheckCircle, XCircle, Plus, Edit, Trash2 } from 'lucide-react';
+import { Building2, CheckCircle, XCircle, Plus, Edit, Trash2, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function OrganizationsPage() {
@@ -330,6 +331,11 @@ export default function OrganizationsPage() {
                         <TableCell>{format(new Date(org.createdAt), 'MMM dd, yyyy')}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            <Link href={`/dashboard/users/create?orgId=${org._id}`}>
+                              <Button variant="ghost" size="sm" title="Add user to this organization">
+                                <Users className="h-4 w-4" />
+                              </Button>
+                            </Link>
                             <Button
                               variant="ghost"
                               size="sm"

@@ -25,6 +25,7 @@ export class HolidayController {
         new Date(date),
         type as HolidayType || HolidayType.COMPANY,
         createdBy,
+        req.organizationId!, // From tenant middleware
         description,
         isRecurring || false
       );
@@ -57,7 +58,7 @@ export class HolidayController {
       if (startDate) filters.startDate = new Date(startDate as string);
       if (endDate) filters.endDate = new Date(endDate as string);
 
-      const holidays = await holidayService.getAllHolidays(filters);
+      const holidays = await holidayService.getAllHolidays(req.organizationId!, filters);
 
       res.status(200).json({
         success: true,
@@ -80,7 +81,7 @@ export class HolidayController {
     try {
       const { id } = req.params;
 
-      const holiday = await holidayService.getHolidayById(id);
+      const holiday = await holidayService.getHolidayById(id, req.organizationId!);
 
       if (!holiday) {
         res.status(404).json({
@@ -120,7 +121,7 @@ export class HolidayController {
       if (description !== undefined) updates.description = description;
       if (isRecurring !== undefined) updates.isRecurring = isRecurring;
 
-      const holiday = await holidayService.updateHoliday(id, updates);
+      const holiday = await holidayService.updateHoliday(id, req.organizationId!, updates);
 
       if (!holiday) {
         res.status(404).json({
@@ -153,7 +154,7 @@ export class HolidayController {
     try {
       const { id } = req.params;
 
-      const deleted = await holidayService.deleteHoliday(id);
+      const deleted = await holidayService.deleteHoliday(id, req.organizationId!);
 
       if (!deleted) {
         res.status(404).json({
@@ -185,7 +186,7 @@ export class HolidayController {
     try {
       const { date } = req.params;
 
-      const holiday = await holidayService.isHoliday(new Date(date));
+      const holiday = await holidayService.isHoliday(new Date(date), req.organizationId!);
 
       res.status(200).json({
         success: true,
@@ -212,6 +213,7 @@ export class HolidayController {
       const { limit } = req.query;
 
       const holidays = await holidayService.getUpcomingHolidays(
+        req.organizationId!,
         limit ? parseInt(limit as string) : undefined
       );
 

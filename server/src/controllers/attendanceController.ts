@@ -11,7 +11,11 @@ export class AttendanceController {
       const userId = req.user!.userId;
       const { photoData } = req.body;
 
-      const attendance = await attendanceService.checkIn(userId, photoData);
+      const attendance = await attendanceService.checkIn(
+        userId,
+        req.organizationId!,
+        photoData
+      );
 
       res.status(200).json({
         success: true,
@@ -35,7 +39,7 @@ export class AttendanceController {
     try {
       const userId = req.user!.userId;
 
-      const attendance = await attendanceService.checkOut(userId);
+      const attendance = await attendanceService.checkOut(userId, req.organizationId!);
 
       res.status(200).json({
         success: true,
@@ -59,7 +63,7 @@ export class AttendanceController {
     try {
       const userId = req.user!.userId;
 
-      const status = await attendanceService.getTodayStatus(userId);
+      const status = await attendanceService.getTodayStatus(userId, req.organizationId!);
 
       res.status(200).json({
         success: true,
@@ -85,6 +89,7 @@ export class AttendanceController {
 
       const result = await attendanceService.getUserAttendance(
         userId,
+        req.organizationId!,
         startDate ? new Date(startDate as string) : undefined,
         endDate ? new Date(endDate as string) : undefined,
         page ? parseInt(page as string) : undefined,
@@ -116,6 +121,7 @@ export class AttendanceController {
 
       const stats = await attendanceService.getUserStats(
         userId,
+        req.organizationId!,
         month ? parseInt(month as string) : undefined,
         year ? parseInt(year as string) : undefined
       );
@@ -149,6 +155,7 @@ export class AttendanceController {
       if (department) filters.department = department as string;
 
       const result = await attendanceService.getAllAttendance(
+        req.organizationId!,
         filters,
         page ? parseInt(page as string) : undefined,
         limit ? parseInt(limit as string) : undefined
@@ -179,6 +186,7 @@ export class AttendanceController {
 
       const result = await attendanceService.getUserAttendance(
         userId,
+        req.organizationId!,
         startDate ? new Date(startDate as string) : undefined,
         endDate ? new Date(endDate as string) : undefined,
         page ? parseInt(page as string) : undefined,

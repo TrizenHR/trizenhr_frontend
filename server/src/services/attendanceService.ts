@@ -6,12 +6,13 @@ export class AttendanceService {
   /**
    * Mark check-in for a user
    */
-  async checkIn(userId: string, photoData?: string): Promise<any> {
+  async checkIn(userId: string, organizationId: string, photoData?: string): Promise<any> {
     const today = startOfDay(new Date());
 
     // Check if already checked in today
     const existingAttendance = await Attendance.findOne({
       userId,
+      organizationId,
       date: today,
     });
 
@@ -60,6 +61,7 @@ export class AttendanceService {
 
     const attendance = await Attendance.create({
       userId,
+      organizationId,
       date: today,
       checkIn: now,
       status,
@@ -72,11 +74,12 @@ export class AttendanceService {
   /**
    * Mark check-out for a user
    */
-  async checkOut(userId: string): Promise<any> {
+  async checkOut(userId: string, organizationId: string): Promise<any> {
     const today = startOfDay(new Date());
 
     const attendance = await Attendance.findOne({
       userId,
+      organizationId,
       date: today,
     });
 
@@ -97,11 +100,12 @@ export class AttendanceService {
   /**
    * Get today's attendance status for a user
    */
-  async getTodayStatus(userId: string): Promise<any> {
+  async getTodayStatus(userId: string, organizationId: string): Promise<any> {
     const today = startOfDay(new Date());
 
     const attendance = await Attendance.findOne({
       userId,
+      organizationId,
       date: today,
     });
 
@@ -113,12 +117,13 @@ export class AttendanceService {
    */
   async getUserAttendance(
     userId: string,
+    organizationId: string,
     startDate?: Date,
     endDate?: Date,
     page: number = 1,
     limit: number = 30
   ): Promise<any> {
-    const query: any = { userId };
+    const query: any = { userId, organizationId };
 
     if (startDate || endDate) {
       query.date = {};
@@ -151,7 +156,7 @@ export class AttendanceService {
   /**
    * Get attendance statistics for a user
    */
-  async getUserStats(userId: string, month?: number, year?: number): Promise<any> {
+  async getUserStats(userId: string, organizationId: string, month?: number, year?: number): Promise<any> {
     const now = new Date();
     // Month is 1-indexed from API (1 = January), convert to 0-indexed for Date constructor
     const targetMonth = month ? month - 1 : now.getMonth();
@@ -162,6 +167,7 @@ export class AttendanceService {
 
     const records = await Attendance.find({
       userId,
+      organizationId,
       date: { $gte: startDate, $lte: endDate },
     });
 
@@ -187,6 +193,7 @@ export class AttendanceService {
    * Get all attendance records (for admin/HR)
    */
   async getAllAttendance(
+    organizationId: string,
     filters: {
       date?: Date;
       startDate?: Date;
@@ -197,7 +204,7 @@ export class AttendanceService {
     page: number = 1,
     limit: number = 50
   ): Promise<any> {
-    const query: any = {};
+    const query: any = { organizationId };
 
     if (filters.date) {
       query.date = {

@@ -17,14 +17,15 @@ export class LeaveService {
   /**
    * Get or create leave balance for user/year
    */
-  private async getOrCreateLeaveBalance(userId: string, year: number) {
-    let balance = await LeaveBalance.findOne({ userId, year });
+  private async getOrCreateLeaveBalance(userId: string, year: number, organizationId: string) {
+    let balance = await LeaveBalance.findOne({ userId, year, organizationId });
 
     if (!balance) {
       // Create initial balance with default allocations
       balance = await LeaveBalance.create({
         userId,
         year,
+        organizationId,
         sickLeave: { total: 10, used: 0, remaining: 10 },
         casualLeave: { total: 12, used: 0, remaining: 12 },
         vacationLeave: { total: 15, used: 0, remaining: 15 },
@@ -57,6 +58,7 @@ export class LeaveService {
    */
   async requestLeave(
     userId: string,
+    organizationId: string,
     leaveType: LeaveType,
     startDate: Date,
     endDate: Date,
@@ -81,6 +83,7 @@ export class LeaveService {
     // Check for overlapping leaves
     const overlapping = await Leave.findOne({
       userId,
+      organizationId,
       status: { $in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
       $or: [
         { startDate: { $lte: end }, endDate: { $gte: start } },
@@ -93,7 +96,7 @@ export class LeaveService {
 
     // Check leave balance
     const year = start.getFullYear();
-    const balance = await this.getOrCreateLeaveBalance(userId, year);
+    const balance = await this.getOrCreateLeaveBalance(userId, year, organizationId);
 
     if (!this.checkBalance(balance, leaveType, totalDays)) {
       throw new Error(`Insufficient ${leaveType} leave balance`);
@@ -102,6 +105,7 @@ export class LeaveService {
     // Create leave request
     const leave = await Leave.create({
       userId,
+      organizationId,
       leaveType,
       startDate: start,
       endDate: end,
@@ -118,6 +122,7 @@ export class LeaveService {
    */
   async getMyLeaves(
     userId: string,
+    organizationId: string,
     filters?: {
       status?: LeaveStatus;
       startDate?: Date;
@@ -126,7 +131,7 @@ export class LeaveService {
     page: number = 1,
     limit: number = 20
   ): Promise<any> {
-    const query: any = { userId };
+    const query: any = { userId, organizationId };
 
     if (filters?.status) {
       query.status = filters.status;
@@ -164,10 +169,10 @@ export class LeaveService {
   /**
    * Get user's leave balance
    */
-  async getMyBalance(userId: string, year?: number): Promise<any> {
+  async getMyBalance(userId: string, organizationId: string, year?: number): Promise<any> {
     const targetYear = year || new Date().getFullYear();
     // This will auto-create if doesn't exist
-    const balance = await this.getOrCreateLeaveBalance(userId, targetYear);
+    const balance = await this.getOrCreateLeaveBalance(userId, targetYear, organizationId);
     return balance;
   }
 
@@ -176,11 +181,12 @@ export class LeaveService {
    */
   async getPendingLeaves(
     userId: string,
+    organizationId: string,
     userRole: string,
     page: number = 1,
     limit: number = 20
   ): Promise<any> {
-    const query: any = { status: LeaveStatus.PENDING };
+    const query: any = { organizationId, status: LeaveStatus.PENDING };
 
     // If supervisor, only show team members' leaves
     if (userRole === 'supervisor') {
@@ -217,6 +223,7 @@ export class LeaveService {
    * Get all leaves with filters (HR/Admin)
    */
   async getAllLeaves(
+    organizationId: string,
     filters?: {
       userId?: string;
       status?: LeaveStatus;
@@ -227,7 +234,7 @@ export class LeaveService {
     page: number = 1,
     limit: number = 50
   ): Promise<any> {
-    const query: any = {};
+    const query: any = { organizationId };
 
     if (filters?.userId) query.userId = filters.userId;
     if (filters?.status) query.status = filters.status;
@@ -267,6 +274,7 @@ export class LeaveService {
    * Get leaves for calendar view
    */
   async getCalendarLeaves(
+    organizationId: string,
     month: number,
     year: number,
     userId?: string,
@@ -276,6 +284,7 @@ export class LeaveService {
     const endDate = new Date(year, month, 0);
 
     const query: any = {
+      organizationId,
       status: LeaveStatus.APPROVED,
       $or: [
         { startDate: { $lte: endDate }, endDate: { $gte: startDate } },
@@ -320,7 +329,8 @@ export class LeaveService {
     const year = leave.startDate.getFullYear();
     const balance = await this.getOrCreateLeaveBalance(
       leave.userId.toString(),
-      year
+      year,
+      leave.organizationId.toString()
     );
     
     if (leave.leaveType === LeaveType.UNPAID) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,14 @@ import { toast } from 'sonner';
 
 export default function CreateUserPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const canManage = useCanManageUsers();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get pre-selected organization from URL if present
+  const preSelectedOrgId = searchParams.get('orgId');
 
   const handleSubmit = async (data: CreateUserFormData) => {
     setIsLoading(true);
@@ -70,7 +74,8 @@ export default function CreateUserPage() {
           <UserForm 
             onSubmit={handleSubmit} 
             isLoading={isLoading} 
-            userRole={user.role as UserRole} 
+            userRole={user.role as UserRole}
+            defaultValues={preSelectedOrgId ? { organizationId: preSelectedOrgId } : undefined}
           />
         </CardContent>
       </Card>

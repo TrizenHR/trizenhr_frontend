@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,8 +16,9 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { CreateUserFormData, createUserSchema } from '@/lib/validations';
-import { UserRole } from '@/lib/types';
+import { UserRole, Organization } from '@/lib/types';
 import { getAllowedRolesToCreate, getRoleDisplayName } from '@/lib/permissions';
+import { organizationApi } from '@/lib/api';
 
 interface UserFormProps {
   onSubmit: (data: CreateUserFormData) => Promise<void>;
@@ -28,6 +30,29 @@ interface UserFormProps {
 export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserFormProps) {
   const router = useRouter();
   const allowedRoles = getAllowedRolesToCreate(userRole);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(false);
+
+  const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
+
+  // Load organizations for Super Admin
+  useEffect(() => {
+    if (isSuperAdmin) {
+      loadOrganizations();
+    }
+  }, [isSuperAdmin]);
+
+  const loadOrganizations = async () => {
+    try {
+      setLoadingOrgs(true);
+      const data = await organizationApi.getAll();
+      setOrganizations(data.filter((org) => org.isActive));
+    } catch (error) {
+      console.error('Failed to load organizations:', error);
+    } finally {
+      setLoadingOrgs(false);
+    }
+  };
 
   const {
     register,
@@ -44,9 +69,37 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   });
 
   const selectedRole = watch('role');
+  const selectedOrganization = watch('organizationId');
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Organization Selector - Only for Super Admin */}
+      {isSuperAdmin && (
+        <div className="space-y-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <Label htmlFor="organizationId">
+            Organization <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={selectedOrganization}
+            onValueChange={(value: string) => setValue('organizationId', value)}
+            disabled={isLoading || loadingOrgs}
+          >
+            <SelectTrigger className={errors.organizationId ? 'border-red-500 bg-white' : 'bg-white'}>
+              <SelectValue placeholder={loadingOrgs ? 'Loading organizations...' : 'Select organization'} />
+            </SelectTrigger>
+            <SelectContent>
+              {organizations.map((org) => (
+                <SelectItem key={org._id} value={org._id}>
+                  {org.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.organizationId && <p className="text-sm text-red-500">{errors.organizationId.message}</p>}
+          <p className="text-sm text-blue-700">Select which organization this user belongs to</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">

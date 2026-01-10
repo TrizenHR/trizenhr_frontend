@@ -23,6 +23,7 @@ export class LeaveController {
 
       const leave = await leaveService.requestLeave(
         userId,
+        req.organizationId!,
         leaveType as LeaveType,
         new Date(startDate),
         new Date(endDate),
@@ -59,6 +60,7 @@ export class LeaveController {
 
       const result = await leaveService.getMyLeaves(
         userId,
+        req.organizationId!,
         filters,
         page ? parseInt(page as string) : undefined,
         limit ? parseInt(limit as string) : undefined
@@ -89,6 +91,7 @@ export class LeaveController {
 
       const balance = await leaveService.getMyBalance(
         userId,
+        req.organizationId!,
         year ? parseInt(year as string) : undefined
       );
 
@@ -118,6 +121,7 @@ export class LeaveController {
 
       const result = await leaveService.getPendingLeaves(
         userId,
+        req.organizationId!,
         userRole,
         page ? parseInt(page as string) : undefined,
         limit ? parseInt(limit as string) : undefined
@@ -153,6 +157,7 @@ export class LeaveController {
       if (endDate) filters.endDate = new Date(endDate as string);
 
       const result = await leaveService.getAllLeaves(
+        req.organizationId!,
         filters,
         page ? parseInt(page as string) : undefined,
         limit ? parseInt(limit as string) : undefined
@@ -203,6 +208,7 @@ export class LeaveController {
       }
 
       const leaves = await leaveService.getCalendarLeaves(
+        req.organizationId!,
         parseInt(month as string),
         parseInt(year as string),
         targetUserId,

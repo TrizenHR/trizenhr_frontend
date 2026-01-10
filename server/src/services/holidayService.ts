@@ -10,6 +10,7 @@ export class HolidayService {
     date: Date,
     type: HolidayType,
     createdBy: string,
+    organizationId: string,
     description?: string,
     isRecurring: boolean = false
   ): Promise<IHoliday> {
@@ -20,6 +21,7 @@ export class HolidayService {
       description,
       isRecurring,
       createdBy,
+      organizationId,
     });
 
     return holiday;
@@ -28,13 +30,13 @@ export class HolidayService {
   /**
    * Get all holidays with optional filters
    */
-  async getAllHolidays(filters?: {
+  async getAllHolidays(organizationId: string, filters?: {
     year?: number;
     type?: HolidayType;
     startDate?: Date;
     endDate?: Date;
   }): Promise<IHoliday[]> {
-    const query: any = {};
+    const query: any = { organizationId };
 
     if (filters?.year) {
       const startDate = new Date(filters.year, 0, 1);
@@ -63,8 +65,8 @@ export class HolidayService {
   /**
    * Get holiday by ID
    */
-  async getHolidayById(id: string): Promise<IHoliday | null> {
-    const holiday = await Holiday.findById(id)
+  async getHolidayById(id: string, organizationId: string): Promise<IHoliday | null> {
+    const holiday = await Holiday.findOne({ _id: id, organizationId })
       .populate('createdBy', 'firstName lastName')
       .lean();
     return holiday;
@@ -75,6 +77,7 @@ export class HolidayService {
    */
   async updateHoliday(
     id: string,
+    organizationId: string,
     updates: {
       name?: string;
       date?: Date;
@@ -89,8 +92,8 @@ export class HolidayService {
       updateData.date = startOfDay(updates.date);
     }
 
-    const holiday = await Holiday.findByIdAndUpdate(
-      id,
+    const holiday = await Holiday.findOneAndUpdate(
+      { _id: id, organizationId },
       updateData,
       { new: true, runValidators: true }
     ).populate('createdBy', 'firstName lastName');
@@ -101,8 +104,8 @@ export class HolidayService {
   /**
    * Delete holiday
    */
-  async deleteHoliday(id: string): Promise<boolean> {
-    const result = await Holiday.findByIdAndDelete(id);
+  async deleteHoliday(id: string, organizationId: string): Promise<boolean> {
+    const result = await Holiday.findOneAndDelete({ _id: id, organizationId });
     return !!result;
   }
 
@@ -110,10 +113,12 @@ export class HolidayService {
    * Get holidays by date range (for calendar)
    */
   async getHolidaysByDateRange(
+    organizationId: string,
     startDate: Date,
     endDate: Date
   ): Promise<IHoliday[]> {
     const holidays = await Holiday.find({
+      organizationId,
       date: {
         $gte: startOfDay(startDate),
         $lte: endOfDay(endDate),
@@ -128,8 +133,9 @@ export class HolidayService {
   /**
    * Check if a specific date is a holiday
    */
-  async isHoliday(date: Date): Promise<IHoliday | null> {
+  async isHoliday(date: Date, organizationId: string): Promise<IHoliday | null> {
     const holiday = await Holiday.findOne({
+      organizationId,
       date: startOfDay(date),
     }).lean();
 
@@ -139,10 +145,11 @@ export class HolidayService {
   /**
    * Get upcoming holidays
    */
-  async getUpcomingHolidays(limit: number = 5): Promise<IHoliday[]> {
+  async getUpcomingHolidays(organizationId: string, limit: number = 5): Promise<IHoliday[]> {
     const today = startOfDay(new Date());
     
     const holidays = await Holiday.find({
+      organizationId,
       date: { $gte: today },
     })
       .sort({ date: 1 })
