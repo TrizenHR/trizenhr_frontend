@@ -35,7 +35,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function MyLeavePage() {

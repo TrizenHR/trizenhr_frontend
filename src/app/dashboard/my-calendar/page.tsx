@@ -41,7 +41,7 @@ export default function MyCalendarPage() {
   const loadCalendarData = async () => {
     try {
       setIsLoading(true);
-      const month = currentDate.getMonth() + 1;
+      // const month = currentDate.getMonth() + 1;
       const year = currentDate.getFullYear();
 
       // Load MY leaves only
