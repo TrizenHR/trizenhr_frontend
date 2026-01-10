@@ -7,20 +7,15 @@ export enum UserRole {
 }
 
 export interface User {
-  id: string;
-  email: string;
+  _id: string;
   firstName: string;
   lastName: string;
-  fullName: string;
+  email: string;
   role: UserRole;
-  department?: string;
   employeeId?: string;
-  supervisorId?: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  department?: string;
+  dateOfJoining?: string;
+  avatar?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -228,7 +223,7 @@ export enum HolidayType {
 export interface Holiday {
   _id: string;
   name: string;
-  date: string;
+  date: Date;
   type: HolidayType;
   description?: string;
   isRecurring: boolean;
@@ -243,10 +238,25 @@ export interface Holiday {
 
 export interface HolidayFormData {
   name: string;
-  date: Date | string;
+  date: Date;
   type: HolidayType;
   description?: string;
   isRecurring: boolean;
 }
 
+// Department Types
+export interface Department {
+  _id: string;
+  name: string;
+  description?: string;
+  headOfDepartment?: string | User;
+  members: (string | User)[];
+  createdAt: string;
+  updatedAt: string;
+}
 
+export interface DepartmentFormData {
+  name: string;
+  description?: string;
+  headOfDepartment?: string;
+}

@@ -178,7 +178,9 @@ export default function ProfilePage() {
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Member Since</p>
-                <p className="font-medium">{format(new Date(user.createdAt), 'MMM d, yyyy')}</p>
+                <p className="font-medium">
+                  {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : 'N/A'}
+                </p>
               </div>
             </div>
           </div>

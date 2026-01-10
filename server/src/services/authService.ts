@@ -70,9 +70,9 @@ class AuthService {
       role: user.role,
     };
 
-    return jwt.sign(payload, config.jwtSecret, {
-      expiresIn: config.jwtExpiresIn,
-    });
+    return jwt.sign(payload, config.jwtSecret as string, {
+      expiresIn: config.jwtExpiresIn as string,
+    } as jwt.SignOptions);
   }
 
   /**

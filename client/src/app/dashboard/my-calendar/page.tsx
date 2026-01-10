@@ -14,15 +14,15 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 type CalendarDay = {
   date: Date;
   isCurrentMonth: boolean;
-  leaves: Leave[];
+  myLeaves: Leave[];
   attendance?: Attendance;
   holiday?: Holiday;
 };
 
-export default function LeaveCalendarPage() {
+export default function MyCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
-  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [myLeaves, setMyLeaves] = useState<Leave[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,26 +32,34 @@ export default function LeaveCalendarPage() {
     loadCalendarData();
   }, [currentDate]);
 
+  useEffect(() => {
+    if (!isLoading) {
+      generateCalendarDays();
+    }
+  }, [myLeaves, holidays, attendanceRecords, currentDate]);
+
   const loadCalendarData = async () => {
     try {
       setIsLoading(true);
       const month = currentDate.getMonth() + 1;
       const year = currentDate.getFullYear();
 
-      // Load leaves for the month
-      const leavesResponse = await leaveApi.getCalendarLeaves(month, year);
-      setLeaves(leavesResponse);
+      // Load MY leaves only
+      const leavesResponse = await leaveApi.getMyLeaves({});
+      const approvedMyLeaves = leavesResponse.records.filter(
+        (leave) => leave.status === 'approved'
+      );
+      setMyLeaves(approvedMyLeaves);
 
-      // Load holidays for the year
+      // Load holidays
       try {
         const holidaysResponse = await holidayApi.getAll({ year });
         setHolidays(holidaysResponse);
       } catch (error) {
-        // Holidays might not be available
         setHolidays([]);
       }
 
-      // Load attendance for the month
+      // Load MY attendance
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
       
@@ -62,12 +70,8 @@ export default function LeaveCalendarPage() {
         });
         setAttendanceRecords(attendanceResponse.records);
       } catch (error) {
-        // Attendance might not be available, that's okay
         setAttendanceRecords([]);
       }
-
-      // Generate calendar days
-      generateCalendarDays();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -88,7 +92,7 @@ export default function LeaveCalendarPage() {
     const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     const calendarData: CalendarDay[] = days.map((date) => {
-      const dayLeaves = leaves.filter((leave) => {
+      const dayLeaves = myLeaves.filter((leave) => {
         const leaveStart = new Date(leave.startDate);
         const leaveEnd = new Date(leave.endDate);
         return date >= leaveStart && date <= leaveEnd;
@@ -105,7 +109,7 @@ export default function LeaveCalendarPage() {
       return {
         date,
         isCurrentMonth: isSameMonth(date, currentDate),
-        leaves: dayLeaves,
+        myLeaves: dayLeaves,
         attendance: dayAttendance,
         holiday: dayHoliday,
       };
@@ -143,7 +147,6 @@ export default function LeaveCalendarPage() {
       [AttendanceStatus.HALF_DAY]: 'bg-yellow-100 border-yellow-300',
       [AttendanceStatus.ON_LEAVE]: 'bg-purple-100 border-purple-300',
       [AttendanceStatus.LATE]: 'bg-orange-100 border-orange-300',
-      // [AttendanceStatus.HOLIDAY]: 'bg-blue-100 border-blue-300',
     };
     return colors[status] || 'bg-gray-50';
   };
@@ -155,7 +158,6 @@ export default function LeaveCalendarPage() {
       [AttendanceStatus.HALF_DAY]: 'H',
       [AttendanceStatus.ON_LEAVE]: 'L',
       [AttendanceStatus.LATE]: 'Lt', 
-      // [AttendanceStatus.HOLIDAY]: 'Hol',
     };
     return labels[status] || '';
   };
@@ -164,17 +166,17 @@ export default function LeaveCalendarPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Leave Calendar</h1>
-          <p className="text-muted-foreground">View leaves and attendance</p>
+          <h1 className="text-3xl font-bold">My Calendar</h1>
+          <p className="text-muted-foreground">Your leaves, attendance, and holidays</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={previousMonth}>
+          <Button variant="outline" size="sm" onClick={previousMonth}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" onClick={today}>
+          <Button variant="outline" size="sm" onClick={today}>
             Today
           </Button>
-          <Button variant="outline" onClick={nextMonth}>
+          <Button variant="outline" size="sm" onClick={nextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -182,50 +184,32 @@ export default function LeaveCalendarPage() {
 
       {/* Legend */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Legend</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Legend</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-sm font-medium mb-2">Leave Types</p>
-            <div className="flex flex-wrap gap-2">
-              <Badge className={`${getLeaveTypeColor(LeaveType.SICK)} border`} variant="outline">
-                S - Sick Leave
-              </Badge>
-              <Badge className={`${getLeaveTypeColor(LeaveType.CASUAL)} border`} variant="outline">
-                C - Casual Leave
-              </Badge>
-              <Badge className={`${getLeaveTypeColor(LeaveType.VACATION)} border`} variant="outline">
-                V - Vacation Leave
-              </Badge>
-              <Badge className={`${getLeaveTypeColor(LeaveType.UNPAID)} border`} variant="outline">
-                U - Unpaid Leave
-              </Badge>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-medium mb-1">Leave Types</p>
+              <div className="flex flex-wrap gap-1 text-xs">
+                <Badge className="bg-red-100 text-red-800">S = Sick</Badge>
+                <Badge className="bg-blue-100 text-blue-800">C = Casual</Badge>
+                <Badge className="bg-purple-100 text-purple-800">V = Vacation</Badge>
+                <Badge className="bg-gray-100 text-gray-800">U = Unpaid</Badge>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">Attendance</p>
+              <div className="flex flex-wrap gap-1 text-xs">
+                <Badge className="bg-green-100 text-green-800">P = Present</Badge>
+                <Badge className="bg-red-100 text-red-800">A = Absent</Badge>
+                <Badge className="bg-yellow-100 text-yellow-800">H = Half Day</Badge>
+                <Badge className="bg-purple-100 text-purple-800">L = On Leave</Badge>
+                <Badge className="bg-orange-100 text-orange-800">Lt = Late</Badge>
+              </div>
             </div>
           </div>
-          <div>
-            <p className="text-sm font-medium mb-2">Attendance Status</p>
-            <div className="flex flex-wrap gap-2">
-              <Badge className={`${getAttendanceColor(AttendanceStatus.PRESENT)} border-2`} variant="outline">
-                P - Present
-              </Badge>
-              <Badge className={`${getAttendanceColor(AttendanceStatus.ABSENT)} border-2`} variant="outline">
-                A - Absent
-              </Badge>
-              <Badge className={`${getAttendanceColor(AttendanceStatus.HALF_DAY)} border-2`} variant="outline">
-                H - Half Day
-              </Badge>
-              <Badge className={`${getAttendanceColor(AttendanceStatus.ON_LEAVE)} border-2`} variant="outline">
-                L - On Leave
-              </Badge>
-              <Badge className={`${getAttendanceColor(AttendanceStatus.LATE)} border-2`} variant="outline">
-                Lt - Late
-              </Badge>
-              <Badge className="bg-blue-50 text-blue-700 border-2 border-blue-300" variant="outline">
-                🎉 Holiday
-              </Badge>
-            </div>
-          </div>
+          <p className="text-xs text-muted-foreground pt-1">🎉 = Holiday</p>
         </CardContent>
       </Card>
 
@@ -236,9 +220,6 @@ export default function LeaveCalendarPage() {
             <CalendarIcon className="h-5 w-5" />
             {format(currentDate, 'MMMM yyyy')}
           </CardTitle>
-          <CardDescription>
-            Approved leaves and attendance status
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -289,22 +270,18 @@ export default function LeaveCalendarPage() {
                       {day.holiday && (
                         <div className="mb-1">
                           <Badge variant="outline" className="text-xs px-1 py-0.5 bg-blue-100 text-blue-700 border-blue-300">
-                            🎉 {day.holiday.name.length > 12 ? day.holiday.name.substring(0, 12) + '...' : day.holiday.name}
+                            🎉 {day.holiday.name.length > 10 ? day.holiday.name.substring(0, 10) + '...' : day.holiday.name}
                           </Badge>
                         </div>
                       )}
 
-                      {/* Leave indicators */}
+                      {/* My Leave indicators */}
                       <div className="space-y-1">
-                        {day.leaves.map((leave) => (
+                        {day.myLeaves.map((leave) => (
                           <div
                             key={leave._id}
                             className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(leave.leaveType)}`}
-                            title={`${leave.leaveType} - ${
-                              typeof leave.userId === 'object' && 'firstName' in leave.userId
-                                ? `${leave.userId.firstName} ${leave.userId.lastName}`
-                                : 'Leave'
-                            }`}
+                            title={leave.leaveType}
                           >
                             {leave.leaveType.charAt(0).toUpperCase()}
                           </div>

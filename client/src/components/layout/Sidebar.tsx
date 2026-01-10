@@ -7,15 +7,13 @@ import {
   LayoutDashboard,
   Clock,
   Users,
-  Calendar,
   FileText,
   Settings,
   HelpCircle,
-  UserCog,
-  Building2,
-  BarChart3,
-  UserPlus,
+  Calendar,
   ClipboardList,
+  Building2,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -34,16 +32,16 @@ interface NavSection {
   items: NavItem[];
 }
 
-// Navigation structure organized by sections
+// Navigation structure - reorganized for clarity
 const navigationSections: NavSection[] = [
   {
-    // Main section - no title
+    // Dashboard - always visible
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     ],
   },
   {
-    title: 'Attendance',
+    title: 'Personal',
     items: [
       { 
         label: 'My Attendance', 
@@ -51,26 +49,31 @@ const navigationSections: NavSection[] = [
         icon: Clock,
       },
       { 
-        label: 'Team Attendance', 
-        href: '/dashboard/team/attendance', 
-        icon: ClipboardList,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        label: 'My Leave', 
+        href: '/dashboard/my-leave', 
+        icon: FileText,
       },
       { 
-        label: 'All Attendance', 
-        href: '/dashboard/attendance', 
-        icon: BarChart3,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+        label: 'My Calendar', 
+        href: '/dashboard/my-calendar', 
+        icon: Calendar,
       },
     ],
   },
   {
-    title: 'Leave Management',
+    title: 'Team Management',
     items: [
       { 
-        label: 'My Leave', 
-        href: '/dashboard/my-leave', 
+        label: 'Team Attendance', 
+        href: '/dashboard/team-attendance', 
+        icon: Users,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+      },
+      { 
+        label: 'Team Leaves', 
+        href: '/dashboard/team-leaves', 
         icon: Calendar,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Leave Approvals', 
@@ -79,31 +82,9 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
-        label: 'Leave Calendar', 
-        href: '/dashboard/leave-calendar', 
-        icon: Calendar,
-      },
-    ],
-  },
-  {
-    title: 'People',
-    items: [
-      { 
         label: 'Employees', 
         href: '/dashboard/employees', 
         icon: Users,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
-      },
-      { 
-        label: 'My Team', 
-        href: '/dashboard/team', 
-        icon: Users,
-        roles: [UserRole.SUPERVISOR],
-      },
-      {
-        label: 'Users',
-        href: '/dashboard/users',
-        icon: UserCog,
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
       },
     ],
@@ -128,6 +109,12 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/reports', 
         icon: FileText,
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Users',
+        href: '/dashboard/users',
+        icon: UserCog,
+        roles: [UserRole.SUPER_ADMIN],
       },
     ],
   },

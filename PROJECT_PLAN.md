@@ -289,11 +289,12 @@
   - Calendar integration (holidays show with blue background)
 - [x] Complete testing and documentation
 
-### Phase 3: Team Management (Week 3)
-- [ ] Team attendance view (Supervisor)
-- [ ] Team leave approvals
-- [ ] Employee directory (HR)
-- [ ] Department management
+### Phase 3: Team Management (Week 3) - ✅ 100% COMPLETE
+- [x] Team attendance view (Supervisor/HR/Admin)
+- [x] Team leave overview (Supervisor/HR/Admin)
+- [x] Employee directory (HR/Admin)
+- [x] Department management (Admin/Super Admin)
+- [x] Clean calendar structure (My Calendar for everyone)
 
 ### Phase 4: Reports & Analytics (Week 4)
 - [ ] Attendance reports
