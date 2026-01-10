@@ -6,8 +6,12 @@ import leaveRoutes from './leave.routes';
 import holidayRoutes from './holiday.routes';
 import departmentRoutes from './department.routes';
 import organizationRoutes from './organization.routes';
+import healthRoutes from './health.routes';
 
 const router = Router();
+
+// Health check route (public, no auth required)
+router.use('/health', healthRoutes);
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
