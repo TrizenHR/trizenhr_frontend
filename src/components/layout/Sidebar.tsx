@@ -14,7 +14,6 @@ import {
   ClipboardList,
   Building2,
   UserCog,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
