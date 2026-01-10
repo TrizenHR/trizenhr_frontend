@@ -152,7 +152,7 @@ export default function LeaveReportsTab() {
       if (selectedLeaveType !== 'all') filters.leaveType = selectedLeaveType;
       if (selectedDepartment !== 'all') {
         // Filter by department - need to get users in that department first
-        const deptUsers = users.filter((u) => u.department === selectedDepartment);
+        // const deptUsers = users.filter((u) => u.department === selectedDepartment);
         // Note: This is a limitation - we'd need backend support for department filtering
       }
       if (selectedUser !== 'all') filters.userId = selectedUser;
