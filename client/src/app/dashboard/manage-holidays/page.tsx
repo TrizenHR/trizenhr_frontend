@@ -34,8 +34,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Repeat } from 'lucide-react';
+import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Repeat, Upload } from 'lucide-react';
 import { format } from 'date-fns';
+import BulkUploadDialog from '@/components/holidays/BulkUploadDialog';
 
 export default function ManageHolidaysPage() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -52,6 +53,7 @@ export default function ManageHolidaysPage() {
     isRecurring: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -194,6 +196,10 @@ export default function ManageHolidaysPage() {
               ))}
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Bulk Upload
+          </Button>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="mr-2 h-4 w-4" />
             Add Holiday
@@ -371,6 +377,15 @@ export default function ManageHolidaysPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Upload Dialog */}
+      <BulkUploadDialog
+        open={isBulkUploadOpen}
+        onOpenChange={setIsBulkUploadOpen}
+        onSuccess={() => {
+          loadHolidays();
+        }}
+      />
     </div>
   );
 }

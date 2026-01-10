@@ -319,16 +319,16 @@ export default function DepartmentsPage() {
               <div className="space-y-2">
                 <Label htmlFor="head">Department Head</Label>
                 <Select
-                  value={formData.headOfDepartment}
+                  value={formData.headOfDepartment || 'none'}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, headOfDepartment: value })
+                    setFormData({ ...formData, headOfDepartment: value === 'none' ? '' : value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select department head" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {allUsers.map((user) => (
                       <SelectItem key={user._id} value={user._id}>
                         {user.firstName} {user.lastName} ({user.role})

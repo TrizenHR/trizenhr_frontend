@@ -445,6 +445,25 @@ export const holidayApi = {
     });
     return response.data.data!;
   },
+
+  bulkCreate: async (holidays: Array<{
+    name: string;
+    date: string;
+    type: HolidayType;
+    description?: string;
+    isRecurring?: boolean;
+  }>): Promise<{
+    created: Holiday[];
+    errors: Array<{ row: number; error: string }>;
+    summary: { total: number; successful: number; failed: number };
+  }> => {
+    const response = await api.post<ApiResponse<{
+      created: Holiday[];
+      errors: Array<{ row: number; error: string }>;
+      summary: { total: number; successful: number; failed: number };
+    }>>('/holidays/bulk', { holidays });
+    return response.data.data!;
+  },
 };
 
 export const departmentApi = {
@@ -516,6 +535,20 @@ export const organizationApi = {
 
   getStats: async (id: string): Promise<OrganizationStats> => {
     const response = await api.get<ApiResponse<OrganizationStats>>(`/organizations/${id}/stats`);
+    return response.data.data!;
+  },
+
+  // Get current user's organization settings (Admin/HR)
+  getMySettings: async (): Promise<Organization['settings']> => {
+    const response = await api.get<ApiResponse<Organization['settings']>>('/organizations/my/settings');
+    return response.data.data!;
+  },
+
+  // Update current user's organization settings (Admin/HR)
+  updateMySettings: async (settings: Partial<Organization['settings']>): Promise<Organization> => {
+    const response = await api.put<ApiResponse<Organization>>('/organizations/my/settings', {
+      settings,
+    });
     return response.data.data!;
   },
 };
