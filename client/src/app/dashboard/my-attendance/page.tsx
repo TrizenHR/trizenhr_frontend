@@ -280,10 +280,10 @@ export default function MyAttendancePage() {
   const hasCheckedOut = todayAttendance?.checkOut != null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">My Attendance</h1>
-        <p className="text-muted-foreground">Track your attendance and working hours</p>
+        <h1 className="text-2xl md:text-3xl font-bold">My Attendance</h1>
+        <p className="text-muted-foreground text-sm md:text-base">Track your attendance and working hours</p>
       </div>
 
       {/* Today's Status Card */}

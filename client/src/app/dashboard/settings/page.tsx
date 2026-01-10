@@ -108,16 +108,16 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
             Manage your organization's settings and policies
           </p>
         </div>
         {hasChanges && (
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -135,9 +135,9 @@ export default function SettingsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="working-hours">Working Hours</TabsTrigger>
-          <TabsTrigger value="leave-policy">Leave Policy</TabsTrigger>
-          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="working-hours" className="text-xs sm:text-sm">Working Hours</TabsTrigger>
+          <TabsTrigger value="leave-policy" className="text-xs sm:text-sm">Leave Policy</TabsTrigger>
+          <TabsTrigger value="general" className="text-xs sm:text-sm">General</TabsTrigger>
         </TabsList>
 
         <TabsContent value="working-hours" className="mt-6">

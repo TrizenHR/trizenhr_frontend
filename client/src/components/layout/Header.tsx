@@ -10,16 +10,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, LogOut, User, Settings } from 'lucide-react';
+import { Bell, LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
 
 interface HeaderProps {
   title?: string;
+  onMenuClick?: () => void;
 }
 
-export function Header({ title = 'Dashboard' }: HeaderProps) {
+export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
@@ -34,10 +35,21 @@ export function Header({ title = 'Dashboard' }: HeaderProps) {
     : 'U';
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-      <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+      <div className="flex items-center gap-3">
+        {/* Mobile Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={onMenuClick}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <h1 className="text-lg md:text-xl font-semibold text-gray-900 truncate">{title}</h1>
+      </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5 text-gray-600" />

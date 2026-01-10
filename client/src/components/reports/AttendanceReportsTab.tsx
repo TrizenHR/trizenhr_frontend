@@ -273,7 +273,7 @@ export default function AttendanceReportsTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {/* Date Range */}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Start Date</label>
@@ -281,7 +281,7 @@ export default function AttendanceReportsTab() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn('w-[180px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
+                    className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, 'MMM d, yyyy') : 'Pick a date'}
@@ -304,7 +304,7 @@ export default function AttendanceReportsTab() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn('w-[180px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
+                    className={cn('w-full justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? format(endDate, 'MMM d, yyyy') : 'Pick a date'}
@@ -326,7 +326,7 @@ export default function AttendanceReportsTab() {
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Status</label>
               <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as AttendanceStatus | 'all')}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -344,7 +344,7 @@ export default function AttendanceReportsTab() {
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Department</label>
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -359,13 +359,13 @@ export default function AttendanceReportsTab() {
             </div>
 
             {/* Search */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
               <label className="text-xs text-muted-foreground">Search</label>
               <Input
                 placeholder="Search by name or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[200px]"
+                className="w-full"
               />
             </div>
           </div>
@@ -401,18 +401,18 @@ export default function AttendanceReportsTab() {
             <div className="text-center py-12 text-gray-500">No attendance records found</div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Employee ID</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Check In</TableHead>
-                      <TableHead>Check Out</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Working Hours</TableHead>
+                      <TableHead className="min-w-[100px]">Date</TableHead>
+                      <TableHead className="min-w-[120px]">Employee</TableHead>
+                      <TableHead className="min-w-[100px]">Employee ID</TableHead>
+                      <TableHead className="min-w-[120px]">Department</TableHead>
+                      <TableHead className="min-w-[100px]">Check In</TableHead>
+                      <TableHead className="min-w-[100px]">Check Out</TableHead>
+                      <TableHead className="min-w-[100px]">Status</TableHead>
+                      <TableHead className="min-w-[100px]">Working Hours</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -420,20 +420,20 @@ export default function AttendanceReportsTab() {
                       const user = typeof record.userId === 'object' ? record.userId : null;
                       return (
                         <TableRow key={record._id}>
-                          <TableCell>{formatAttendanceDate(record.date)}</TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.date)}</TableCell>
+                          <TableCell className="whitespace-nowrap">
                             {user ? `${user.firstName} ${user.lastName}` : 'N/A'}
                           </TableCell>
-                          <TableCell>{user?.employeeId || 'N/A'}</TableCell>
-                          <TableCell>{user?.department || 'N/A'}</TableCell>
-                          <TableCell>{record.checkIn ? formatTimeOnly(record.checkIn) : '-'}</TableCell>
-                          <TableCell>{record.checkOut ? formatTimeOnly(record.checkOut) : '-'}</TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">{user?.employeeId || 'N/A'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{user?.department || 'N/A'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{record.checkIn ? formatTimeOnly(record.checkIn) : '-'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{record.checkOut ? formatTimeOnly(record.checkOut) : '-'}</TableCell>
+                          <TableCell className="whitespace-nowrap">
                             <Badge className={statusColors[record.status]}>
                               {statusLabels[record.status]}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">
                             {record.workingHours ? formatWorkingHours(record.workingHours) : '-'}
                           </TableCell>
                         </TableRow>

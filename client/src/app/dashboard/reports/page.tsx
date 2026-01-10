@@ -29,11 +29,11 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="p-6 max-w-full">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6 max-w-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Reports</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl md:text-2xl font-bold">Reports</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
             Generate and export attendance and leave reports
           </p>
         </div>
@@ -41,8 +41,8 @@ export default function ReportsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="attendance">Attendance Reports</TabsTrigger>
-          <TabsTrigger value="leave">Leave Reports</TabsTrigger>
+          <TabsTrigger value="attendance" className="text-xs sm:text-sm">Attendance Reports</TabsTrigger>
+          <TabsTrigger value="leave" className="text-xs sm:text-sm">Leave Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="attendance" className="mt-6">

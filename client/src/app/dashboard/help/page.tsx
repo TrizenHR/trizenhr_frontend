@@ -24,19 +24,19 @@ export default function HelpPage() {
   const userRole = user?.role || UserRole.EMPLOYEE;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
+      <div className="mb-4 md:mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <HelpCircle className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold">Help & Support</h1>
+          <HelpCircle className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+          <h1 className="text-xl md:text-3xl font-bold">Help & Support</h1>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm md:text-base">
           Find answers to common questions and learn how to use AttendEase
         </p>
       </div>
 
       {/* Search Bar */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -49,12 +49,12 @@ export default function HelpPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
-          <TabsTrigger value="guides">Guides</TabsTrigger>
-          <TabsTrigger value="faq">FAQ</TabsTrigger>
-          <TabsTrigger value="troubleshooting">Troubleshooting</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsTrigger value="getting-started" className="text-xs sm:text-sm">Getting Started</TabsTrigger>
+          <TabsTrigger value="guides" className="text-xs sm:text-sm">Guides</TabsTrigger>
+          <TabsTrigger value="faq" className="text-xs sm:text-sm">FAQ</TabsTrigger>
+          <TabsTrigger value="troubleshooting" className="text-xs sm:text-sm">Troubleshooting</TabsTrigger>
+          <TabsTrigger value="contact" className="text-xs sm:text-sm">Contact</TabsTrigger>
         </TabsList>
 
         <TabsContent value="getting-started" className="mt-6">

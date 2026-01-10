@@ -326,7 +326,7 @@ export default function LeaveReportsTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Date Range */}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Start Date</label>
@@ -334,7 +334,7 @@ export default function LeaveReportsTab() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn('w-[180px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
+                    className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, 'MMM d, yyyy') : 'Pick a date'}
@@ -357,7 +357,7 @@ export default function LeaveReportsTab() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn('w-[180px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
+                    className={cn('w-full justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? format(endDate, 'MMM d, yyyy') : 'Pick a date'}
@@ -379,7 +379,7 @@ export default function LeaveReportsTab() {
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Status</label>
               <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as LeaveStatus | 'all')}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -396,7 +396,7 @@ export default function LeaveReportsTab() {
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Leave Type</label>
               <Select value={selectedLeaveType} onValueChange={(v) => setSelectedLeaveType(v as LeaveType | 'all')}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,7 +413,7 @@ export default function LeaveReportsTab() {
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Department</label>
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -431,7 +431,7 @@ export default function LeaveReportsTab() {
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Employee</label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -446,13 +446,13 @@ export default function LeaveReportsTab() {
             </div>
 
             {/* Search */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
               <label className="text-xs text-muted-foreground">Search</label>
               <Input
                 placeholder="Search by name, ID, or reason..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[200px]"
+                className="w-full"
               />
             </div>
           </div>
@@ -488,20 +488,20 @@ export default function LeaveReportsTab() {
             <div className="text-center py-12 text-gray-500">No leave records found</div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Employee ID</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Leave Type</TableHead>
-                      <TableHead>Start Date</TableHead>
-                      <TableHead>End Date</TableHead>
-                      <TableHead>Days</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Applied On</TableHead>
+                      <TableHead className="min-w-[120px]">Employee</TableHead>
+                      <TableHead className="min-w-[100px]">Employee ID</TableHead>
+                      <TableHead className="min-w-[120px]">Department</TableHead>
+                      <TableHead className="min-w-[100px]">Leave Type</TableHead>
+                      <TableHead className="min-w-[100px]">Start Date</TableHead>
+                      <TableHead className="min-w-[100px]">End Date</TableHead>
+                      <TableHead className="min-w-[60px]">Days</TableHead>
+                      <TableHead className="min-w-[100px]">Status</TableHead>
+                      <TableHead className="min-w-[150px]">Reason</TableHead>
+                      <TableHead className="min-w-[100px]">Applied On</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -509,22 +509,22 @@ export default function LeaveReportsTab() {
                       const user = typeof record.userId === 'object' ? record.userId : null;
                       return (
                         <TableRow key={record._id}>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">
                             {user ? `${user.firstName} ${user.lastName}` : 'N/A'}
                           </TableCell>
-                          <TableCell>{user?.employeeId || 'N/A'}</TableCell>
-                          <TableCell>{user?.department || 'N/A'}</TableCell>
-                          <TableCell>{leaveTypeLabels[record.leaveType]}</TableCell>
-                          <TableCell>{formatAttendanceDate(record.startDate)}</TableCell>
-                          <TableCell>{formatAttendanceDate(record.endDate)}</TableCell>
-                          <TableCell>{record.totalDays}</TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">{user?.employeeId || 'N/A'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{user?.department || 'N/A'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{leaveTypeLabels[record.leaveType]}</TableCell>
+                          <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.startDate)}</TableCell>
+                          <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.endDate)}</TableCell>
+                          <TableCell className="whitespace-nowrap">{record.totalDays}</TableCell>
+                          <TableCell className="whitespace-nowrap">
                             <Badge className={statusColors[record.status]}>
                               {statusLabels[record.status]}
                             </Badge>
                           </TableCell>
                           <TableCell className="max-w-xs truncate">{record.reason || '-'}</TableCell>
-                          <TableCell>{formatAttendanceDate(record.createdAt)}</TableCell>
+                          <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.createdAt)}</TableCell>
                         </TableRow>
                       );
                     })}

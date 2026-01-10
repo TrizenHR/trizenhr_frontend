@@ -216,29 +216,29 @@ export default function ManageHolidaysPage() {
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">Loading...</p>
           ) : holidays.length > 0 ? (
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Recurring</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="min-w-[150px]">Date</TableHead>
+                    <TableHead className="min-w-[150px]">Name</TableHead>
+                    <TableHead className="min-w-[100px]">Type</TableHead>
+                    <TableHead className="min-w-[200px]">Description</TableHead>
+                    <TableHead className="min-w-[100px]">Recurring</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {holidays.map((holiday) => (
                     <TableRow key={holiday._id}>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                           {format(new Date(holiday.date), 'MMM dd, yyyy (EEE)')}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{holiday.name}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{holiday.name}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Badge variant="outline" className={getTypeColor(holiday.type)}>
                           {holiday.type}
                         </Badge>
@@ -246,7 +246,7 @@ export default function ManageHolidaysPage() {
                       <TableCell className="max-w-xs truncate">
                         {holiday.description || '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {holiday.isRecurring && (
                           <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                             <Repeat className="h-3 w-3" />
@@ -288,7 +288,7 @@ export default function ManageHolidaysPage() {
 
       {/* Add/Edit Holiday Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingHoliday ? 'Edit Holiday' : 'Add New Holiday'}
@@ -311,7 +311,7 @@ export default function ManageHolidaysPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date">Date *</Label>
                 <Input

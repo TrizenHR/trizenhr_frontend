@@ -14,11 +14,14 @@ import {
   ClipboardList,
   Building2,
   UserCog,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { UserRole } from '@/lib/types';
 import { hasAnyRole } from '@/lib/permissions';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NavItem {
   label: string;
@@ -132,9 +135,15 @@ const bottomNavItems: NavItem[] = [
   { label: 'Help', href: '/dashboard/help', icon: HelpCircle },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function Sidebar({ open, onOpenChange }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Filter navigation items based on user role
   const filterItemsByRole = (items: NavItem[]) => {
@@ -165,8 +174,8 @@ export function Sidebar() {
 
   const visibleBottomItems = filterItemsByRole(bottomNavItems);
 
-  return (
-    <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
         <Image src="/assets/logo.png" alt="Logo" width={32} height={32} className="rounded" />
@@ -191,7 +200,12 @@ export function Sidebar() {
                   <li key={item.href}>
                     <NavLink 
                       item={item} 
-                      isActive={pathname === item.href || pathname.startsWith(item.href + '/')} 
+                      isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
+                      onNavigate={() => {
+                        if (isMobile && onOpenChange) {
+                          onOpenChange(false);
+                        }
+                      }}
                     />
                   </li>
                 ))}
@@ -206,11 +220,39 @@ export function Sidebar() {
         <ul className="space-y-1">
           {visibleBottomItems.map((item) => (
             <li key={item.href}>
-              <NavLink item={item} isActive={pathname === item.href} />
+              <NavLink 
+                item={item} 
+                isActive={pathname === item.href}
+                onNavigate={() => {
+                  if (isMobile && onOpenChange) {
+                    onOpenChange(false);
+                  }
+                }}
+              />
             </li>
           ))}
         </ul>
       </div>
+    </>
+  );
+
+  // Mobile: Use Sheet component
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="left" className="w-64 p-0">
+          <aside className="flex h-full w-full flex-col bg-white">
+            {sidebarContent}
+          </aside>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Regular sidebar
+  return (
+    <aside className="hidden md:flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
+      {sidebarContent}
     </aside>
   );
 }
@@ -218,14 +260,16 @@ export function Sidebar() {
 interface NavLinkProps {
   item: NavItem;
   isActive: boolean;
+  onNavigate?: () => void;
 }
 
-function NavLink({ item, isActive }: NavLinkProps) {
+function NavLink({ item, isActive, onNavigate }: NavLinkProps) {
   const Icon = item.icon;
 
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         isActive

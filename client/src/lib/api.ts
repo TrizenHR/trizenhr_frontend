@@ -23,7 +23,6 @@ import {
   Organization,
   CreateOrganizationPayload,
   OrganizationStats,
-  SubscriptionPlan,
 } from './types';
 
 // Create axios instance

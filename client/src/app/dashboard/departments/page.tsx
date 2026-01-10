@@ -150,13 +150,13 @@ export default function DepartmentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Departments</h1>
-          <p className="text-muted-foreground">Manage organization departments</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Departments</h1>
+          <p className="text-muted-foreground text-sm">Manage organization departments</p>
         </div>
-        <Button onClick={openAddDialog}>
+        <Button onClick={openAddDialog} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Department
         </Button>
@@ -222,27 +222,27 @@ export default function DepartmentsPage() {
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">Loading...</p>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Head</TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="min-w-[150px]">Name</TableHead>
+                    <TableHead className="min-w-[200px]">Description</TableHead>
+                    <TableHead className="min-w-[150px]">Head</TableHead>
+                    <TableHead className="min-w-[100px]">Members</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {departments.length > 0 ? (
                     departments.map((dept) => (
                       <TableRow key={dept._id}>
-                        <TableCell className="font-medium">{dept.name}</TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">{dept.name}</TableCell>
                         <TableCell className="max-w-xs truncate">
                           {dept.description || '-'}
                         </TableCell>
-                        <TableCell>{getHeadName(dept)}</TableCell>
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap">{getHeadName(dept)}</TableCell>
+                        <TableCell className="whitespace-nowrap">
                           <Badge variant="outline">
                             {getMemberCount(dept)} {getMemberCount(dept) === 1 ? 'member' : 'members'}
                           </Badge>
@@ -283,7 +283,7 @@ export default function DepartmentsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingDept ? 'Edit Department' : 'Add Department'}
