@@ -25,9 +25,37 @@ import {
   OrganizationStats,
 } from './types';
 
+// Get API base URL from environment
+const getApiBaseURL = (): string => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  
+  if (envUrl) {
+    // Remove trailing slash if present, then append /api
+    const cleanUrl = envUrl.replace(/\/$/, '');
+    const baseURL = cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+    
+    // Log in development to help debug
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+      console.log('[API Config] Using API URL:', baseURL);
+      console.log('[API Config] Environment variable:', envUrl);
+    }
+    
+    return baseURL;
+  }
+  
+  // Default to localhost for development
+  const defaultURL = 'http://localhost:5000/api';
+  
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    console.warn('[API Config] NEXT_PUBLIC_API_URL not set, using default:', defaultURL);
+  }
+  
+  return defaultURL;
+};
+
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: getApiBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
