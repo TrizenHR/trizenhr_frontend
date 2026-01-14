@@ -8,7 +8,6 @@ export enum UserRole {
 
 export interface User {
   id: string;
-  _id?: string; // Backend may return _id when populated
   organizationId?: string;
   organization?: {
     _id: string;
@@ -22,7 +21,6 @@ export interface User {
   role: UserRole;
   department?: string;
   employeeId?: string;
-  dateOfJoining?: string; // Date when employee joined the organization
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -87,7 +85,7 @@ export enum AttendanceStatus {
 
 export interface Attendance {
   _id: string;
-  userId: string | User; // Can be string ID or populated User object
+  userId: string;
   date: string;
   checkIn?: string;
   checkOut?: string;
@@ -232,7 +230,7 @@ export enum HolidayType {
 export interface Holiday {
   _id: string;
   name: string;
-  date: string; // ISO date string from API
+  date: Date;
   type: HolidayType;
   description?: string;
   isRecurring: boolean;
@@ -247,7 +245,7 @@ export interface Holiday {
 
 export interface HolidayFormData {
   name: string;
-  date: string; // HTML date input uses string format (YYYY-MM-DD)
+  date: Date;
   type: HolidayType;
   description?: string;
   isRecurring: boolean;
@@ -318,3 +316,111 @@ export interface OrganizationStats {
   subscriptionPlan: SubscriptionPlan;
   isActive: boolean;
 }
+
+// Dashboard Stats (role-specific)
+export interface DashboardStats {
+  totalUsers?: number;
+  totalDepartments?: number;
+  teamSize?: number;
+  todayAttendance: {
+    present: number;
+    late: number;
+    absent: number;
+    onLeave: number;
+    total: number;
+  };
+}
+
+// Payroll Types
+export enum PayrollRunStatus {
+  DRAFT = 'draft',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export enum PayrollRecordStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  ON_HOLD = 'on_hold',
+}
+
+export interface Allowance {
+  name: string;
+  amount: number;
+  type: 'fixed' | 'percentage';
+}
+
+export interface Deduction {
+  name: string;
+  amount: number;
+  type: 'fixed' | 'percentage';
+}
+
+export interface SalaryStructure {
+  _id: string;
+  organizationId: string;
+  userId: string | User;
+  baseSalary: number;
+  allowances: Allowance[];
+  deductions: Deduction[];
+  effectiveFrom: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollRun {
+  _id: string;
+  organizationId: string;
+  month: number;
+  year: number;
+  status: PayrollRunStatus;
+  processedBy?: string | User;
+  processedAt?: string;
+  totalGrossSalary: number;
+  totalDeductions: number;
+  totalNetSalary: number;
+  employeeCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollRecord {
+  _id: string;
+  organizationId: string;
+  payrollRunId: string;
+  userId: string | User;
+  month: number;
+  year: number;
+  workingDays: number;
+  daysWorked: number;
+  leaveDays: number;
+  absentDays: number;
+  baseSalary: number;
+  allowances: Allowance[];
+  deductions: Deduction[];
+  grossSalary: number;
+  totalDeductions: number;
+  netSalary: number;
+  status: PayrollRecordStatus;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSalaryStructurePayload {
+  userId: string;
+  baseSalary: number;
+  allowances?: Allowance[];
+  deductions?: Deduction[];
+  effectiveFrom: Date | string;
+}
+
+export interface UpdateSalaryStructurePayload {
+  baseSalary?: number;
+  allowances?: Allowance[];
+  deductions?: Deduction[];
+  effectiveFrom?: Date | string;
+}
+

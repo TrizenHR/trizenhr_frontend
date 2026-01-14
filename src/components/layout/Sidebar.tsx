@@ -14,6 +14,9 @@ import {
   ClipboardList,
   Building2,
   UserCog,
+  X,
+  DollarSign,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -59,6 +62,11 @@ const navigationSections: NavSection[] = [
         label: 'My Calendar', 
         href: '/dashboard/my-calendar', 
         icon: Calendar,
+      },
+      { 
+        label: 'My Salary', 
+        href: '/dashboard/my-salary', 
+        icon: Wallet,
       },
     ],
   },
@@ -116,6 +124,18 @@ const navigationSections: NavSection[] = [
         label: 'Reports', 
         href: '/dashboard/reports', 
         icon: FileText,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Salary Structures',
+        href: '/dashboard/salary-structures',
+        icon: DollarSign,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Payroll Processing',
+        href: '/dashboard/payroll',
+        icon: Wallet,
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
       },
       {
@@ -179,7 +199,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
       <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
         <Image src="/assets/logo.png" alt="Logo" width={32} height={32} className="rounded" />
         <div>
-          <span className="block font-semibold text-gray-900">AttendEase</span>
+          <span className="block font-semibold text-gray-900">TrizenHR</span>
           <span className="block text-xs text-gray-500">by Trizen Ventures</span>
         </div>
       </div>

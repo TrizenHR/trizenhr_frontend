@@ -23,9 +23,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Grid3x3, List, Mail, Briefcase, Calendar as CalendarIcon, UserCheck, UserX } from 'lucide-react';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<User[]>([]);

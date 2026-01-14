@@ -88,7 +88,7 @@ export default function DepartmentsPage() {
       name: dept.name,
       description: dept.description || '',
       headOfDepartment: typeof dept.headOfDepartment === 'object' && dept.headOfDepartment
-        ? dept.headOfDepartment._id || dept.headOfDepartment.id
+        ? dept.headOfDepartment._id
         : (dept.headOfDepartment as string) || '',
     });
     setIsDialogOpen(true);
@@ -222,9 +222,9 @@ export default function DepartmentsPage() {
   const getAvailableEmployees = () => {
     if (!selectedDept) return [];
     const memberIds = selectedDept.members.map((m) =>
-      typeof m === 'object' ? (m._id || m.id || '') : m
-    ).filter((id): id is string => !!id);
-    return allUsers.filter((user) => !memberIds.includes(user.id) && !(user._id && memberIds.includes(user._id)));
+      typeof m === 'object' ? m._id : m
+    );
+    return allUsers.filter((user) => !memberIds.includes(user._id));
   };
 
   // Get member name
@@ -232,7 +232,7 @@ export default function DepartmentsPage() {
     if (typeof member === 'object') {
       return `${member.firstName} ${member.lastName}`;
     }
-    const user = allUsers.find((u) => u.id === member || u._id === member);
+    const user = allUsers.find((u) => u._id === member);
     return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
   };
 
@@ -427,7 +427,7 @@ export default function DepartmentsPage() {
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {allUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
+                      <SelectItem key={user._id} value={user._id}>
                         {user.firstName} {user.lastName} ({user.role})
                       </SelectItem>
                     ))}
@@ -469,9 +469,7 @@ export default function DepartmentsPage() {
               {selectedDept && selectedDept.members.length > 0 ? (
                 <div className="space-y-2">
                   {selectedDept.members.map((member, index) => {
-                    const memberId = typeof member === 'object' 
-                      ? (member._id || member.id) 
-                      : member;
+                    const memberId = typeof member === 'object' ? member._id : member;
                     return (
                       <div
                         key={memberId || index}
@@ -493,7 +491,7 @@ export default function DepartmentsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveMember(memberId || '')}
+                          onClick={() => handleRemoveMember(memberId)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <X className="h-4 w-4" />
@@ -520,7 +518,7 @@ export default function DepartmentsPage() {
                   <SelectContent>
                     {getAvailableEmployees().length > 0 ? (
                       getAvailableEmployees().map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
+                        <SelectItem key={user._id} value={user._id}>
                           {user.firstName} {user.lastName}
                           {user.employeeId && ` (${user.employeeId})`}
                           {user.department && ` - ${user.department}`}

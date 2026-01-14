@@ -16,7 +16,7 @@ export default function GettingStartedSection({
   const quickStartSteps = [
     {
       title: '1. Login to Your Account',
-      description: 'Use your email and password to access AttendEase dashboard',
+      description: 'Use your email and password to access TrizenHR dashboard',
       icon: Shield,
     },
     {
@@ -52,7 +52,7 @@ export default function GettingStartedSection({
         <CardHeader>
           <CardTitle>Quick Start Guide</CardTitle>
           <CardDescription>
-            Get up and running with AttendEase in just a few steps
+            Get up and running with TrizenHR in just a few steps
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,7 +97,7 @@ export default function GettingStartedSection({
         <CardHeader>
           <CardTitle>Navigation Overview</CardTitle>
           <CardDescription>
-            Learn how to navigate the AttendEase dashboard
+            Learn how to navigate the TrizenHR dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>

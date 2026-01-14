@@ -1,4 +1,4 @@
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 /**
  * Format date for attendance display: "Mon, Jan 9"

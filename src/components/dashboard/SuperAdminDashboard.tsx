@@ -118,7 +118,7 @@ export function SuperAdminDashboard() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {org.subdomain ? `${org.subdomain}.attendease.com` : 'No subdomain'}
+                          {org.subdomain ? `${org.subdomain}.trizenhr.com` : 'No subdomain'}
                         </p>
                       </div>
                       <Badge className={getPlanBadgeColor(org.subscriptionPlan)} variant="outline">

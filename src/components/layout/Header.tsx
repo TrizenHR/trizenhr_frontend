@@ -14,6 +14,7 @@ import { Bell, LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
+import { OrganizationSwitcher } from '@/components/dashboard/OrganizationSwitcher';
 
 interface HeaderProps {
   title?: string;
@@ -50,6 +51,9 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Organization Switcher (Super Admin only) */}
+        <OrganizationSwitcher />
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5 text-gray-600" />

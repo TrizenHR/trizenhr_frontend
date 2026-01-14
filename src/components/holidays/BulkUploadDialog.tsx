@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, Download, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, Download, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { holidayApi } from '@/lib/api';
 import { parseHolidayCSV, generateHolidayTemplate, ParsedHoliday } from '@/lib/csv-parser';
+import { HolidayType } from '@/lib/types';
 import { format } from 'date-fns';
 
 interface BulkUploadDialogProps {

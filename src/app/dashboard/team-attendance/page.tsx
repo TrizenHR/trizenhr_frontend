@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, TrendingUp, Download } from 'lucide-react';
+import { Users, Calendar, TrendingUp, Download } from 'lucide-react';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
 type TeamMemberStatus = {
@@ -80,12 +80,8 @@ export default function TeamAttendancePage() {
       // Map users with their attendance
       const teamStatus: TeamMemberStatus[] = users.map((user) => {
         const attendance = attendanceResponse.records.find(
-          (att) => {
-            const userId = typeof att.userId === 'object' 
-              ? (att.userId._id || att.userId.id)
-              : att.userId;
-            return userId === user.id || userId === user._id;
-          }
+          (att) => att.userId === user._id || 
+                   (typeof att.userId === 'object' && att.userId._id === user._id)
         );
 
         let status: TeamMemberStatus['status'] = 'not_marked';

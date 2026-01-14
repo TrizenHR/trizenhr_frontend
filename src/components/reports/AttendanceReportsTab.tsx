@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { attendanceApi, departmentApi } from '@/lib/api';
-import { Attendance, AttendanceStatus, Department } from '@/lib/types';
+import { attendanceApi, departmentApi, userApi } from '@/lib/api';
+import { Attendance, AttendanceStatus, Department, User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

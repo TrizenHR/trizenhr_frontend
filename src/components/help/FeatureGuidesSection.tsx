@@ -1,7 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Calendar, Users, Settings, BarChart3 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Calendar, FileText, Users, Settings, BarChart3 } from 'lucide-react';
 import { UserRole } from '@/lib/types';
 
 interface FeatureGuidesSectionProps {

@@ -42,7 +42,7 @@ export default function LandingPage() {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center transition-transform hover:scale-105">
@@ -98,7 +98,7 @@ function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b border-border">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-linear-to-brfrom-primary/5 via-accent/5 to-secondary/5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5" />
       
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -116,7 +116,7 @@ function HeroSection() {
             <h1 className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
               Workforce Attendance.
               <br />
-              <span className="bg-linear-to-br from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
                 Complete Visibility.
               </span>
             </h1>
@@ -163,7 +163,7 @@ function HeroSection() {
               </div>
               
               {/* Dashboard Preview */}
-              <div className="bg-linear-to-br from-card to-muted/30 p-6">
+              <div className="bg-gradient-to-br from-card to-muted/30 p-6">
                 <div className="mb-6 flex items-center justify-between">
                   <div className="space-y-2">
                     <div className="h-3 w-32 rounded-full bg-foreground/10 animate-pulse" />
@@ -195,7 +195,7 @@ function HeroSection() {
                       style={{ animationDelay: `${i * 0.1}s` }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-linear-to-br from-primary to-primary/60" />
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/60" />
                         <div className="space-y-1">
                           <div className="h-2 w-24 rounded bg-foreground/20" />
                           <div className="h-2 w-16 rounded bg-foreground/10" />
@@ -255,7 +255,7 @@ function ProblemSection() {
           {problems.map((problem, index) => (
             <div
               key={index}
-              className={`group relative overflow-hidden rounded-2xl border border-border bg-linear-to-br ${problem.gradient} p-6 transition-all hover:scale-105 hover:shadow-lg`}
+              className={`group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${problem.gradient} p-6 transition-all hover:scale-105 hover:shadow-lg`}
             >
               <div className="mb-4 inline-flex rounded-xl bg-background/50 p-3 backdrop-blur-sm">
                 <problem.icon className="h-6 w-6 text-primary" />
@@ -317,7 +317,7 @@ function FeaturesSection() {
           {features.map((feature, index) => (
             <Card
               key={index}
-              className={`group border-border bg-linear-to-br   ${feature.gradient} backdrop-blur-sm transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/10`}
+              className={`group border-border bg-gradient-to-br ${feature.gradient} backdrop-blur-sm transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/10`}
             >
               <CardHeader className="pb-4">
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 transition-all group-hover:scale-110 group-hover:bg-primary/20">
@@ -415,7 +415,7 @@ function RoleBasedValueSection() {
             </TabsList>
             {roles.map((role) => (
               <TabsContent key={role.id} value={role.id} className="mt-0">
-                <Card className="border-border bg-linear-to-brfrom-card to-muted/20 shadow-lg">
+                <Card className="border-border bg-gradient-to-br from-card to-muted/20 shadow-lg">
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center gap-3 text-xl">
                       <div className="rounded-xl bg-primary/10 p-2">
@@ -431,7 +431,7 @@ function RoleBasedValueSection() {
                     <ul className="grid gap-4 md:grid-cols-2">
                       {role.benefits.map((benefit, index) => (
                         <li key={index} className="flex items-start gap-3 group">
-                          <CheckCircle2 className="h-5 w-5 shrink-0 text-primary transition-all group-hover:scale-110 mt-0.5" />
+                          <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary transition-all group-hover:scale-110 mt-0.5" />
                           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                             {benefit}
                           </span>
@@ -500,7 +500,7 @@ function SecuritySection() {
               key={index}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-center transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/10"
             >
-              <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
               <div className="relative">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 transition-all group-hover:scale-110 group-hover:bg-primary/20">
                   <feature.icon className="h-7 w-7 text-primary" />
@@ -522,7 +522,7 @@ function CTASection() {
   return (
     <section id="demo" className="relative overflow-hidden py-20">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-accent/10 to-secondary/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10" />
       
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-3xl border border-border bg-card/80 p-12 text-center shadow-2xl backdrop-blur-sm">

@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { HelpCircle, Search, MessageCircle, Mail, Phone, Clock } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { HelpCircle, Search, BookOpen, MessageCircle, AlertCircle, Mail, Phone, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { UserRole } from '@/lib/types';
 import GettingStartedSection from '@/components/help/GettingStartedSection';
@@ -28,7 +31,7 @@ export default function HelpPage() {
           <h1 className="text-xl md:text-3xl font-bold">Help & Support</h1>
         </div>
         <p className="text-muted-foreground text-sm md:text-base">
-          Find answers to common questions and learn how to use AttendEase
+          Find answers to common questions and learn how to use TrizenHR
         </p>
       </div>
 
@@ -100,10 +103,10 @@ function ContactSection() {
                   Send us an email and we'll get back to you within 24 hours
                 </p>
                 <a
-                  href="mailto:support@attendease.com"
+                  href="mailto:support@trizenventures.com"
                   className="text-blue-600 hover:underline text-sm"
                 >
-                  support@attendease.com
+                  support@trizenventures.com
                 </a>
               </div>
             </div>

@@ -3,12 +3,10 @@
  * Parses CSV file and validates holiday data
  */
 
-import { HolidayType } from './types';
-
 export interface ParsedHoliday {
   name: string;
   date: string; // ISO date string
-  type: HolidayType;
+  type: string;
   description?: string;
   isRecurring: boolean;
 }
@@ -83,16 +81,10 @@ export function parseHolidayCSV(csvContent: string): ParseResult {
       }
     }
 
-    // Validate and normalize type
-    const validTypes = Object.values(HolidayType);
-    let normalizedType: HolidayType = HolidayType.COMPANY; // Default
-    if (type) {
-      const normalizedTypeStr = type.toLowerCase();
-      if (validTypes.includes(normalizedTypeStr as HolidayType)) {
-        normalizedType = normalizedTypeStr as HolidayType;
-      } else {
-        rowErrors.push(`Invalid type: ${type}. Must be one of: ${validTypes.join(', ')}`);
-      }
+    // Validate type
+    const validTypes = ['national', 'company', 'optional'];
+    if (type && !validTypes.includes(type)) {
+      rowErrors.push(`Invalid type: ${type}. Must be one of: ${validTypes.join(', ')}`);
     }
 
     // Parse recurring
@@ -110,7 +102,7 @@ export function parseHolidayCSV(csvContent: string): ParseResult {
       holidays.push({
         name,
         date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        type: normalizedType,
+        type: type || 'company',
         description,
         isRecurring,
       });
