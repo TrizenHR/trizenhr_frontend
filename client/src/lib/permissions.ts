@@ -167,3 +167,25 @@ export function getRoleColor(role: UserRole): string {
 
   return colors[role];
 }
+
+/**
+ * Check if user can manage payroll (salary structures, payroll runs)
+ */
+export function canManagePayroll(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
+}
+
+/**
+ * Check if user can view all payroll data
+ */
+export function canViewAllPayroll(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
+}
+
+/**
+ * Check if user can process payroll
+ */
+export function canProcessPayroll(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
+}
+

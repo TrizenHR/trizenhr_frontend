@@ -24,6 +24,12 @@ import {
   CreateOrganizationPayload,
   OrganizationStats,
   DashboardStats,
+  SalaryStructure,
+  PayrollRun,
+  PayrollRunStatus,
+  PayrollRecord,
+  CreateSalaryStructurePayload,
+  UpdateSalaryStructurePayload,
 } from './types';
 
 // Create axios instance
@@ -564,6 +570,87 @@ export const organizationApi = {
 export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {
     const response = await api.get<ApiResponse<DashboardStats>>('/dashboard/stats');
+    return response.data.data!;
+  },
+};
+
+// Payroll API
+export const payrollApi = {
+  // Salary Structure Management
+  createSalaryStructure: async (data: CreateSalaryStructurePayload): Promise<SalaryStructure> => {
+    const response = await api.post<ApiResponse<SalaryStructure>>('/payroll/salary-structure', data);
+    return response.data.data!;
+  },
+
+  updateSalaryStructure: async (
+    userId: string,
+    data: UpdateSalaryStructurePayload
+  ): Promise<SalaryStructure> => {
+    const response = await api.put<ApiResponse<SalaryStructure>>(
+      `/payroll/salary-structure/${userId}`,
+      data
+    );
+    return response.data.data!;
+  },
+
+  getSalaryStructure: async (userId: string): Promise<SalaryStructure | null> => {
+    const response = await api.get<ApiResponse<SalaryStructure | null>>(
+      `/payroll/salary-structure/${userId}`
+    );
+    return response.data.data!;
+  },
+
+  getAllSalaryStructures: async (filters?: {
+    department?: string;
+    search?: string;
+  }): Promise<SalaryStructure[]> => {
+    const response = await api.get<ApiResponse<SalaryStructure[]>>('/payroll/salary-structures', {
+      params: filters,
+    });
+    return response.data.data!;
+  },
+
+  // Payroll Runs
+  createPayrollRun: async (month: number, year: number): Promise<PayrollRun> => {
+    const response = await api.post<ApiResponse<PayrollRun>>('/payroll/run', { month, year });
+    return response.data.data!;
+  },
+
+  processPayrollRun: async (runId: string): Promise<PayrollRun> => {
+    const response = await api.post<ApiResponse<PayrollRun>>(`/payroll/run/${runId}/process`);
+    return response.data.data!;
+  },
+
+  getPayrollRun: async (
+    runId: string
+  ): Promise<PayrollRun & { records: PayrollRecord[] }> => {
+    const response = await api.get<ApiResponse<PayrollRun & { records: PayrollRecord[] }>>(
+      `/payroll/run/${runId}`
+    );
+    return response.data.data!;
+  },
+
+  getPayrollRuns: async (filters?: {
+    year?: number;
+    status?: PayrollRunStatus;
+  }): Promise<PayrollRun[]> => {
+    const response = await api.get<ApiResponse<PayrollRun[]>>('/payroll/runs', {
+      params: filters,
+    });
+    return response.data.data!;
+  },
+
+  // Employee Payslips (My Salary)
+  getMyPayslips: async (year?: number): Promise<PayrollRecord[]> => {
+    const response = await api.get<ApiResponse<PayrollRecord[]>>('/payroll/my-payslips', {
+      params: { year },
+    });
+    return response.data.data!;
+  },
+
+  // Payroll Record Details
+  getPayrollRecord: async (recordId: string): Promise<PayrollRecord> => {
+    const response = await api.get<ApiResponse<PayrollRecord>>(`/payroll/records/${recordId}`);
     return response.data.data!;
   },
 };

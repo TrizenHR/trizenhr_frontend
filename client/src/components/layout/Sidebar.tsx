@@ -15,6 +15,8 @@ import {
   Building2,
   UserCog,
   X,
+  DollarSign,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -60,6 +62,11 @@ const navigationSections: NavSection[] = [
         label: 'My Calendar', 
         href: '/dashboard/my-calendar', 
         icon: Calendar,
+      },
+      { 
+        label: 'My Salary', 
+        href: '/dashboard/my-salary', 
+        icon: Wallet,
       },
     ],
   },
@@ -117,6 +124,18 @@ const navigationSections: NavSection[] = [
         label: 'Reports', 
         href: '/dashboard/reports', 
         icon: FileText,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Salary Structures',
+        href: '/dashboard/salary-structures',
+        icon: DollarSign,
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Payroll Processing',
+        href: '/dashboard/payroll',
+        icon: Wallet,
         roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
       },
       {

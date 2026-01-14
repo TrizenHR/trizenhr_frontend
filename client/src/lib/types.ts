@@ -329,5 +329,98 @@ export interface DashboardStats {
     onLeave: number;
     total: number;
   };
-  pendingLeaveApprovals: number;
 }
+
+// Payroll Types
+export enum PayrollRunStatus {
+  DRAFT = 'draft',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export enum PayrollRecordStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  ON_HOLD = 'on_hold',
+}
+
+export interface Allowance {
+  name: string;
+  amount: number;
+  type: 'fixed' | 'percentage';
+}
+
+export interface Deduction {
+  name: string;
+  amount: number;
+  type: 'fixed' | 'percentage';
+}
+
+export interface SalaryStructure {
+  _id: string;
+  organizationId: string;
+  userId: string | User;
+  baseSalary: number;
+  allowances: Allowance[];
+  deductions: Deduction[];
+  effectiveFrom: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollRun {
+  _id: string;
+  organizationId: string;
+  month: number;
+  year: number;
+  status: PayrollRunStatus;
+  processedBy?: string | User;
+  processedAt?: string;
+  totalGrossSalary: number;
+  totalDeductions: number;
+  totalNetSalary: number;
+  employeeCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollRecord {
+  _id: string;
+  organizationId: string;
+  payrollRunId: string;
+  userId: string | User;
+  month: number;
+  year: number;
+  workingDays: number;
+  daysWorked: number;
+  leaveDays: number;
+  absentDays: number;
+  baseSalary: number;
+  allowances: Allowance[];
+  deductions: Deduction[];
+  grossSalary: number;
+  totalDeductions: number;
+  netSalary: number;
+  status: PayrollRecordStatus;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSalaryStructurePayload {
+  userId: string;
+  baseSalary: number;
+  allowances?: Allowance[];
+  deductions?: Deduction[];
+  effectiveFrom: Date | string;
+}
+
+export interface UpdateSalaryStructurePayload {
+  baseSalary?: number;
+  allowances?: Allowance[];
+  deductions?: Deduction[];
+  effectiveFrom?: Date | string;
+}
+
