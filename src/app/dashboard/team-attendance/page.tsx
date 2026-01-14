@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Calendar, TrendingUp, Download } from 'lucide-react';
+import { Users, TrendingUp, Download } from 'lucide-react';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
 type TeamMemberStatus = {

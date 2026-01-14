@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { HelpCircle, Search, BookOpen, MessageCircle, AlertCircle, Mail, Phone, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { HelpCircle, Search, MessageCircle, Mail, Phone, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { UserRole } from '@/lib/types';
 import GettingStartedSection from '@/components/help/GettingStartedSection';

@@ -151,9 +151,7 @@ export default function LeaveReportsTab() {
       if (selectedStatus !== 'all') filters.status = selectedStatus;
       if (selectedLeaveType !== 'all') filters.leaveType = selectedLeaveType;
       if (selectedDepartment !== 'all') {
-        // Filter by department - need to get users in that department first
-        const deptUsers = users.filter((u) => u.department === selectedDepartment);
-        // Note: This is a limitation - we'd need backend support for department filtering
+        // Note: Department filtering is done client-side in departmentFilteredRecords
       }
       if (selectedUser !== 'all') filters.userId = selectedUser;
       filters.limit = 10000; // Large limit to get all records

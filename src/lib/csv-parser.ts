@@ -3,10 +3,12 @@
  * Parses CSV file and validates holiday data
  */
 
+import { HolidayType } from './types';
+
 export interface ParsedHoliday {
   name: string;
   date: string; // ISO date string
-  type: string;
+  type: HolidayType;
   description?: string;
   isRecurring: boolean;
 }
@@ -102,7 +104,7 @@ export function parseHolidayCSV(csvContent: string): ParseResult {
       holidays.push({
         name,
         date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        type: type || 'company',
+        type: (type || 'company') as HolidayType,
         description,
         isRecurring,
       });

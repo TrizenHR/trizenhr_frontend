@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +30,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
 export default function SalaryStructuresPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const canManage = user ? canManagePayroll(user.role) : false;
 
@@ -141,19 +139,6 @@ export default function SalaryStructuresPage() {
     setIsDialogOpen(true);
   };
 
-  const addAllowance = () => {
-    setFormData((prev) => ({
-      ...prev,
-      allowances: [...prev.allowances, { name: '', amount: 0, type: 'fixed' as const }],
-    }));
-  };
-
-  const addDeduction = () => {
-    setFormData((prev) => ({
-      ...prev,
-      deductions: [...prev.deductions, { name: '', amount: 0, type: 'fixed' as const }],
-    }));
-  };
 
   if (!canManage) {
     return (

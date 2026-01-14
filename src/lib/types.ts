@@ -86,7 +86,7 @@ export enum AttendanceStatus {
 
 export interface Attendance {
   _id: string;
-  userId: string;
+  userId: string | User;
   date: string;
   checkIn?: string;
   checkOut?: string;
@@ -332,6 +332,7 @@ export interface DashboardStats {
   totalUsers?: number;
   totalDepartments?: number;
   teamSize?: number;
+  pendingLeaveApprovals?: number;
   todayAttendance: {
     present: number;
     late: number;

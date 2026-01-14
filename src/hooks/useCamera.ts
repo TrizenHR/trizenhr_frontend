@@ -2,11 +2,6 @@
 
 import { useState, useRef, useCallback } from 'react';
 
-interface CameraResult {
-  photoData: string | null;
-  error: string | null;
-  isLoading: boolean;
-}
 
 export function useCamera() {
   const [photoData, setPhotoData] = useState<string | null>(null);

@@ -14,7 +14,6 @@ import {
   ClipboardList,
   Building2,
   UserCog,
-  X,
   DollarSign,
   Wallet,
 } from 'lucide-react';

@@ -23,11 +23,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Grid3x3, List, Mail, Briefcase, Calendar as CalendarIcon, UserCheck, UserX } from 'lucide-react';
 import { format } from 'date-fns';
-import Link from 'next/link';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<User[]>([]);
@@ -315,8 +313,8 @@ export default function EmployeesPage() {
                         </TableCell>
                         <TableCell>{employee.department || '-'}</TableCell>
                         <TableCell>
-                          {employee.dateOfJoining
-                            ? format(new Date(employee.dateOfJoining), 'MMM dd, yyyy')
+                          {employee.createdAt
+                            ? format(new Date(employee.createdAt), 'MMM dd, yyyy')
                             : '-'}
                         </TableCell>
                         <TableCell>
@@ -375,10 +373,10 @@ export default function EmployeesPage() {
                           <span>{employee.department}</span>
                         </div>
                       )}
-                      {employee.dateOfJoining && (
+                      {employee.createdAt && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <CalendarIcon className="h-4 w-4" />
-                          <span>Joined {format(new Date(employee.dateOfJoining), 'MMM yyyy')}</span>
+                          <span>Joined {format(new Date(employee.createdAt), 'MMM yyyy')}</span>
                         </div>
                       )}
                     </CardContent>

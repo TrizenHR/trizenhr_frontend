@@ -1,0 +1,21 @@
+src/app/dashboard/team-attendance/page.tsx(84,66): error TS2339: Property '_id' does not exist on type 'never'.
+src/components/dashboard/AdminDashboard.tsx(64,46): error TS2339: Property 'pendingLeaveApprovals' does not exist on type 'DashboardStats'.
+src/components/dashboard/HRDashboard.tsx(58,46): error TS2339: Property 'pendingLeaveApprovals' does not exist on type 'DashboardStats'.
+src/components/dashboard/SupervisorDashboard.tsx(63,46): error TS2339: Property 'pendingLeaveApprovals' does not exist on type 'DashboardStats'.
+src/components/holidays/BulkUploadDialog.tsx(135,50): error TS2345: Argument of type 'ParsedHoliday[]' is not assignable to parameter of type '{ name: string; date: string; type: HolidayType; description?: string | undefined; isRecurring?: boolean | undefined; }[]'.
+  Type 'ParsedHoliday' is not assignable to type '{ name: string; date: string; type: HolidayType; description?: string | undefined; isRecurring?: boolean | undefined; }'.
+    Types of property 'type' are incompatible.
+      Type 'string' is not assignable to type 'HolidayType'.
+src/components/reports/AttendanceReportsTab.tsx(4,40): error TS6133: 'userApi' is declared but its value is never read.
+src/components/reports/AttendanceReportsTab.tsx(5,52): error TS6133: 'User' is declared but its value is never read.
+src/components/reports/AttendanceReportsTab.tsx(166,24): error TS2339: Property 'firstName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(166,42): error TS2339: Property 'lastName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(167,15): error TS2339: Property 'employeeId' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(168,15): error TS2339: Property 'department' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(207,37): error TS2339: Property 'firstName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(207,55): error TS2339: Property 'lastName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(208,29): error TS2339: Property 'employeeId' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(425,45): error TS2339: Property 'firstName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(425,63): error TS2339: Property 'lastName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(427,75): error TS2339: Property 'employeeId' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(428,75): error TS2339: Property 'department' does not exist on type 'never'.

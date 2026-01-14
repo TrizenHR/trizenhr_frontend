@@ -1,0 +1,43 @@
+src/app/dashboard/my-calendar/page.tsx(7,29): error TS6133: 'CardDescription' is declared but its value is never read.
+src/app/dashboard/my-calendar/page.tsx(44,13): error TS6133: 'month' is declared but its value is never read.
+src/app/dashboard/my-leave/page.tsx(38,28): error TS6133: 'CalendarIcon' is declared but its value is never read.
+src/app/dashboard/profile/page.tsx(5,19): error TS6133: 'userApi' is declared but its value is never read.
+src/app/dashboard/salary-structures/page.tsx(34,9): error TS6133: 'router' is declared but its value is never read.
+src/app/dashboard/salary-structures/page.tsx(144,9): error TS6133: 'addAllowance' is declared but its value is never read.
+src/app/dashboard/salary-structures/page.tsx(151,9): error TS6133: 'addDeduction' is declared but its value is never read.
+src/app/dashboard/settings/page.tsx(6,1): error TS6192: All imports in import declaration are unused.
+src/app/dashboard/team-attendance/page.tsx(27,17): error TS6133: 'Calendar' is declared but its value is never read.
+src/app/dashboard/team-attendance/page.tsx(84,66): error TS2339: Property '_id' does not exist on type 'never'.
+src/app/dashboard/team-leaves/page.tsx(12,44): error TS6133: 'isSameMonth' is declared but its value is never read.
+src/app/dashboard/team-leaves/page.tsx(37,13): error TS6133: 'monthStart' is declared but its value is never read.
+src/app/dashboard/team-leaves/page.tsx(38,13): error TS6133: 'monthEnd' is declared but its value is never read.
+src/components/dashboard/AdminDashboard.tsx(64,46): error TS2339: Property 'pendingLeaveApprovals' does not exist on type 'DashboardStats'.
+src/components/dashboard/HRDashboard.tsx(58,46): error TS2339: Property 'pendingLeaveApprovals' does not exist on type 'DashboardStats'.
+src/components/dashboard/SupervisorDashboard.tsx(63,46): error TS2339: Property 'pendingLeaveApprovals' does not exist on type 'DashboardStats'.
+src/components/help/FAQSection.tsx(5,1): error TS6133: 'Badge' is declared but its value is never read.
+src/components/help/FeatureGuidesSection.tsx(4,1): error TS6133: 'Badge' is declared but its value is never read.
+src/components/help/FeatureGuidesSection.tsx(5,27): error TS6133: 'FileText' is declared but its value is never read.
+src/components/help/TroubleshootingSection.tsx(4,23): error TS6133: 'CheckCircle2' is declared but its value is never read.
+src/components/help/TroubleshootingSection.tsx(4,37): error TS6133: 'XCircle' is declared but its value is never read.
+src/components/holidays/BulkUploadDialog.tsx(4,28): error TS6133: 'X' is declared but its value is never read.
+src/components/holidays/BulkUploadDialog.tsx(26,1): error TS6133: 'HolidayType' is declared but its value is never read.
+src/components/holidays/BulkUploadDialog.tsx(136,50): error TS2345: Argument of type 'ParsedHoliday[]' is not assignable to parameter of type '{ name: string; date: string; type: HolidayType; description?: string | undefined; isRecurring?: boolean | undefined; }[]'.
+  Type 'ParsedHoliday' is not assignable to type '{ name: string; date: string; type: HolidayType; description?: string | undefined; isRecurring?: boolean | undefined; }'.
+    Types of property 'type' are incompatible.
+      Type 'string' is not assignable to type 'HolidayType'.
+src/components/layout/Sidebar.tsx(17,3): error TS6133: 'X' is declared but its value is never read.
+src/components/reports/AttendanceReportsTab.tsx(4,40): error TS6133: 'userApi' is declared but its value is never read.
+src/components/reports/AttendanceReportsTab.tsx(5,52): error TS6133: 'User' is declared but its value is never read.
+src/components/reports/AttendanceReportsTab.tsx(166,24): error TS2339: Property 'firstName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(166,42): error TS2339: Property 'lastName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(167,15): error TS2339: Property 'employeeId' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(168,15): error TS2339: Property 'department' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(207,37): error TS2339: Property 'firstName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(207,55): error TS2339: Property 'lastName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(208,29): error TS2339: Property 'employeeId' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(425,45): error TS2339: Property 'firstName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(425,63): error TS2339: Property 'lastName' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(427,75): error TS2339: Property 'employeeId' does not exist on type 'never'.
+src/components/reports/AttendanceReportsTab.tsx(428,75): error TS2339: Property 'department' does not exist on type 'never'.
+src/components/reports/LeaveReportsTab.tsx(155,15): error TS6133: 'deptUsers' is declared but its value is never read.
+src/components/settings/GeneralSettings.tsx(6,17): error TS6133: 'Calendar' is declared but its value is never read.
