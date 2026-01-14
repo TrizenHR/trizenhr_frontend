@@ -25,9 +25,9 @@ export function canCreateUser(userRole: UserRole, targetRole: UserRole): boolean
     return true;
   }
 
-  // Admin can create everyone except super admin and other admins
+  // Admin can create HR, Supervisor, and Employee (NOT other Admins or Super Admins)
   if (userRole === UserRole.ADMIN) {
-    return targetRole !== UserRole.SUPER_ADMIN && targetRole !== UserRole.ADMIN;
+    return targetRole === UserRole.HR || targetRole === UserRole.SUPERVISOR || targetRole === UserRole.EMPLOYEE;
   }
 
   // HR can only create employees
@@ -92,10 +92,10 @@ export function canDeleteUser(userRole: UserRole, targetUserRole: UserRole): boo
 }
 
 /**
- * Check if user can view all users
+ * Check if user can view all users (org-wide, not team-only)
  */
 export function canViewAllUsers(role: UserRole): boolean {
-  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR].includes(role);
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
 }
 
 /**
@@ -170,22 +170,55 @@ export function getRoleColor(role: UserRole): string {
 
 /**
  * Check if user can manage payroll (salary structures, payroll runs)
+ * ADMIN ONLY - HR CANNOT manage payroll
  */
 export function canManagePayroll(role: UserRole): boolean {
-  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(role);
 }
 
 /**
  * Check if user can view all payroll data
+ * ADMIN ONLY - HR CANNOT view all payroll
  */
 export function canViewAllPayroll(role: UserRole): boolean {
-  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(role);
 }
 
 /**
  * Check if user can process payroll
+ * ADMIN ONLY - HR CANNOT process payroll
  */
 export function canProcessPayroll(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(role);
+}
+
+/**
+ * Check if user can manage departments
+ * ADMIN ONLY - HR can only view
+ */
+export function canManageDepartments(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(role);
+}
+
+/**
+ * Check if user can manage holidays
+ * ADMIN ONLY - HR can only view
+ */
+export function canManageHolidays(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(role);
+}
+
+/**
+ * Check if user can view organization-wide data
+ */
+export function canViewOrgWideData(role: UserRole): boolean {
   return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR].includes(role);
+}
+
+/**
+ * Check if user can view team data (team-level or higher)
+ */
+export function canViewTeamData(role: UserRole): boolean {
+  return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR].includes(role);
 }
 

@@ -37,6 +37,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Calendar as CalendarIcon, Repeat, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import BulkUploadDialog from '@/components/holidays/BulkUploadDialog';
+import { useAuth } from '@/hooks/use-auth';
+import { canManageHolidays } from '@/lib/permissions';
 
 export default function ManageHolidaysPage() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -56,6 +58,8 @@ export default function ManageHolidaysPage() {
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
 
   const { toast } = useToast();
+  const { user } = useAuth();
+  const canManage = user ? canManageHolidays(user.role) : false;
 
   useEffect(() => {
     loadHolidays();
@@ -82,7 +86,7 @@ export default function ManageHolidaysPage() {
       setEditingHoliday(holiday);
       setFormData({
         name: holiday.name,
-        date: holiday.date.split('T')[0],
+        date: format(new Date(holiday.date), 'yyyy-MM-dd'),
         type: holiday.type,
         description: holiday.description || '',
         isRecurring: holiday.isRecurring,
@@ -196,21 +200,29 @@ export default function ManageHolidaysPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Upload
-          </Button>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Holiday
-          </Button>
+          {canManage && (
+            <>
+              <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Bulk Upload
+              </Button>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Holiday
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Holidays ({selectedYear})</CardTitle>
-          <CardDescription>Manage holidays for the selected year</CardDescription>
+          <CardDescription>
+            {canManage
+              ? 'Manage holidays for the selected year'
+              : 'View holidays for the selected year (Admin only can manage)'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -255,23 +267,25 @@ export default function ManageHolidaysPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleOpenDialog(holiday)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(holiday._id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {canManage && (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleOpenDialog(holiday)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(holiday._id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

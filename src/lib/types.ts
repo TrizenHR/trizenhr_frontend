@@ -7,6 +7,7 @@ export enum UserRole {
 }
 
 export interface User {
+  _id: string;
   id: string;
   organizationId?: string;
   organization?: {
@@ -245,7 +246,7 @@ export interface Holiday {
 
 export interface HolidayFormData {
   name: string;
-  date: Date;
+  date: string;
   type: HolidayType;
   description?: string;
   isRecurring: boolean;

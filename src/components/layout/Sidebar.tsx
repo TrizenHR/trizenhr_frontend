@@ -112,13 +112,13 @@ const navigationSections: NavSection[] = [
         label: 'Departments', 
         href: '/dashboard/departments', 
         icon: Building2,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // HR can only view (no management)
       },
       { 
         label: 'Manage Holidays', 
         href: '/dashboard/manage-holidays', 
         icon: Calendar,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // HR can only view (no management)
       },
       { 
         label: 'Reports', 
@@ -130,13 +130,13 @@ const navigationSections: NavSection[] = [
         label: 'Salary Structures',
         href: '/dashboard/salary-structures',
         icon: DollarSign,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // Admin only, HR cannot access
       },
       {
         label: 'Payroll Processing',
         href: '/dashboard/payroll',
         icon: Wallet,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // Admin only, HR cannot access
       },
       {
         label: 'Users',

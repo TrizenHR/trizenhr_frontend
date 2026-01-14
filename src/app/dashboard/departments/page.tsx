@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { departmentApi, userApi } from '@/lib/api';
 import { Department, DepartmentFormData, User } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Pencil, Trash2, Users, UserPlus, X } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { canManageDepartments } from '@/lib/permissions';
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -51,6 +53,8 @@ export default function DepartmentsPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isAddingMember, setIsAddingMember] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const canManage = user ? canManageDepartments(user.role) : false;
 
   useEffect(() => {
     loadData();
@@ -243,10 +247,12 @@ export default function DepartmentsPage() {
           <h1 className="text-2xl md:text-3xl font-bold">Departments</h1>
           <p className="text-muted-foreground text-sm">Manage organization departments</p>
         </div>
-        <Button onClick={openAddDialog} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Department
-        </Button>
+        {canManage && (
+          <Button onClick={openAddDialog} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Department
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -304,6 +310,11 @@ export default function DepartmentsPage() {
       <Card>
         <CardHeader>
           <CardTitle>All Departments</CardTitle>
+          {!canManage && (
+            <CardDescription className="text-amber-600">
+              View only. Only Admins can create, edit, or delete departments.
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -336,30 +347,34 @@ export default function DepartmentsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openMembersDialog(dept)}
-                              title="Manage Members"
-                            >
-                              <Users className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditDialog(dept)}
-                              title="Edit Department"
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(dept._id)}
-                              title="Delete Department"
-                            >
-                              <Trash2 className="h-3 w-3 text-red-600" />
-                            </Button>
+                            {canManage && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openMembersDialog(dept)}
+                                  title="Manage Members"
+                                >
+                                  <Users className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditDialog(dept)}
+                                  title="Edit Department"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDelete(dept._id)}
+                                  title="Delete Department"
+                                >
+                                  <Trash2 className="h-3 w-3 text-red-600" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
