@@ -11,6 +11,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
+  selectedOrganizationId: string | null;
+  setSelectedOrganizationId: (orgId: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedOrganizationId, setSelectedState] = useState<string | null>(null);
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -26,10 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const storedToken = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
+        const storedOrgId = localStorage.getItem('selectedOrganizationId');
 
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
+          if (storedOrgId) setSelectedState(storedOrgId);
 
           // Optionally fetch fresh user data from API
           try {
@@ -41,8 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Failed to fetch user:', error);
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            localStorage.removeItem('selectedOrganizationId');
             setToken(null);
             setUser(null);
+            setSelectedState(null);
           }
         }
       } catch (error) {
@@ -76,9 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated'); // Clear old demo auth
+    localStorage.removeItem('selectedOrganizationId');
 
     setToken(null);
     setUser(null);
+    setSelectedState(null);
 
     // Optional: Call logout API endpoint
     authApi.logout().catch(console.error);
@@ -89,6 +98,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const setSelectedOrganizationId = (orgId: string | null) => {
+    setSelectedState(orgId);
+    if (orgId) {
+      localStorage.setItem('selectedOrganizationId', orgId);
+    } else {
+      localStorage.removeItem('selectedOrganizationId');
+    }
+    // Force reload to ensure all queries strictly respect the new context
+    window.location.reload(); 
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -96,6 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     updateUser,
+    selectedOrganizationId,
+    setSelectedOrganizationId,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

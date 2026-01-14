@@ -23,6 +23,7 @@ import {
   Organization,
   CreateOrganizationPayload,
   OrganizationStats,
+  DashboardStats,
 } from './types';
 
 // Create axios instance
@@ -38,8 +39,15 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
+      const selectedOrgId = localStorage.getItem('selectedOrganizationId');
+      
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      // Inject organizationId override for Super Admin
+      if (selectedOrgId) {
+        config.params = { ...config.params, organizationId: selectedOrgId };
       }
     }
     return config;
@@ -548,6 +556,14 @@ export const organizationApi = {
     const response = await api.put<ApiResponse<Organization>>('/organizations/my/settings', {
       settings,
     });
+    return response.data.data!;
+  },
+};
+
+// Dashboard API (Admin/HR/Supervisor)
+export const dashboardApi = {
+  getStats: async (): Promise<DashboardStats> => {
+    const response = await api.get<ApiResponse<DashboardStats>>('/dashboard/stats');
     return response.data.data!;
   },
 };

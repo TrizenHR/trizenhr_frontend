@@ -316,3 +316,18 @@ export interface OrganizationStats {
   subscriptionPlan: SubscriptionPlan;
   isActive: boolean;
 }
+
+// Dashboard Stats (role-specific)
+export interface DashboardStats {
+  totalUsers?: number;
+  totalDepartments?: number;
+  teamSize?: number;
+  todayAttendance: {
+    present: number;
+    late: number;
+    absent: number;
+    onLeave: number;
+    total: number;
+  };
+  pendingLeaveApprovals: number;
+}

@@ -180,7 +180,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
       <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
         <Image src="/assets/logo.png" alt="Logo" width={32} height={32} className="rounded" />
         <div>
-          <span className="block font-semibold text-gray-900">AttendEase</span>
+          <span className="block font-semibold text-gray-900">TrizenHR</span>
           <span className="block text-xs text-gray-500">by Trizen Ventures</span>
         </div>
       </div>

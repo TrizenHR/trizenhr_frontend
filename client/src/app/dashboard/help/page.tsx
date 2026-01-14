@@ -31,7 +31,7 @@ export default function HelpPage() {
           <h1 className="text-xl md:text-3xl font-bold">Help & Support</h1>
         </div>
         <p className="text-muted-foreground text-sm md:text-base">
-          Find answers to common questions and learn how to use AttendEase
+          Find answers to common questions and learn how to use TrizenHR
         </p>
       </div>
 
@@ -103,10 +103,10 @@ function ContactSection() {
                   Send us an email and we'll get back to you within 24 hours
                 </p>
                 <a
-                  href="mailto:support@attendease.com"
+                  href="mailto:support@trizenventures.com"
                   className="text-blue-600 hover:underline text-sm"
                 >
-                  support@attendease.com
+                  support@trizenventures.com
                 </a>
               </div>
             </div>

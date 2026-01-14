@@ -158,7 +158,7 @@ export default function TroubleshootingSection({
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-blue-800">
-            <p>• Email: support@attendease.com</p>
+            <p>• Email: support@trizenventures.com</p>
             <p>• Phone: +1 (800) ATTEND</p>
             <p>• Support Hours: Monday-Friday, 9 AM - 6 PM (IST)</p>
           </div>

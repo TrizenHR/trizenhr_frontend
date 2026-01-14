@@ -93,13 +93,13 @@ const faqs = [
       {
         question: 'What browsers are supported?',
         answer:
-          'AttendEase works best on Chrome, Firefox, Safari, and Edge (latest versions). Make sure your browser is up to date for the best experience.',
+          'TrizenHR works best on Chrome, Firefox, Safari, and Edge (latest versions). Make sure your browser is up to date for the best experience.',
         roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN],
       },
       {
-        question: 'Can I use AttendEase on mobile?',
+        question: 'Can I use TrizenHR on mobile?',
         answer:
-          'Yes, AttendEase is fully responsive and works on mobile devices. You can access all features including check-in, leave requests, and viewing reports from your mobile browser.',
+          'Yes, TrizenHR is fully responsive and works on mobile devices. You can access all features including check-in, leave requests, and viewing reports from your mobile browser.',
         roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN],
       },
     ],

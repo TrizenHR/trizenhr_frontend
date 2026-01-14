@@ -6,7 +6,7 @@ import User, { UserRole } from '../models/User';
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/attendease';
+const MONGO_URI = process.env.MONGO_URI!;
 
 /**
  * Seed script to create initial users including Super Admin
