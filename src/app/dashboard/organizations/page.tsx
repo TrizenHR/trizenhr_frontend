@@ -32,6 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle, XCircle, Plus, Edit, Trash2, Users } from 'lucide-react';
 import { format } from 'date-fns';
@@ -50,6 +51,12 @@ export default function OrganizationsPage() {
     name: '',
     subdomain: '',
     subscriptionPlan: SubscriptionPlan.FREE,
+    microsoftAuth: {
+      tenantId: '',
+      domain: '',
+      allowMicrosoftAuth: false,
+      allowLocalAuth: true,
+    },
   });
 
   const { toast } = useToast();
@@ -140,6 +147,12 @@ export default function OrganizationsPage() {
       name: org.name,
       subdomain: org.subdomain,
       subscriptionPlan: org.subscriptionPlan,
+      microsoftAuth: {
+        tenantId: org.microsoftAuth?.tenantId || '',
+        domain: org.microsoftAuth?.domain || '',
+        allowMicrosoftAuth: org.microsoftAuth?.allowMicrosoftAuth || false,
+        allowLocalAuth: org.microsoftAuth?.allowLocalAuth ?? true,
+      },
     });
     setIsDialogOpen(true);
   };
@@ -168,6 +181,12 @@ export default function OrganizationsPage() {
       name: '',
       subdomain: '',
       subscriptionPlan: SubscriptionPlan.FREE,
+      microsoftAuth: {
+        tenantId: '',
+        domain: '',
+        allowMicrosoftAuth: false,
+        allowLocalAuth: true,
+      },
     });
     setIsEditing(false);
     setCurrentOrgId(null);
@@ -370,53 +389,159 @@ export default function OrganizationsPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{isEditing ? 'Edit Organization' : 'Create Organization'}</DialogTitle>
             <DialogDescription>
               {isEditing ? 'Update organization details' : 'Add a new client organization'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Organization Name *</Label>
-              <Input
-                id="name"
-                placeholder="Acme Corporation"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subdomain">Subdomain (Optional)</Label>
-              <Input
-                id="subdomain"
-                placeholder="acme"
-                value={formData.subdomain || ''}
-                onChange={(e) => setFormData({ ...formData, subdomain: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="plan">Subscription Plan</Label>
-              <Select
-                value={formData.subscriptionPlan}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, subscriptionPlan: value as SubscriptionPlan })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={SubscriptionPlan.FREE}>Free</SelectItem>
-                  <SelectItem value={SubscriptionPlan.BASIC}>Basic</SelectItem>
-                  <SelectItem value={SubscriptionPlan.PREMIUM}>Premium</SelectItem>
-                  <SelectItem value={SubscriptionPlan.ENTERPRISE}>Enterprise</SelectItem>
-                </SelectContent>
-              </Select>
+          
+          <div className="overflow-y-auto flex-1 px-1">
+            <div className="space-y-6 py-4">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Basic Information</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="name">Organization Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Acme Corporation"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="subdomain">Subdomain (Optional)</Label>
+                  <Input
+                    id="subdomain"
+                    placeholder="acme"
+                    value={formData.subdomain || ''}
+                    onChange={(e) => setFormData({ ...formData, subdomain: e.target.value })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="plan">Subscription Plan</Label>
+                  <Select
+                    value={formData.subscriptionPlan}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, subscriptionPlan: value as SubscriptionPlan })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={SubscriptionPlan.FREE}>Free</SelectItem>
+                      <SelectItem value={SubscriptionPlan.BASIC}>Basic</SelectItem>
+                      <SelectItem value={SubscriptionPlan.PREMIUM}>Premium</SelectItem>
+                      <SelectItem value={SubscriptionPlan.ENTERPRISE}>Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Microsoft Authentication Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-sm font-semibold text-foreground mb-4">Authentication Settings</h3>
+                
+                <div className="space-y-5">
+                  <div className="flex items-start justify-between gap-4 p-3 rounded-lg border bg-muted/30">
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-sm font-medium">Microsoft Sign-In</Label>
+                      <p className="text-xs text-muted-foreground">Allow users to authenticate with their Microsoft accounts</p>
+                    </div>
+                    <Switch
+                      checked={formData.microsoftAuth?.allowMicrosoftAuth || false}
+                      onCheckedChange={(checked: boolean) =>
+                        setFormData({
+                          ...formData,
+                          microsoftAuth: { 
+                            tenantId: formData.microsoftAuth?.tenantId || '',
+                            domain: formData.microsoftAuth?.domain || '',
+                            allowMicrosoftAuth: checked,
+                            allowLocalAuth: formData.microsoftAuth?.allowLocalAuth ?? true,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-start justify-between gap-4 p-3 rounded-lg border bg-muted/30">
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-sm font-medium">Email/Password Login</Label>
+                      <p className="text-xs text-muted-foreground">Allow traditional email and password authentication</p>
+                    </div>
+                    <Switch
+                      checked={formData.microsoftAuth?.allowLocalAuth ?? true}
+                      onCheckedChange={(checked: boolean) =>
+                        setFormData({
+                          ...formData,
+                          microsoftAuth: {
+                            tenantId: formData.microsoftAuth?.tenantId || '',
+                            domain: formData.microsoftAuth?.domain || '',
+                            allowMicrosoftAuth: formData.microsoftAuth?.allowMicrosoftAuth || false,
+                            allowLocalAuth: checked,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+
+                  {formData.microsoftAuth?.allowMicrosoftAuth && (
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="domain" className="text-sm font-medium">Email Domain</Label>
+                        <Input
+                          id="domain"
+                          placeholder="e.g., trizenventures.com"
+                          value={formData.microsoftAuth?.domain || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              microsoftAuth: {
+                                tenantId: formData.microsoftAuth?.tenantId || '',
+                                domain: e.target.value,
+                                allowMicrosoftAuth: formData.microsoftAuth?.allowMicrosoftAuth || false,
+                                allowLocalAuth: formData.microsoftAuth?.allowLocalAuth ?? true,
+                              },
+                            })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">Optional: Match users by their email domain</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="tenantId" className="text-sm font-medium">Azure AD Tenant ID</Label>
+                        <Input
+                          id="tenantId"
+                          placeholder="e.g., 12345678-abcd-1234-5678-abcdef123456"
+                          value={formData.microsoftAuth?.tenantId || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              microsoftAuth: {
+                                tenantId: e.target.value,
+                                domain: formData.microsoftAuth?.domain || '',
+                                allowMicrosoftAuth: formData.microsoftAuth?.allowMicrosoftAuth || false,
+                                allowLocalAuth: formData.microsoftAuth?.allowLocalAuth ?? true,
+                              },
+                            })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">Optional: Restrict access to a specific Azure AD tenant</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <DialogFooter>
+          
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => {
               setIsDialogOpen(false);
               resetForm();
@@ -424,7 +549,7 @@ export default function OrganizationsPage() {
               Cancel
             </Button>
             <Button onClick={handleCreateOrUpdate}>
-              {isEditing ? 'Update' : 'Create'}
+              {isEditing ? 'Update Organization' : 'Create Organization'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -93,6 +93,22 @@ export const authApi = {
     return response.data.data!;
   },
 
+  // Microsoft OAuth: Get authorization URL
+  getMicrosoftAuthUrl: async (state?: string): Promise<{ authUrl: string }> => {
+    const response = await api.get<ApiResponse<{ authUrl: string }>>('/auth/microsoft/url', {
+      params: { state },
+    });
+    return response.data.data!;
+  },
+
+  // Microsoft OAuth: Handle callback and get tokens
+  handleMicrosoftCallback: async (code: string): Promise<LoginResponse> => {
+    const response = await api.post<ApiResponse<LoginResponse>>('/auth/microsoft/callback', {
+      code,
+    });
+    return response.data.data!;
+  },
+
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get<ApiResponse<User>>('/auth/me');
     return response.data.data!;

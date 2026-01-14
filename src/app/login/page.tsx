@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/features/auth-context';
 import { LoginFormData, loginSchema } from '@/lib/validations';
 import { toast } from 'sonner';
+import { authApi } from '@/lib/api';
 
 // Test credentials for all roles
 const TEST_CREDENTIALS = [
@@ -28,6 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
 
   const {
     register,
@@ -47,6 +49,19 @@ export default function LoginPage() {
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.response?.data?.error || 'Invalid email or password');
       setIsLoading(false);
+    }
+  };
+
+  const handleMicrosoftLogin = async () => {
+    setIsMicrosoftLoading(true);
+    try {
+      // Get Microsoft auth URL from backend
+      const response = await authApi.getMicrosoftAuthUrl();
+      // Redirect to Microsoft login
+      window.location.href = response.authUrl;
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to initiate Microsoft login');
+      setIsMicrosoftLoading(false);
     }
   };
 
@@ -100,9 +115,46 @@ export default function LoginPage() {
               </Link>
             </div>
             <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
-            <CardDescription>Enter your credentials to access your dashboard</CardDescription>
+            <CardDescription>Sign in to access your dashboard</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Microsoft Sign-In Button */}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mb-4 flex items-center justify-center gap-2"
+              onClick={handleMicrosoftLogin}
+              disabled={isMicrosoftLoading || isLoading}
+            >
+              {isMicrosoftLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Connecting to Microsoft...
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+                    <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+                    <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+                  </svg>
+                  Sign in with Microsoft
+                </>
+              )}
+            </Button>
+
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -185,3 +237,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

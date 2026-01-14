@@ -276,6 +276,13 @@ export enum SubscriptionPlan {
   ENTERPRISE = 'enterprise',
 }
 
+export interface MicrosoftAuthConfig {
+  tenantId?: string;
+  domain?: string;
+  allowMicrosoftAuth: boolean;
+  allowLocalAuth: boolean;
+}
+
 export interface Organization {
   _id: string;
   name: string;
@@ -296,6 +303,7 @@ export interface Organization {
     timezone: string;
     fiscalYearStart: number;
   };
+  microsoftAuth?: MicrosoftAuthConfig;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
@@ -307,6 +315,7 @@ export interface CreateOrganizationPayload {
   subscriptionPlan?: SubscriptionPlan;
   subscriptionExpiry?: Date;
   settings?: Partial<Organization['settings']>;
+  microsoftAuth?: MicrosoftAuthConfig;
 }
 
 export interface OrganizationStats {
