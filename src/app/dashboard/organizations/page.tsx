@@ -351,7 +351,7 @@ export default function OrganizationsPage() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Link href={`/dashboard/users/create?orgId=${org._id}`}>
-                              <Button variant="ghost" size="sm" title="Add user to this organization">
+                              <Button variant="ghost" size="sm" title="Create Company Admin for this organization">
                                 <Users className="h-4 w-4" />
                               </Button>
                             </Link>

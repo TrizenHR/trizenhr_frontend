@@ -18,10 +18,10 @@ import { authApi } from '@/lib/api';
 
 // Test credentials for all roles
 const TEST_CREDENTIALS = [
-  { role: 'Super Admin', email: 'demo@trizenventures.com', password: 'demo123' },
-  { role: 'Admin', email: 'admin@trizenventures.com', password: 'admin123' },
-  { role: 'HR', email: 'hr@trizenventures.com', password: 'hr1234' },
-  { role: 'Supervisor', email: 'supervisor@trizenventures.com', password: 'supervisor123' },
+  { role: 'System Admin', email: 'demo@trizenventures.com', password: 'demo123' },
+  { role: 'Company Admin', email: 'admin@trizenventures.com', password: 'admin123' },
+  { role: 'HR Admin', email: 'hr@trizenventures.com', password: 'hr1234' },
+  { role: 'Manager', email: 'supervisor@trizenventures.com', password: 'supervisor123' },
   { role: 'Employee', email: 'employee@trizenventures.com', password: 'employee123' },
 ];
 
@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div>
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/assets/logo.png"
+              src="/assets/logo-white.png"
               alt="Logo"
               width={40}
               height={40}

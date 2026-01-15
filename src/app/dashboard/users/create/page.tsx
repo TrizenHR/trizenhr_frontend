@@ -16,7 +16,7 @@ export default function CreateUserPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const canManage = useCanManageUsers();
+  const canManage = useCanManageUsers() || user?.role === UserRole.SUPER_ADMIN;
 
   const [isLoading, setIsLoading] = useState(false);
 

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserRole } from '@/lib/types';
-import { Camera, Calendar, Users, FileText, UserPlus, ClipboardCheck } from 'lucide-react';
+import { Camera, Calendar, Users, FileText, UserPlus, ClipboardCheck, Building2, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 interface QuickActionsProps {
@@ -32,9 +32,9 @@ const roleActions = {
     { label: 'Reports', href: '/dashboard/reports', icon: FileText },
   ],
   [UserRole.SUPER_ADMIN]: [
-    { label: 'Manage Users', href: '/dashboard/users', icon: Users },
-    { label: 'View Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
-    { label: 'System Reports', href: '/dashboard/reports', icon: FileText },
+    { label: 'Create Organization', href: '/dashboard/organizations/new', icon: Building2 },
+    { label: 'View All Orgs', href: '/dashboard/organizations', icon: Building2 },
+    { label: 'System Settings', href: '/dashboard/settings', icon: Settings },
   ],
 };
 

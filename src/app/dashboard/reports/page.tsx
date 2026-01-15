@@ -14,7 +14,7 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState('attendance');
 
   // Check if user has access to reports
-  if (!user || !hasAnyRole(user.role, [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR])) {
+  if (!user || !hasAnyRole(user.role, [UserRole.ADMIN, UserRole.HR])) {
     return (
       <div className="p-6">
         <div className="text-center py-12">

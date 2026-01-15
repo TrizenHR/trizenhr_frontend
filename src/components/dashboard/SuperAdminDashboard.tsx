@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { organizationApi } from '@/lib/api';
+import { organizationApi, dashboardApi } from '@/lib/api';
 import { Organization, SubscriptionPlan } from '@/lib/types';
 import { QuickActions } from './QuickActions';
 import { StatCard } from './StatCard';
 import { UserRole } from '@/lib/types';
-import { Building2, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
+import { Building2, CheckCircle, XCircle, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -14,31 +14,40 @@ import { Button } from '@/components/ui/button';
 
 export function SuperAdminDashboard() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [systemStats, setSystemStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadOrganizations();
+    loadData();
   }, []);
 
-  const loadOrganizations = async () => {
+  const loadData = async () => {
     try {
-      const data = await organizationApi.getAll();
-      setOrganizations(data);
+      const [orgsData, statsData] = await Promise.all([
+        organizationApi.getAll(),
+        dashboardApi.getStats()
+      ]);
+      setOrganizations(orgsData);
+      setSystemStats(statsData);
     } catch (error) {
-      console.error('Failed to load organizations:', error);
+      console.error('Failed to load data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const stats = {
-    totalOrgs: organizations.length,
-    activeOrgs: organizations.filter((o) => o.isActive).length,
-    inactiveOrgs: organizations.filter((o) => !o.isActive).length,
-    premiumOrgs: organizations.filter((o) => 
-      o.subscriptionPlan === SubscriptionPlan.PREMIUM || 
-      o.subscriptionPlan === SubscriptionPlan.ENTERPRISE
-    ).length,
+  const stats = systemStats ? {
+    totalOrgs: systemStats.totalOrganizations || 0,
+    activeOrgs: systemStats.activeOrganizations || 0,
+    inactiveOrgs: systemStats.inactiveOrganizations || 0,
+    totalUsers: systemStats.totalUsers || 0,
+    premiumOrgs: (systemStats.organizationsByPlan?.premium || 0) + (systemStats.organizationsByPlan?.enterprise || 0),
+  } : {
+    totalOrgs: 0,
+    activeOrgs: 0,
+    inactiveOrgs: 0,
+    totalUsers: 0,
+    premiumOrgs: 0,
   };
 
   const getPlanBadgeColor = (plan: SubscriptionPlan) => {
@@ -55,16 +64,16 @@ export function SuperAdminDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage client organizations and platform</p>
+          <h1 className="text-3xl font-bold">System Dashboard</h1>
+          <p className="text-muted-foreground">Manage platform and client organizations</p>
         </div>
         <Link href="/dashboard/organizations">
-          <Button>View All Organizations</Button>
+          <Button>Manage Organizations</Button>
         </Link>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <StatCard
           title="Total Organizations"
           value={stats.totalOrgs}
@@ -81,7 +90,13 @@ export function SuperAdminDashboard() {
           title="Inactive"
           value={stats.inactiveOrgs}
           icon={XCircle}
-          description="Paused or deleted"
+          description="Paused or disabled"
+        />
+        <StatCard
+          title="Total Users"
+          value={stats.totalUsers}
+          icon={Users}
+          description="Across all organizations"
         />
         <StatCard
           title="Premium Tier"

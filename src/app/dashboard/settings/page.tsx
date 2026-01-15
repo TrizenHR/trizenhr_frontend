@@ -23,8 +23,8 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Check if user has access to settings
-  if (!user || !hasAnyRole(user.role, [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR])) {
+  // Check if user has access to settings (organization-level settings, not for Super Admin)
+  if (!user || !hasAnyRole(user.role, [UserRole.ADMIN, UserRole.HR])) {
     return (
       <div className="p-6">
         <div className="text-center py-12">

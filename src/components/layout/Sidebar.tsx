@@ -51,21 +51,25 @@ const navigationSections: NavSection[] = [
         label: 'My Attendance', 
         href: '/dashboard/my-attendance', 
         icon: Clock,
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
       },
       { 
         label: 'My Leave', 
         href: '/dashboard/my-leave', 
         icon: FileText,
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
       },
       { 
         label: 'My Calendar', 
         href: '/dashboard/my-calendar', 
         icon: Calendar,
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
       },
       { 
         label: 'My Salary', 
         href: '/dashboard/my-salary', 
         icon: Wallet,
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
       },
     ],
   },
@@ -76,25 +80,25 @@ const navigationSections: NavSection[] = [
         label: 'Team Attendance', 
         href: '/dashboard/team-attendance', 
         icon: Users,
-        roles: [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Team Leaves', 
         href: '/dashboard/team-leaves', 
         icon: Calendar,
-        roles: [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Leave Approvals', 
         href: '/dashboard/leave-approvals', 
         icon: ClipboardList,
-        roles: [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
       { 
         label: 'Employees', 
         href: '/dashboard/employees', 
         icon: Users,
-        roles: [UserRole.ADMIN, UserRole.HR],
+        roles: [UserRole.HR],
       },
     ],
   },
@@ -111,35 +115,35 @@ const navigationSections: NavSection[] = [
         label: 'Departments', 
         href: '/dashboard/departments', 
         icon: Building2,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // HR can only view (no management)
+        roles: [UserRole.ADMIN], // HR can only view, Super Admin excluded
       },
       { 
         label: 'Manage Holidays', 
         href: '/dashboard/manage-holidays', 
         icon: Calendar,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // HR can only view (no management)
+        roles: [UserRole.ADMIN], // HR can only view, Super Admin excluded
       },
       { 
         label: 'Reports', 
         href: '/dashboard/reports', 
         icon: FileText,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.HR],
+        roles: [UserRole.ADMIN, UserRole.HR], // Super Admin excluded
       },
       {
         label: 'Salary Structures',
         href: '/dashboard/salary-structures',
         icon: DollarSign,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // Admin only, HR cannot access
+        roles: [UserRole.ADMIN], // Admin only, HR and Super Admin excluded
       },
       {
         label: 'Payroll Processing',
         href: '/dashboard/payroll',
         icon: Wallet,
-        roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN], // Admin only, HR cannot access
+        roles: [UserRole.ADMIN], // Admin only, HR and Super Admin excluded
       },
       {
-        label: 'Users',
-        href: '/dashboard/users',
+        label: 'System Users',
+        href: '/dashboard/system-users',
         icon: UserCog,
         roles: [UserRole.SUPER_ADMIN],
       },
