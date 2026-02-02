@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Cache-bust: pass --build-arg CACHEBUST=$(date +%s) or CACHEBUST=$COMMIT_SHA to force fresh build
+ARG CACHEBUST=1
+
 # Accept build arguments for environment variables
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_APP_ENV
@@ -14,8 +17,11 @@ ENV NEXT_PUBLIC_APP_ENV=${NEXT_PUBLIC_APP_ENV}
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (cache invalidated when package*.json changes)
 RUN npm ci
+
+# Invalidate cache when CACHEBUST changes (pass --build-arg CACHEBUST=$(date +%s) in deployment)
+RUN echo "Cache bust: ${CACHEBUST}"
 
 # Copy source code and config
 COPY . .
