@@ -10,8 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Attendance Dashboard',
-  description: 'Enterprise attendance management system',
+  title: 'TrizenHR | Attendance & Payroll for Growing Teams',
+  description:
+    'Role-based attendance and payroll platform that gives HR teams complete visibility, control, and compliance as organizations scale.',
 };
 
 export default function RootLayout({

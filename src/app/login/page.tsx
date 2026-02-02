@@ -16,15 +16,6 @@ import { LoginFormData, loginSchema } from '@/lib/validations';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
 
-// Test credentials for all roles
-const TEST_CREDENTIALS = [
-  { role: 'System Admin', email: 'demo@trizenventures.com', password: 'demo123' },
-  { role: 'Company Admin', email: 'admin@trizenventures.com', password: 'admin123' },
-  { role: 'HR Admin', email: 'hr@trizenventures.com', password: 'hr1234' },
-  { role: 'Manager', email: 'supervisor@trizenventures.com', password: 'supervisor123' },
-  { role: 'Employee', email: 'employee@trizenventures.com', password: 'employee123' },
-];
-
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -34,7 +25,6 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -63,11 +53,6 @@ export default function LoginPage() {
       toast.error(err.response?.data?.message || 'Failed to initiate Microsoft login');
       setIsMicrosoftLoading(false);
     }
-  };
-
-  const fillCredentials = (email: string, password: string) => {
-    setValue('email', email);
-    setValue('password', password);
   };
 
   return (
@@ -205,26 +190,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            {/* Test Credentials - All Roles */}
-            <div className="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-              <p className="mb-3 text-sm font-medium text-gray-700">Quick Login (Test Accounts)</p>
-              <div className="grid grid-cols-1 gap-2">
-                {TEST_CREDENTIALS.map((cred) => (
-                  <Button
-                    key={cred.role}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-between"
-                    onClick={() => fillCredentials(cred.email, cred.password)}
-                  >
-                    <span className="font-medium">{cred.role}</span>
-                    <span className="text-xs text-gray-500">{cred.email}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
 
             <p className="mt-6 text-center text-sm text-gray-500">
               <Link href="/" className="hover:text-gray-700">
