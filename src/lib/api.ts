@@ -32,27 +32,66 @@ import {
   UpdateSalaryStructurePayload,
 } from './types';
 
+// Resolve API base URL
+// - In browser: prefer NEXT_PUBLIC_API_URL if provided, otherwise use same-origin /api
+// - On server (SSR/ISR): fall back to NEXT_PUBLIC_API_URL or localhost
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
+    return `${window.location.origin}/api`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+};
+
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - attach JWT token
+// Helper to detect if current host is "platform" (no tenant subdomain)
+const isPlatformHost = () => {
+  if (typeof window === 'undefined') return true;
+  const host = window.location.hostname;
+
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return true;
+  }
+
+  // e.g. "trizenhr.com" (2 parts) -> platform, "acme.trizenhr.com" (3+) -> tenant
+  const parts = host.split('.');
+  return parts.length <= 2;
+};
+
+// Request interceptor - attach JWT token and optional Super Admin org override
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       const selectedOrgId = localStorage.getItem('selectedOrganizationId');
+      const storedUser = localStorage.getItem('user');
+      let userRole: string | undefined;
+
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          userRole = parsed.role;
+        } catch {
+          // ignore parse errors
+        }
+      }
       
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      // Inject organizationId override for Super Admin
-      if (selectedOrgId) {
+      // Inject organizationId override for Super Admin on the platform domain only.
+      // For tenant subdomains, organization is derived from subdomain on the backend.
+      if (selectedOrgId && userRole === 'super_admin' && isPlatformHost()) {
         config.params = { ...config.params, organizationId: selectedOrgId };
       }
     }

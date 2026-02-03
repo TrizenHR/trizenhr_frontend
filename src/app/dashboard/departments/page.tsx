@@ -540,7 +540,7 @@ export default function DepartmentsPage() {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="__no_employees__" disabled>
                         No available employees
                       </SelectItem>
                     )}

@@ -9,7 +9,14 @@ export const createUserSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   role: z.nativeEnum(UserRole),
   department: z.string().optional(),
-  employeeId: z.string().optional(),
+  employeeId: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^[A-Za-z0-9_-]+$/.test(val),
+      'Employee ID can only contain letters, numbers, hyphens and underscores'
+    )
+    .refine((val) => !val || val.length <= 50, 'Employee ID must be at most 50 characters'),
   supervisorId: z.string().optional(),
 });
 

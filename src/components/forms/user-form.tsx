@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { CreateUserFormData, createUserSchema } from '@/lib/validations';
-import { UserRole, Organization } from '@/lib/types';
+import { UserRole, Organization, Department } from '@/lib/types';
 import { getAllowedRolesToCreate, getRoleDisplayName } from '@/lib/permissions';
-import { organizationApi } from '@/lib/api';
+import { organizationApi, departmentApi } from '@/lib/api';
 
 interface UserFormProps {
   onSubmit: (data: CreateUserFormData) => Promise<void>;
@@ -31,7 +31,9 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   const router = useRouter();
   const allowedRoles = getAllowedRolesToCreate(userRole);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
+  const [loadingDepts, setLoadingDepts] = useState(false);
 
   const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
 
@@ -39,6 +41,13 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   useEffect(() => {
     if (isSuperAdmin) {
       loadOrganizations();
+    }
+  }, [isSuperAdmin]);
+
+  // Load departments for dropdown (non–Super Admin is org-scoped)
+  useEffect(() => {
+    if (!isSuperAdmin) {
+      loadDepartments();
     }
   }, [isSuperAdmin]);
 
@@ -51,6 +60,18 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
       console.error('Failed to load organizations:', error);
     } finally {
       setLoadingOrgs(false);
+    }
+  };
+
+  const loadDepartments = async () => {
+    try {
+      setLoadingDepts(true);
+      const data = await departmentApi.getAll();
+      setDepartments(data);
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+    } finally {
+      setLoadingDepts(false);
     }
   };
 
@@ -70,6 +91,7 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
 
   const selectedRole = watch('role');
   const selectedOrganization = watch('organizationId');
+  const selectedDepartment = watch('department');
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -184,14 +206,41 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
 
       <div className="space-y-2">
         <Label htmlFor="employeeId">Employee ID</Label>
-        <Input id="employeeId" {...register('employeeId')} disabled={isLoading} />
-        {errors.employeeId && <p className="text-sm text-red-500">{errors.employeeId.message}</p>}
+        <Input
+          id="employeeId"
+          placeholder="e.g. EMP001 or 003"
+          {...register('employeeId')}
+          disabled={isLoading}
+          className={errors.employeeId ? 'border-red-500' : ''}
+        />
+        {errors.employeeId && (
+          <p className="text-sm text-red-500">{errors.employeeId.message}</p>
+        )}
+        <p className="text-sm text-gray-500">Letters, numbers, hyphens and underscores only (max 50 characters)</p>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="department">Department</Label>
-        <Input id="department" {...register('department')} disabled={isLoading} />
-        {errors.department && <p className="text-sm text-red-500">{errors.department.message}</p>}
+        <Select
+          value={selectedDepartment ?? '__none__'}
+          onValueChange={(value) => setValue('department', value === '__none__' ? '' : value)}
+          disabled={isLoading || loadingDepts}
+        >
+          <SelectTrigger className={errors.department ? 'border-red-500' : ''}>
+            <SelectValue placeholder={loadingDepts ? 'Loading departments...' : 'Select department'} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">None</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept._id} value={dept.name}>
+                {dept.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.department && (
+          <p className="text-sm text-red-500">{errors.department.message}</p>
+        )}
       </div>
 
       <div className="flex gap-3 pt-4">
