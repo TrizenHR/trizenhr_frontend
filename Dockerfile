@@ -3,11 +3,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Cache-bust: CapRover injects CAPROVER_GIT_COMMIT_SHA on Git deploy; each commit = fresh build
-# Fallback: pass --build-arg CACHEBUST=$(date +%s) for manual/CI builds
+# Cache-bust: CapRover injects CAPROVER_GIT_COMMIT_SHA on Git deploy. Manual/CI: --build-arg CACHEBUST=$(date +%s)
+# Force Build in CapRover or pass CACHEBUST to guarantee fresh image.
 ARG CACHEBUST=1
 ARG CAPROVER_GIT_COMMIT_SHA=unknown
-RUN echo "Build: commit=${CAPROVER_GIT_COMMIT_SHA} cachebust=${CACHEBUST}"
+RUN echo "Cache bust: ${CACHEBUST} commit=${CAPROVER_GIT_COMMIT_SHA}"
+
+# Bake build id into app so /api/health can report which version is live
+ENV NEXT_PUBLIC_BUILD_ID=${CAPROVER_GIT_COMMIT_SHA}
 
 # Accept build arguments for environment variables
 ARG NEXT_PUBLIC_API_URL
@@ -25,6 +28,12 @@ RUN npm ci
 
 # Copy source code and config
 COPY . .
+
+# Nuke Next.js build cache so we never reuse stale .next/standalone
+RUN rm -rf .next node_modules/.cache
+
+# Optional: disable Next.js build cache (slower builds, zero ghost versions)
+ENV NEXT_DISABLE_BUILD_CACHE=1
 
 # Build Next.js application with standalone output
 RUN npm run build
