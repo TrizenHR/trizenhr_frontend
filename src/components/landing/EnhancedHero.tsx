@@ -10,7 +10,7 @@ interface EnhancedHeroProps {
 }
 
 /**
- * Zoho-style hero section — tagline, headline, description, CTAs, and product screenshot
+ * Hero section — tagline, headline, description, CTAs, and product screenshot
  */
 export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
   return (
@@ -28,18 +28,17 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
 
           {/* Main heading */}
           <h1 className="animate-fade-in-up text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Manage your attendance
+            Attendance and payroll,
             <br />
-            <span className="text-slate-600 dark:text-slate-300">like clockwork</span>
+            <span className="text-slate-600 dark:text-slate-300">in one place</span>
           </h1>
 
           {/* Description */}
           <p className="mt-6 animate-fade-in-up text-lg leading-relaxed text-muted-foreground" style={{ animationDelay: '0.1s' }}>
-            Boost workplace efficiency with a flexible attendance system that lets you check-in from the web and mobile app,
-            allows policy customization according to changing work preferences, and manages all your attendance information accurately.
+            Clock in from web or mobile, set policies that fit your workplace, and keep attendance and payroll accurate—without spreadsheets or guesswork.
           </p>
 
-          {/* CTA buttons — Zoho-style: primary + outline */}
+          {/* CTA buttons */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <Button
               size="lg"
@@ -63,7 +62,7 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
           </div>
         </div>
 
-        {/* Product screenshot — Zoho-style large image with bottom fade */}
+        {/* Product screenshot with bottom fade */}
         <div className="relative -mb-8 mt-12 animate-fade-in-up sm:-mb-12 lg:-mb-16 lg:mt-16" style={{ animationDelay: '0.3s' }}>
           <div className="relative mx-auto max-w-5xl overflow-hidden rounded-t-xl border-x border-t border-slate-200/80 bg-white shadow-2xl shadow-blue-200/50 dark:border-slate-700 dark:bg-slate-900 dark:shadow-blue-900/30">
             <Image
