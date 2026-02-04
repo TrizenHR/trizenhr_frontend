@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Save, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Settings, Save, Loader2, DollarSign } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { hasAnyRole } from '@/lib/permissions';
@@ -16,6 +18,7 @@ import GeneralSettings from '@/components/settings/GeneralSettings';
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('working-hours');
   const [settings, setSettings] = useState<Organization['settings'] | null>(null);
@@ -133,10 +136,15 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="working-hours" className="text-xs sm:text-sm">Working Hours</TabsTrigger>
           <TabsTrigger value="leave-policy" className="text-xs sm:text-sm">Leave Policy</TabsTrigger>
           <TabsTrigger value="general" className="text-xs sm:text-sm">General</TabsTrigger>
+          {hasAnyRole(user.role, [UserRole.ADMIN, UserRole.SUPER_ADMIN]) && (
+            <TabsTrigger value="billing" className="text-xs sm:text-sm">
+              Billing
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="working-hours" className="mt-6">
@@ -160,6 +168,38 @@ export default function SettingsPage() {
             onChange={(updates) => handleSettingsChange(updates)}
           />
         </TabsContent>
+
+        {hasAnyRole(user.role, [UserRole.ADMIN, UserRole.SUPER_ADMIN]) && (
+          <TabsContent value="billing" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <DollarSign className="h-4 w-4 text-primary" />
+                    Billing &amp; Subscription
+                  </CardTitle>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Review your plan, usage, invoices, and manage payment methods for this organization.
+                  </p>
+                </div>
+                <Button
+                  variant="default"
+                  onClick={() => router.push('/dashboard/billing')}
+                >
+                  Open Billing
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-gray-600">
+                <p>From the Billing page you can:</p>
+                <ul className="list-disc space-y-1 pl-5 text-xs">
+                  <li>See how your monthly charges are calculated from active employees.</li>
+                  <li>Download past invoices for finance and compliance.</li>
+                  <li>Configure payment methods and auto‑pay behavior.</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
