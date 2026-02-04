@@ -18,7 +18,6 @@ import {
   TrendingUp,
   CheckCircle2,
   DollarSign,
-  UserCog,
 } from 'lucide-react';
 import { DemoRequestModal } from '@/components/landing/DemoRequestModal';
 import { EnhancedHero } from '@/components/landing/EnhancedHero';
