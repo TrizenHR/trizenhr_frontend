@@ -30,6 +30,8 @@ import {
   PayrollRecord,
   CreateSalaryStructurePayload,
   UpdateSalaryStructurePayload,
+  BillingOverview,
+  BillingInvoice,
 } from './types';
 
 // Resolve API base URL
@@ -219,6 +221,13 @@ export const userApi = {
 
   getUserStats: async (): Promise<any> => {
     const response = await api.get<ApiResponse<any>>('/users/stats');
+    return response.data.data!;
+  },
+
+  getNextEmployeeId: async (): Promise<{ nextEmployeeId: string; existingSample: string[] }> => {
+    const response = await api.get<
+      ApiResponse<{ nextEmployeeId: string; existingSample: string[] }>
+    >('/users/next-employee-id');
     return response.data.data!;
   },
 };
@@ -707,6 +716,25 @@ export const payrollApi = {
   getPayrollRecord: async (recordId: string): Promise<PayrollRecord> => {
     const response = await api.get<ApiResponse<PayrollRecord>>(`/payroll/records/${recordId}`);
     return response.data.data!;
+  },
+};
+
+// Billing API
+export const billingApi = {
+  /**
+   * Get billing overview for the current organization (Company Admin / Super Admin)
+   */
+  getOverview: async (): Promise<BillingOverview> => {
+    const response = await api.get<ApiResponse<BillingOverview>>('/billing/overview');
+    return response.data.data!;
+  },
+
+  /**
+   * Get billing invoices for the current organization
+   */
+  getInvoices: async (): Promise<BillingInvoice[]> => {
+    const response = await api.get<ApiResponse<BillingInvoice[]>>('/billing/invoices');
+    return response.data.data || [];
   },
 };
 

@@ -11,12 +11,8 @@ export const createUserSchema = z.object({
   department: z.string().optional(),
   employeeId: z
     .string()
-    .optional()
-    .refine(
-      (val) => !val || /^[A-Za-z0-9_-]+$/.test(val),
-      'Employee ID can only contain letters, numbers, hyphens and underscores'
-    )
-    .refine((val) => !val || val.length <= 50, 'Employee ID must be at most 50 characters'),
+    .min(1, 'Employee ID is required')
+    .regex(/^[0-9]+$/, 'Employee ID must be digits only, e.g. 1, 2, 3'),
   supervisorId: z.string().optional(),
 });
 

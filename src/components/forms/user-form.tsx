@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { CreateUserFormData, createUserSchema } from '@/lib/validations';
 import { UserRole, Organization, Department } from '@/lib/types';
 import { getAllowedRolesToCreate, getRoleDisplayName } from '@/lib/permissions';
-import { organizationApi, departmentApi } from '@/lib/api';
+import { organizationApi, departmentApi, userApi } from '@/lib/api';
 
 interface UserFormProps {
   onSubmit: (data: CreateUserFormData) => Promise<void>;
@@ -34,6 +34,8 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [loadingDepts, setLoadingDepts] = useState(false);
+  const [employeeIdSuggestions, setEmployeeIdSuggestions] = useState<string[]>([]);
+  const [nextEmployeeId, setNextEmployeeId] = useState<string | null>(null);
 
   const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
 
@@ -88,6 +90,27 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
       ...defaultValues,
     },
   });
+
+  // Load suggested next employee ID for org-scoped roles
+  useEffect(() => {
+    const loadNextEmployeeId = async () => {
+      if (isSuperAdmin) return;
+      try {
+        const { nextEmployeeId, existingSample } = await userApi.getNextEmployeeId();
+        setNextEmployeeId(nextEmployeeId);
+        setEmployeeIdSuggestions(existingSample);
+
+        // Prefill only when no default employeeId is provided
+        if (!defaultValues?.employeeId) {
+          setValue('employeeId', nextEmployeeId);
+        }
+      } catch (error) {
+        console.error('Failed to load next employee ID:', error);
+      }
+    };
+
+    loadNextEmployeeId();
+  }, [isSuperAdmin, defaultValues, setValue]);
 
   const selectedRole = watch('role');
   const selectedOrganization = watch('organizationId');
@@ -205,10 +228,12 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="employeeId">Employee ID</Label>
+        <Label htmlFor="employeeId">
+          Employee ID <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="employeeId"
-          placeholder="e.g. EMP001 or 003"
+          placeholder={nextEmployeeId ? `Suggested: ${nextEmployeeId}` : 'e.g. 1, 2, 3'}
           {...register('employeeId')}
           disabled={isLoading}
           className={errors.employeeId ? 'border-red-500' : ''}
@@ -216,7 +241,15 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
         {errors.employeeId && (
           <p className="text-sm text-red-500">{errors.employeeId.message}</p>
         )}
-        <p className="text-sm text-gray-500">Letters, numbers, hyphens and underscores only (max 50 characters)</p>
+        <p className="text-sm text-gray-500">
+          Numbers only (e.g. 1, 2, 3). IDs are stored as formatted codes like EMP001.
+        </p>
+        {employeeIdSuggestions.length > 0 && (
+          <p className="text-xs text-gray-500">
+            Existing IDs: {employeeIdSuggestions.join(', ')}
+            {nextEmployeeId ? `. Suggested next: ${nextEmployeeId}` : ''}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

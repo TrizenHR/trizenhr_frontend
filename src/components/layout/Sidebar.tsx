@@ -142,6 +142,12 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.ADMIN], // Admin only, HR and Super Admin excluded
       },
       {
+        label: 'Billing',
+        href: '/dashboard/billing',
+        icon: DollarSign,
+        roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
+      {
         label: 'System Users',
         href: '/dashboard/system-users',
         icon: UserCog,

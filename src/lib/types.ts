@@ -310,6 +310,45 @@ export interface Organization {
   updatedAt: string;
 }
 
+// Billing Types
+export enum BillingInvoiceStatus {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  PAID = 'paid',
+  FAILED = 'failed',
+}
+
+export interface BillingInvoice {
+  _id: string;
+  organizationId: string;
+  periodStart: string;
+  periodEnd: string;
+  plan: SubscriptionPlan;
+  pricePerUserPerDay: number;
+  averageBillableUsers: number;
+  amount: number;
+  currency: string;
+  status: BillingInvoiceStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingOverview {
+  organizationId: string;
+  organizationName: string;
+  subscriptionPlan: SubscriptionPlan | string;
+  pricePerUserPerDay: number;
+  billingCycle: string;
+  currency: string;
+  activeUsers: number;
+  currentMonthEstimate: number;
+  monthlyHistory: {
+    month: string; // 'YYYY-MM'
+    amount: number;
+    status: BillingInvoiceStatus;
+  }[];
+}
+
 export interface CreateOrganizationPayload {
   name: string;
   subdomain?: string;

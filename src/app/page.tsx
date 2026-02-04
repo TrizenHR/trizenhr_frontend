@@ -307,14 +307,6 @@ function RoleBasedValueSection() {
       iconBg: 'bg-amber-50',
       iconColor: 'text-amber-600',
     },
-    {
-      label: 'System Admin',
-      icon: UserCog,
-      value: 'Manage organizations, access, and platform-wide settings',
-      color: 'from-rose-500 to-pink-500',
-      iconBg: 'bg-rose-50',
-      iconColor: 'text-rose-600',
-    },
   ];
 
   return (
@@ -332,7 +324,7 @@ function RoleBasedValueSection() {
             Each user accesses features and data appropriate to their responsibilities.
           </p>
         </div>
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
           {roles.map((role, index) => (
             <Card
               key={index}
@@ -416,8 +408,8 @@ function PricingSection({ onBookDemo }: { onBookDemo: () => void }) {
       name: 'Starter',
       description: 'Up to 50 employees',
       features: 'Core attendance + payroll',
-      price: '₹49',
-      period: '/ user / month',
+      price: '₹1',
+      period: '/ user / day',
       cta: 'Book demo',
       highlighted: false,
     },
@@ -425,8 +417,8 @@ function PricingSection({ onBookDemo }: { onBookDemo: () => void }) {
       name: 'Growth',
       description: 'Up to 200 employees',
       features: 'All features + basic integrations',
-      price: '₹79',
-      period: '/ user / month',
+      price: '₹2',
+      period: '/ user / day',
       cta: 'Book demo',
       highlighted: true,
     },
