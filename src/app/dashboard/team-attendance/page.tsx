@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { attendanceApi, userApi } from '@/lib/api';
-import { Attendance, AttendanceStatus, User } from '@/lib/types';
+import { Attendance, AttendanceStatus, User, UserRole } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Users, TrendingUp, Download } from 'lucide-react';
 import { format, startOfDay, endOfDay } from 'date-fns';
 
@@ -34,6 +35,7 @@ type TeamMemberStatus = {
 };
 
 export default function TeamAttendancePage() {
+  const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState<TeamMemberStatus[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<TeamMemberStatus[]>([]);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -64,25 +66,61 @@ export default function TeamAttendancePage() {
     try {
       setIsLoading(true);
 
-      // Get all users (for now, show all employees)
-      // TODO: Filter by supervisor's team when team/department relationship is implemented
-      const users = await userApi.getAllUsers();
+      const currentUserId = user?._id || user?.id;
+      if (!currentUserId) {
+        throw new Error('Missing user id');
+      }
+
+      const isSupervisor = user?.role === UserRole.SUPERVISOR;
+      const users = isSupervisor
+        ? await userApi.getTeamMembers(currentUserId)
+        : await userApi.getAllUsers({ isActive: true });
 
       // Get attendance for selected date
       const startDate = startOfDay(new Date(selectedDate));
       const endDate = endOfDay(new Date(selectedDate));
-      
-      const attendanceResponse = await attendanceApi.getAllAttendance({
-        startDate,
-        endDate,
-      });
+
+      const attendanceByUserId = new Map<string, Attendance | undefined>();
+      if (isSupervisor) {
+        // Supervisors are not allowed to call /attendance/all.
+        // Fetch each team member's attendance for the selected date via /attendance/user/:id.
+        await Promise.all(
+          users.map(async (u) => {
+            try {
+              const res = await attendanceApi.getUserAttendance(u._id, {
+                startDate,
+                endDate,
+                page: 1,
+                limit: 1,
+              });
+              attendanceByUserId.set(u._id, res.records?.[0]);
+            } catch {
+              attendanceByUserId.set(u._id, undefined);
+            }
+          })
+        );
+      } else {
+        // HR/Admin/Super Admin can load all attendance for selected date in one request.
+        const allAttendance = await attendanceApi.getAllAttendance({
+          startDate,
+          endDate,
+          page: 1,
+          limit: 1000,
+        });
+        for (const record of allAttendance.records) {
+          const recordUserId =
+            typeof record.userId === 'object' && record.userId
+              ? (record.userId as any)._id
+              : (record.userId as string);
+          if (recordUserId) {
+            attendanceByUserId.set(recordUserId, record);
+          }
+        }
+      }
 
       // Map users with their attendance
       const teamStatus: TeamMemberStatus[] = users.map((user) => {
-        const attendance = attendanceResponse.records.find(
-          (att) => att.userId === user._id || 
-                   (typeof att.userId === 'object' && att.userId._id === user._id)
-        );
+        const attendance = attendanceByUserId.get(user._id);
 
         let status: TeamMemberStatus['status'] = 'not_marked';
         
@@ -217,6 +255,52 @@ export default function TeamAttendancePage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="cursor-pointer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="present">Present</SelectItem>
+                  <SelectItem value="absent">Absent</SelectItem>
+                  <SelectItem value="on_leave">On Leave</SelectItem>
+                  <SelectItem value="half_day">Half Day</SelectItem>
+                  <SelectItem value="late">Late</SelectItem>
+                  <SelectItem value="not_marked">Not Marked</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Search</Label>
+              <Input
+                placeholder="Search by name, email, ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="cursor-text"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <Card>
@@ -288,50 +372,6 @@ export default function TeamAttendancePage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="present">Present</SelectItem>
-                  <SelectItem value="absent">Absent</SelectItem>
-                  <SelectItem value="on_leave">On Leave</SelectItem>
-                  <SelectItem value="half_day">Half Day</SelectItem>
-                  <SelectItem value="late">Late</SelectItem>
-                  <SelectItem value="not_marked">Not Marked</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Search</Label>
-              <Input
-                placeholder="Search by name, email, ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Team Table */}
       <Card>

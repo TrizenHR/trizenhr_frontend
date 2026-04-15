@@ -12,7 +12,7 @@ export const createUserSchema = z.object({
   employeeId: z
     .string()
     .min(1, 'Employee ID is required')
-    .regex(/^[0-9]+$/, 'Employee ID must be digits only, e.g. 1, 2, 3'),
+    .regex(/^(?:[0-9]+|EMP[0-9]+)$/i, 'Employee ID must be digits (e.g. 6) or code (e.g. EMP006)'),
   supervisorId: z.string().optional(),
 });
 

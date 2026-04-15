@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 import { CreateUserFormData, createUserSchema } from '@/lib/validations';
 import { UserRole, Organization, Department } from '@/lib/types';
@@ -36,8 +37,11 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   const [loadingDepts, setLoadingDepts] = useState(false);
   const [employeeIdSuggestions, setEmployeeIdSuggestions] = useState<string[]>([]);
   const [nextEmployeeId, setNextEmployeeId] = useState<string | null>(null);
+  const [useCustomEmployeeId, setUseCustomEmployeeId] = useState(false);
 
   const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
+  const isHR = userRole === UserRole.HR;
+  const lockEmployeeId = isHR && !useCustomEmployeeId;
 
   // Load organizations for Super Admin
   useEffect(() => {
@@ -231,19 +235,53 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
         <Label htmlFor="employeeId">
           Employee ID <span className="text-red-500">*</span>
         </Label>
+        {isHR && (
+          <div className="flex items-center justify-between rounded-md border p-2">
+            <Label htmlFor="useCustomEmployeeId" className="text-sm font-normal">
+              Use custom Employee ID
+            </Label>
+            <Switch
+              id="useCustomEmployeeId"
+              checked={useCustomEmployeeId}
+              onCheckedChange={(checked) => {
+                setUseCustomEmployeeId(checked);
+                if (!checked && nextEmployeeId) {
+                  setValue('employeeId', nextEmployeeId);
+                }
+              }}
+              disabled={isLoading}
+            />
+          </div>
+        )}
         <Input
           id="employeeId"
-          placeholder={nextEmployeeId ? `Suggested: ${nextEmployeeId}` : 'e.g. 1, 2, 3'}
+          placeholder={
+            lockEmployeeId
+              ? nextEmployeeId
+                ? `Auto: ${nextEmployeeId}`
+                : 'Auto-generated'
+              : 'e.g. 6 or EMP006'
+          }
           {...register('employeeId')}
           disabled={isLoading}
-          className={errors.employeeId ? 'border-red-500' : ''}
+          readOnly={lockEmployeeId}
+          className={[
+            errors.employeeId ? 'border-red-500' : '',
+            lockEmployeeId ? 'bg-muted cursor-not-allowed' : '',
+          ].join(' ').trim()}
         />
         {errors.employeeId && (
           <p className="text-sm text-red-500">{errors.employeeId.message}</p>
         )}
-        <p className="text-sm text-gray-500">
-          Numbers only (e.g. 1, 2, 3). IDs are stored as formatted codes like EMP001.
-        </p>
+        {lockEmployeeId ? (
+          <p className="text-sm text-gray-500">
+            Auto-generated for HR. Enable "Use custom Employee ID" to enter a manual value.
+          </p>
+        ) : (
+          <p className="text-sm text-gray-500">
+            You can enter digits (e.g. 6) or a code (e.g. EMP006). It will be normalized and stored as EMP###.
+          </p>
+        )}
         {employeeIdSuggestions.length > 0 && (
           <p className="text-xs text-gray-500">
             Existing IDs: {employeeIdSuggestions.join(', ')}

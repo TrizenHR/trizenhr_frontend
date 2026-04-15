@@ -136,6 +136,12 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.ADMIN], // Admin only, HR and Super Admin excluded
       },
       {
+        label: 'Manage Users',
+        href: '/dashboard/users',
+        icon: UserCog,
+        roles: [UserRole.ADMIN], // Admin only
+      },
+      {
         label: 'Payroll Processing',
         href: '/dashboard/payroll',
         icon: Wallet,

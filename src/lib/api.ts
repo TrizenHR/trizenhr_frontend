@@ -108,7 +108,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    // Only treat 401 as an authentication failure.
+    // 403 means "authenticated but not allowed" and should NOT log the user out.
+    if (error.response?.status === 401) {
       // Clear auth data
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
@@ -171,6 +173,7 @@ export const userApi = {
     department?: string;
     isActive?: boolean;
     search?: string;
+    organizationId?: string;
   }): Promise<User[]> => {
     const response = await api.get<ApiResponse<User[]>>('/users', {
       params: filters,
@@ -266,6 +269,7 @@ export const attendanceApi = {
   getMyAttendance: async (filters?: {
     startDate?: Date;
     endDate?: Date;
+    status?: AttendanceStatus;
     page?: number;
     limit?: number;
   }): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
@@ -422,6 +426,28 @@ export const leaveApi = {
     const response = await api.get<
       ApiResponse<Leave[]> & { pagination: LeavePagination }
     >('/leaves/all', {
+      params: {
+        ...filters,
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
+   * Get team leaves with filters (Supervisor gets only their team; HR/Admin gets all)
+   */
+  getTeamLeaves: async (filters?: LeaveFilters): Promise<{
+    records: Leave[];
+    pagination: LeavePagination;
+  }> => {
+    const response = await api.get<
+      ApiResponse<Leave[]> & { pagination: LeavePagination }
+    >('/leaves/team', {
       params: {
         ...filters,
         startDate: filters?.startDate?.toISOString(),

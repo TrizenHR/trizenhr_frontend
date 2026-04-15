@@ -17,22 +17,23 @@ const roleActions = {
     { label: 'Request Leave', href: '/dashboard/my-leave', icon: Calendar },
   ],
   [UserRole.SUPERVISOR]: [
-    { label: 'View Team', href: '/dashboard/team', icon: Users },
-    { label: 'Approve Leaves', href: '/dashboard/team/leave', icon: Calendar },
-    { label: 'Team Attendance', href: '/dashboard/team/attendance', icon: ClipboardCheck },
+    // Supervisors don't have access to the HR-only Employees page; route to an allowed "team" view.
+    { label: 'View Team', href: '/dashboard/team-attendance', icon: Users },
+    { label: 'Approve Leaves', href: '/dashboard/leave-approvals', icon: Calendar },
+    { label: 'Team Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck },
   ],
   [UserRole.HR]: [
-    { label: 'Add Employee', href: '/dashboard/users?action=create', icon: UserPlus },
-    { label: 'View Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
-    { label: 'Leave Requests', href: '/dashboard/leave', icon: Calendar },
+    { label: 'Add Employee', href: '/dashboard/users/create', icon: UserPlus },
+    { label: 'View Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck },
+    { label: 'Leave Requests', href: '/dashboard/team-leaves', icon: Calendar },
   ],
   [UserRole.ADMIN]: [
     { label: 'Manage Users', href: '/dashboard/users', icon: Users },
-    { label: 'View Attendance', href: '/dashboard/attendance', icon: ClipboardCheck },
+    { label: 'View Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck },
     { label: 'Reports', href: '/dashboard/reports', icon: FileText },
   ],
   [UserRole.SUPER_ADMIN]: [
-    { label: 'Create Organization', href: '/dashboard/organizations/new', icon: Building2 },
+    { label: 'Create Organization', href: '/dashboard/organizations', icon: Building2 },
     { label: 'View All Orgs', href: '/dashboard/organizations', icon: Building2 },
     { label: 'System Settings', href: '/dashboard/settings', icon: Settings },
   ],

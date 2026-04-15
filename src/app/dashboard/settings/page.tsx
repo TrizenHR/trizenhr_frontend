@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [apiAccessDenied, setApiAccessDenied] = useState(false);
 
   // Check if user has access to settings (organization-level settings, not for Super Admin)
   if (!user || !hasAnyRole(user.role, [UserRole.ADMIN, UserRole.HR])) {
@@ -48,9 +49,14 @@ export default function SettingsPage() {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
+      setApiAccessDenied(false);
       const currentSettings = await organizationApi.getMySettings();
       setSettings(currentSettings);
     } catch (error: any) {
+      if (error?.response?.status === 403) {
+        setApiAccessDenied(true);
+        return;
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to load settings',
@@ -73,6 +79,10 @@ export default function SettingsPage() {
         description: 'Settings saved successfully',
       });
     } catch (error: any) {
+      if (error?.response?.status === 403) {
+        setApiAccessDenied(true);
+        return;
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to save settings',
@@ -94,6 +104,20 @@ export default function SettingsPage() {
       <div className="p-6">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  if (apiAccessDenied) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <Settings className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500">
+            You don&apos;t have permission to view organization settings.
+          </p>
         </div>
       </div>
     );

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { organizationApi } from '@/lib/api';
-import { Organization, SubscriptionPlan, CreateOrganizationPayload } from '@/lib/types';
+import { organizationApi, userApi } from '@/lib/api';
+import { Organization, SubscriptionPlan, CreateOrganizationPayload, UserRole } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ import { format } from 'date-fns';
 export default function OrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [filteredOrganizations, setFilteredOrganizations] = useState<Organization[]>([]);
+  const [companyAdminNames, setCompanyAdminNames] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planFilter, setPlanFilter] = useState<string>('all');
@@ -74,6 +75,28 @@ export default function OrganizationsPage() {
       setIsLoading(true);
       const data = await organizationApi.getAll();
       setOrganizations(data);
+
+      // For System Admin view: resolve company admin for each organization
+      const adminEntries = await Promise.all(
+        data.map(async (org) => {
+          try {
+            const admins = await userApi.getAllUsers({
+              role: UserRole.ADMIN,
+              isActive: true,
+              organizationId: org._id,
+            });
+            const admin = admins[0];
+            const name = admin
+              ? admin.fullName || `${admin.firstName} ${admin.lastName}`.trim() || admin.email
+              : '-';
+            return [org._id, name] as const;
+          } catch {
+            return [org._id, '-'] as const;
+          }
+        })
+      );
+
+      setCompanyAdminNames(Object.fromEntries(adminEntries));
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -322,6 +345,7 @@ export default function OrganizationsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Company Admin</TableHead>
                     <TableHead>Subdomain</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Status</TableHead>
@@ -334,6 +358,7 @@ export default function OrganizationsPage() {
                     filteredOrganizations.map((org) => (
                       <TableRow key={org._id}>
                         <TableCell className="font-medium">{org.name}</TableCell>
+                        <TableCell>{companyAdminNames[org._id] || '-'}</TableCell>
                         <TableCell>{org.subdomain || '-'}</TableCell>
                         <TableCell>
                           <Badge className={getPlanBadgeColor(org.subscriptionPlan)} variant="outline">
@@ -375,7 +400,7 @@ export default function OrganizationsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                         No organizations found
                       </TableCell>
                     </TableRow>

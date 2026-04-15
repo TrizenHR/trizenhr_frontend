@@ -14,7 +14,6 @@ import { Bell, LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
-import {  } from '@/components/dashboard/OrganizationSwitcher';
 
 interface HeaderProps {
   title?: string;
@@ -60,7 +59,7 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-2">
+            <Button variant="ghost" className="flex items-center gap-2 px-2 cursor-pointer">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-gray-200 text-sm font-medium text-gray-700">
                   {initials}
@@ -77,16 +76,28 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                router.push('/dashboard/profile');
+              }}
+              className="cursor-pointer"
+            >
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                router.push('/dashboard/settings');
+              }}
+              className="cursor-pointer"
+            >
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>

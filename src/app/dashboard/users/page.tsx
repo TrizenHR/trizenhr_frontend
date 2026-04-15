@@ -20,22 +20,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Search, MoreVertical, Edit, Trash2, UserPlus, Loader2 } from 'lucide-react';
-import { useCanManageUsers } from '@/hooks/use-auth';
+import { Plus, Search, MoreVertical, Edit, Trash2, UserPlus, Loader2, ShieldX } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { userApi } from '@/lib/api';
 import { User, UserRole } from '@/lib/types';
-import { getRoleColor, getRoleDisplayName } from '@/lib/permissions';
+import { getRoleColor, getRoleDisplayName, hasAnyRole } from '@/lib/permissions';
 import { toast } from 'sonner';
 
 export default function UsersPage() {
   const router = useRouter();
-  const canManage = useCanManageUsers();
+  const { user } = useAuth();
+  const canManage = !!user && hasAnyRole(user.role as UserRole, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
 
   useEffect(() => {
     loadUsers();
@@ -43,13 +45,15 @@ export default function UsersPage() {
 
   useEffect(() => {
     filterUsers();
-  }, [searchTerm, roleFilter, users]);
+  }, [searchTerm, roleFilter, departmentFilter, users]);
 
   const loadUsers = async () => {
     try {
       setIsLoading(true);
       const data = await userApi.getAllUsers();
-      setUsers(data);
+      // Delete is implemented as soft-delete (isActive=false).
+      // Keep Users page focused on active users so deleted rows disappear.
+      setUsers(data.filter((u) => u.isActive));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load users');
     } finally {
@@ -75,6 +79,11 @@ export default function UsersPage() {
       filtered = filtered.filter((user) => user.role === roleFilter);
     }
 
+    // Filter by department
+    if (departmentFilter !== 'all') {
+      filtered = filtered.filter((user) => (user.department || '') === departmentFilter);
+    }
+
     setFilteredUsers(filtered);
   };
 
@@ -84,22 +93,39 @@ export default function UsersPage() {
     try {
       await userApi.deleteUser(userId);
       toast.success('User deleted successfully');
-      loadUsers();
+      // Optimistically remove from UI immediately after successful delete.
+      setUsers((prev) => prev.filter((u) => (u.id || u._id) !== userId));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
+  const uniqueDepartments = Array.from(
+    new Set(users.map((u) => u.department).filter((d): d is string => !!d))
+  );
+
   if (!canManage) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Card>
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <Card className="w-full max-w-md border-gray-200 shadow-sm">
+          <CardHeader className="items-center text-center space-y-3">
+            <div className="w-full rounded-full bg-red-50 px-4 py-3 flex items-center justify-center gap-2">
+              <ShieldX className="h-5 w-5 text-red-600" />
+              <span className="text-sm font-semibold text-red-700">Access Denied</span>
+            </div>
+            <CardDescription className="text-base leading-relaxed">
               You don&apos;t have permission to access this page.
             </CardDescription>
           </CardHeader>
+          <CardContent className="pt-0">
+            <Button
+              variant="outline"
+              className="w-full cursor-pointer"
+              onClick={() => router.push('/dashboard')}
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
@@ -122,7 +148,7 @@ export default function UsersPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -141,6 +167,18 @@ export default function UsersPage() {
               {Object.values(UserRole).map((role) => (
                 <option key={role} value={role}>
                   {getRoleDisplayName(role)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="rounded-md border border-gray-300 px-4 py-2"
+            >
+              <option value="all">All Departments</option>
+              {uniqueDepartments.map((department) => (
+                <option key={department} value={department}>
+                  {department}
                 </option>
               ))}
             </select>
@@ -179,8 +217,10 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
+                {filteredUsers.map((user) => {
+                  const userId = user.id || user._id;
+                  return (
+                  <TableRow key={userId}>
                     <TableCell className="font-medium">{user.fullName}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.employeeId || '-'}</TableCell>
@@ -204,13 +244,13 @@ export default function UsersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                            onClick={() => router.push(`/dashboard/users/${userId}`)}
                           >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => handleDelete(user.id)}
+                            onClick={() => handleDelete(userId)}
                             className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -220,7 +260,7 @@ export default function UsersPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           )}
