@@ -29,7 +29,7 @@ export default function CreateUserPage() {
     try {
       await userApi.createUser(data);
       toast.success('User created successfully');
-      router.push(user.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users');
+      router.push(user?.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create user');
       setIsLoading(false);
