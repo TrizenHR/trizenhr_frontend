@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { organizationApi } from '@/lib/api';
 import { Organization, SubscriptionPlan, CreateOrganizationPayload } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +39,8 @@ import { Building2, CheckCircle, XCircle, Plus, Edit, Trash2, Users } from 'luci
 import { format } from 'date-fns';
 
 export default function OrganizationsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [filteredOrganizations, setFilteredOrganizations] = useState<Organization[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,6 +64,9 @@ export default function OrganizationsPage() {
 
   const { toast } = useToast();
 
+  const shouldOpenCreateDialog =
+    searchParams.get('create') === '1' || searchParams.get('create') === 'true';
+
   useEffect(() => {
     loadOrganizations();
   }, []);
@@ -68,6 +74,14 @@ export default function OrganizationsPage() {
   useEffect(() => {
     filterOrganizations();
   }, [organizations, searchQuery, statusFilter, planFilter]);
+
+  useEffect(() => {
+    if (!shouldOpenCreateDialog) return;
+
+    resetForm();
+    setIsDialogOpen(true);
+    router.replace('/dashboard/organizations');
+  }, [shouldOpenCreateDialog, router]);
 
   const loadOrganizations = async () => {
     try {

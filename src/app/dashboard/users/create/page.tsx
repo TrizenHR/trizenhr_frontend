@@ -29,6 +29,18 @@ export default function CreateUserPage() {
     try {
       await userApi.createUser(data);
       toast.success('User created successfully');
+
+      // Super Admin does not have access to org-level users list.
+      // Route them to the relevant system-level page after creation.
+      if (user?.role === UserRole.SUPER_ADMIN) {
+        if (data.role === UserRole.SUPER_ADMIN) {
+          router.push('/dashboard/system-users');
+        } else {
+          router.push('/dashboard/organizations');
+        }
+        return;
+      }
+
       router.push('/dashboard/users');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create user');
