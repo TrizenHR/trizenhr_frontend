@@ -25,34 +25,36 @@ export function StatCard({
   return (
     <Card
       className={cn(
-        'border-blue-100 bg-white shadow-sm ring-1 ring-blue-950/5 transition-shadow hover:shadow-md',
+        'gap-0 overflow-hidden rounded-2xl border-border/80 bg-card py-0 shadow-sm ring-1 ring-border/40 transition-all hover:shadow-md',
         className
       )}
     >
-      <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
-        <CardTitle className="text-sm font-medium leading-snug text-blue-900/75">{title}</CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2 pt-4">
+        <CardTitle className="text-[11px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground">
+          {title}
+        </CardTitle>
         {Icon && (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-            <Icon className="h-4 w-4" aria-hidden />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/15">
+            <Icon className="h-[18px] w-[18px]" aria-hidden />
           </span>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-semibold tracking-tight text-blue-950">{value}</div>
+      <CardContent className="pb-4">
+        <div className="text-2xl font-bold tabular-nums tracking-tight text-foreground">{value}</div>
         {(description || trend) && (
           <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             {trend && (
               <span
                 className={cn(
                   'font-semibold',
-                  trend.isPositive ? 'text-blue-700' : 'text-blue-500'
+                  trend.isPositive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
                 {trend.isPositive ? '+' : ''}
                 {trend.value}%
               </span>
             )}
-            {description && <span className="text-blue-900/55">{description}</span>}
+            {description && <span className="text-muted-foreground">{description}</span>}
           </div>
         )}
       </CardContent>

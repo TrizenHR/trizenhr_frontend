@@ -51,26 +51,26 @@ export function QuickActions({ userRole }: QuickActionsProps) {
   const actions = roleActions[userRole] || [];
 
   return (
-    <Card className="border-blue-100 bg-white shadow-sm ring-1 ring-blue-950/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-blue-950">Quick Actions</CardTitle>
-        <CardDescription className="text-blue-900/60">
+    <Card className="overflow-hidden rounded-2xl border-border/80 bg-card py-0 shadow-sm ring-1 ring-border/40">
+      <CardHeader className="space-y-1 pb-2 pt-5">
+        <CardTitle className="text-lg font-semibold tracking-tight text-foreground">Quick Actions</CardTitle>
+        <CardDescription className="text-sm leading-relaxed">
           Shortcuts to the tasks you use most often
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-2 sm:gap-3">
+      <CardContent className="grid grid-cols-1 gap-2 pt-1 pb-5 sm:gap-2.5">
         {actions.map((action) => {
           const Icon = action.icon;
           return (
             <Button
               key={action.label}
               variant="outline"
-              className="h-auto justify-start gap-3 rounded-xl border-blue-200 bg-white py-3 text-left font-medium text-blue-900 shadow-none transition-colors hover:border-blue-300 hover:bg-blue-50"
+              className="h-auto justify-start gap-3 rounded-xl border-border/80 bg-background py-3.5 text-left font-medium text-foreground shadow-none transition-colors hover:border-primary/25 hover:bg-muted/50"
               asChild
             >
               <Link href={action.href} className="cursor-pointer">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                  <Icon className="h-4 w-4" aria-hidden />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+                  <Icon className="h-[18px] w-[18px]" aria-hidden />
                 </span>
                 <span>{action.label}</span>
               </Link>

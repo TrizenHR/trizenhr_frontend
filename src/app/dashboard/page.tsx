@@ -15,10 +15,10 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
         <div
-          className="h-9 w-9 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-600"
+          className="h-9 w-9 animate-spin rounded-full border-[3px] border-muted border-t-primary"
           aria-hidden
         />
-        <p className="text-sm font-medium text-blue-900/70">Loading your dashboard…</p>
+        <p className="text-sm font-medium text-muted-foreground">Loading your dashboard…</p>
       </div>
     );
   }
@@ -38,9 +38,9 @@ export default function DashboardPage() {
     default:
       return (
         <div className="flex min-h-[40vh] items-center justify-center">
-          <div className="max-w-md rounded-2xl border border-blue-100 bg-white p-8 text-center shadow-sm ring-1 ring-blue-950/5">
-            <p className="font-medium text-blue-950">Unknown user role</p>
-            <p className="mt-2 text-sm text-blue-900/65">Contact support if this persists.</p>
+          <div className="max-w-md rounded-2xl border border-border/80 bg-card p-8 text-center shadow-sm ring-1 ring-border/40">
+            <p className="font-medium text-foreground">Unknown user role</p>
+            <p className="mt-2 text-sm text-muted-foreground">Contact support if this persists.</p>
           </div>
         </div>
       );

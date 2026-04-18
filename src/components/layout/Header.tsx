@@ -15,15 +15,15 @@ import { LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
-import { OrganizationSwitcher } from '@/components/dashboard/OrganizationSwitcher';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 
 interface HeaderProps {
+  /** Page title in the header bar; omit for a minimal bar (e.g. dashboard). */
   title?: string;
   onMenuClick?: () => void;
 }
 
-export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
+export function Header({ title, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
@@ -48,8 +48,8 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
     : 'U';
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border/70 bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
         {/* Mobile Menu Button */}
         <Button
           variant="ghost"
@@ -59,25 +59,36 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg md:text-xl font-semibold text-gray-900 truncate">{title}</h1>
+        {title ? (
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold tracking-tight text-foreground md:text-xl">
+              {title}
+            </h1>
+            <div aria-hidden className="mt-0.5 h-px w-12 rounded-full bg-gradient-to-r from-primary/60 to-transparent" />
+          </div>
+        ) : null}
       </div>
 
       <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-4">
-        <OrganizationSwitcher />
         <NotificationBell />
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-2 cursor-pointer">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gray-200 text-sm font-medium text-gray-700">
+            <Button
+              variant="ghost"
+              className="flex cursor-pointer items-center gap-2 rounded-xl px-2 hover:bg-muted/80"
+            >
+              <Avatar className="h-9 w-9 ring-1 ring-border/60">
+                <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden flex-col items-start md:flex">
-                <span className="text-sm font-medium text-gray-700">{user?.fullName || user?.email}</span>
-                <span className="text-xs text-gray-500">
+              <div className="hidden flex-col items-start text-left md:flex">
+                <span className="max-w-[10rem] truncate text-sm font-medium text-foreground">
+                  {user?.fullName || user?.email}
+                </span>
+                <span className="text-xs text-muted-foreground">
                   {user?.role && getRoleDisplayName(user.role as any)}
                 </span>
               </div>

@@ -19,49 +19,48 @@ export function TodayAttendanceSummary({
   stats,
   title = "Today's Attendance",
 }: TodayAttendanceSummaryProps) {
-  /* Blue & white only: differentiate rows with borders + blue intensity */
   const items = [
     {
       label: 'Present',
       count: stats.present,
       icon: CheckCircle2,
-      panel: 'border-blue-200 bg-blue-50/80 text-blue-900',
-      iconWrap: 'bg-white text-blue-700 ring-1 ring-blue-100',
+      panel: 'border-primary/25 bg-primary/5 text-foreground',
+      iconWrap: 'bg-background text-primary ring-1 ring-primary/15',
     },
     {
       label: 'Late',
       count: stats.late,
       icon: Clock,
-      panel: 'border-blue-100 bg-white text-blue-900',
-      iconWrap: 'bg-blue-50 text-blue-700 ring-1 ring-blue-100',
+      panel: 'border-border bg-card text-foreground',
+      iconWrap: 'bg-primary/10 text-primary ring-1 ring-primary/10',
     },
     {
       label: 'Absent',
       count: stats.absent,
       icon: XCircle,
-      panel: 'border-blue-300/60 bg-blue-50 text-blue-950',
-      iconWrap: 'bg-white text-blue-800 ring-1 ring-blue-200',
+      panel: 'border-border/80 bg-muted/40 text-foreground',
+      iconWrap: 'bg-background text-primary ring-1 ring-border',
     },
     {
       label: 'On Leave',
       count: stats.onLeave,
       icon: Calendar,
-      panel: 'border-blue-100 bg-gradient-to-br from-blue-50 to-white text-blue-900',
-      iconWrap: 'bg-white text-blue-600 ring-1 ring-blue-100',
+      panel: 'border-primary/15 bg-gradient-to-br from-primary/5 to-card text-foreground',
+      iconWrap: 'bg-background text-primary ring-1 ring-primary/10',
     },
   ];
 
   return (
-    <Card className="border-blue-100 bg-white shadow-sm ring-1 ring-blue-950/5">
-      <CardHeader>
-        <CardTitle className="text-lg text-blue-950">{title}</CardTitle>
+    <Card className="overflow-hidden rounded-2xl border-border/80 bg-card py-0 shadow-sm ring-1 ring-border/40">
+      <CardHeader className="pt-5">
+        <CardTitle className="text-lg font-semibold tracking-tight text-foreground">{title}</CardTitle>
         {stats.total !== undefined && (
-          <CardDescription className="text-blue-900/65">
-            Total tracked today: <span className="font-semibold text-blue-950">{stats.total}</span>
+          <CardDescription className="text-sm">
+            Total tracked today: <span className="font-semibold text-foreground">{stats.total}</span>
           </CardDescription>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-5">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {items.map((item) => {
             const Icon = item.icon;
@@ -69,7 +68,7 @@ export function TodayAttendanceSummary({
               <div
                 key={item.label}
                 className={cn(
-                  'flex flex-col items-center rounded-xl border p-4 text-center shadow-sm',
+                  'flex flex-col items-center rounded-xl border p-3.5 text-center shadow-sm',
                   item.panel
                 )}
               >
@@ -81,8 +80,8 @@ export function TodayAttendanceSummary({
                 >
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
-                <div className="text-2xl font-bold tabular-nums">{item.count}</div>
-                <div className="mt-1 text-xs font-medium text-blue-900/70">{item.label}</div>
+                <div className="text-xl font-bold tabular-nums">{item.count}</div>
+                <div className="mt-1 text-xs font-medium text-muted-foreground">{item.label}</div>
               </div>
             );
           })}

@@ -159,19 +159,19 @@ export function NotificationBell() {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[min(calc(100vw-1.5rem),22rem)] p-0 sm:w-96"
+        className="w-[min(calc(100vw-1.5rem),22rem)] rounded-2xl border-border/80 bg-card p-0 shadow-lg ring-1 ring-border/40 sm:w-96"
         collisionPadding={12}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
-          <p className="text-sm font-semibold text-gray-900">Notifications</p>
+        <div className="flex items-center justify-between border-b border-border/60 px-3 py-2.5">
+          <p className="text-sm font-semibold text-foreground">Notifications</p>
           <div className="flex items-center gap-1">
-            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" aria-hidden />}
+            {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" aria-hidden />}
             {unreadCount > 0 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 gap-1 px-2 text-xs text-blue-700"
+                className="h-8 gap-1 rounded-lg px-2 text-xs text-primary"
                 onClick={() => void onMarkAll()}
                 disabled={loading}
               >
@@ -184,11 +184,14 @@ export function NotificationBell() {
 
         <div className="max-h-[min(70vh,26rem)] overflow-y-auto overscroll-y-contain">
           {items.length === 0 ? (
-            <div className="px-4 py-10 text-center text-sm text-gray-500">
-              You&apos;re all caught up. Important updates for your role will appear here.
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm font-semibold text-foreground">No notifications</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                You&apos;re all caught up. Important updates for your role will appear here.
+              </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100" role="list">
+            <ul className="divide-y divide-border/60" role="list">
               {items.map((n) => {
                 const Icon = iconForType(n.type);
                 const busy = actionId === n.id;
@@ -197,8 +200,8 @@ export function NotificationBell() {
                     <button
                       type="button"
                       className={cn(
-                        'flex w-full gap-3 px-3 py-3 text-left transition-colors hover:bg-gray-50',
-                        !n.read && 'bg-blue-50/40'
+                        'flex w-full gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/40',
+                        !n.read && 'bg-primary/5'
                       )}
                       onClick={() => void onItemClick(n)}
                       disabled={busy}
@@ -206,7 +209,9 @@ export function NotificationBell() {
                       <span
                         className={cn(
                           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                          n.read ? 'bg-gray-100 text-gray-600' : 'bg-blue-100 text-blue-700'
+                          n.read
+                            ? 'bg-muted/60 text-muted-foreground'
+                            : 'bg-primary/10 text-primary ring-1 ring-primary/10'
                         )}
                       >
                         {busy ? (
@@ -217,15 +222,18 @@ export function NotificationBell() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-start justify-between gap-2">
-                          <span className="text-sm font-medium text-gray-900">{n.title}</span>
+                          <span className="text-sm font-medium text-foreground">{n.title}</span>
                           {n.read ? (
-                            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" aria-label="Read" />
+                            <Check
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                              aria-label="Read"
+                            />
                           ) : (
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-hidden />
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden />
                           )}
                         </span>
-                        <span className="mt-0.5 line-clamp-2 text-xs text-gray-600">{n.body}</span>
-                        <span className="mt-1 text-[11px] text-gray-400">
+                        <span className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</span>
+                        <span className="mt-1 text-[11px] text-muted-foreground">
                           {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                         </span>
                       </span>

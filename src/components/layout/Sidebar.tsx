@@ -210,7 +210,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
 
   const mainNav = (
     <nav
-      className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 pb-4 pt-2 sm:px-4"
+      className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 pb-4 pt-3 sm:px-4"
       aria-label="Main navigation"
     >
       <div className="flex flex-col">
@@ -218,16 +218,16 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
           <div key={section.title ?? `section-${sectionIndex}`}>
             {sectionIndex > 0 && (
               <div
-                className="mx-1 mb-4 mt-4 h-px bg-gradient-to-r from-transparent via-blue-200/70 to-transparent"
+                className="mx-1 my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent"
                 aria-hidden
               />
             )}
             {section.title && (
-              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-900/40">
+              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {section.title}
               </h3>
             )}
-            <ul className="flex flex-col gap-0.5" role="list">
+            <ul className="flex flex-col gap-2" role="list">
               {section.items.map((item) => (
                 <li key={item.href}>
                   <NavLink
@@ -245,11 +245,11 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   );
 
   const accountNav = (
-    <div className="shrink-0 border-t border-blue-100/90 bg-white px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-4">
-      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-900/40">
+    <div className="shrink-0 border-t border-border/70 bg-background/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm sm:px-4">
+      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         Account
       </p>
-      <ul className="flex flex-col gap-1" role="list" aria-label="Account links">
+      <ul className="flex flex-col gap-2" role="list" aria-label="Account links">
         {visibleBottomItems.map((item) => (
           <li key={item.href}>
             <NavLink
@@ -264,26 +264,19 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   );
 
   const header = (
-    <header className="flex shrink-0 items-center gap-3 border-b border-blue-100 bg-white px-4 py-4 sm:px-5">
-      <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden ">
-        <Image
-          src="/assets/logo.png"
-          alt=""
-          width={32}
-          height={32}
-          priority
-          className="size-8 object-contain"
-        />
+    <header className="flex shrink-0 items-center gap-3 border-b border-border/70 bg-background/80 px-4 py-4 backdrop-blur-sm sm:px-5">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl">
+        <Image src="/assets/logo.png" alt="" width={32} height={32} priority className="size-8 object-contain" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold tracking-tight text-blue-950">TrizenHR</p>
-        <p className="truncate text-xs font-medium text-blue-600/85">by Trizen Ventures</p>
+        <p className="truncate text-base font-bold tracking-tight text-foreground">TrizenHR</p>
+        <p className="truncate text-xs font-medium text-muted-foreground">Admin console</p>
       </div>
     </header>
   );
 
   const mobileShellClass = cn(
-    'flex h-full min-h-0 w-full flex-col bg-white pt-14'
+    'flex h-full min-h-0 w-full flex-col bg-background pt-14'
   );
 
   const column = (
@@ -299,7 +292,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="left"
-          className="w-[min(17rem,calc(100vw-1rem))] max-w-none border-0 border-r border-blue-200/90 p-0 shadow-2xl sm:max-w-none [&>button]:right-3 [&>button]:top-3 [&>button]:z-[60] [&>button]:flex [&>button]:size-9 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:border [&>button]:border-blue-100 [&>button]:bg-white [&>button]:text-blue-700 [&>button]:shadow-sm"
+          className="w-[min(20rem,calc(100vw-1rem))] max-w-none border-0 border-r border-border/70 bg-background p-0 shadow-2xl sm:max-w-none [&>button]:right-3 [&>button]:top-3 [&>button]:z-[60] [&>button]:flex [&>button]:size-9 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:border [&>button]:border-border/70 [&>button]:bg-background [&>button]:text-muted-foreground [&>button]:shadow-sm"
         >
           <aside className={mobileShellClass}>{column}</aside>
         </SheetContent>
@@ -308,7 +301,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden h-screen w-56 shrink-0 border-r border-blue-200/85 bg-white shadow-[6px_0_28px_-14px_rgba(29,78,216,0.14)] md:flex md:flex-col">
+    <aside className="hidden h-screen w-64 shrink-0 border-r border-border/70 bg-background/90 shadow-[6px_0_28px_-18px_rgba(15,23,42,0.08)] backdrop-blur-sm md:flex md:flex-col">
       {column}
     </aside>
   );
@@ -330,22 +323,28 @@ const NavLink = memo(function NavLink({ item, isActive, onNavigate }: NavLinkPro
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'group flex min-h-[44px] items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors duration-100 ease-out sm:min-h-0 sm:py-1',
-        'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+        'group relative flex min-h-[44px] items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors duration-100 ease-out sm:min-h-0 sm:py-1',
+        'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         isActive
-          ? 'bg-blue-50/90 text-blue-950 ring-1 ring-blue-100/80'
-          : 'text-blue-950/70 hover:bg-blue-50/70 hover:text-blue-950'
+          ? 'bg-primary/15 text-foreground ring-1 ring-primary/20 shadow-sm'
+          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
       )}
     >
+      {isActive ? (
+        <span
+          aria-hidden
+          className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary"
+        />
+      ) : null}
       <span
         className={cn(
           'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-100 ease-out',
           isActive
-            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-            : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:text-blue-700'
+            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+            : 'bg-primary/10 text-primary ring-1 ring-primary/10 group-hover:bg-primary/15'
         )}
       >
-        <Icon className="size-[17px]" strokeWidth={2} aria-hidden />
+        <Icon className="size-[18px]" strokeWidth={2} aria-hidden />
       </span>
       <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug sm:text-sm">
         {item.label}

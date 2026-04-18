@@ -386,6 +386,8 @@ export interface CreateOrganizationPayload {
   subscriptionExpiry?: Date;
   settings?: Partial<Organization['settings']>;
   microsoftAuth?: MicrosoftAuthConfig;
+  /** Set via update only — pause/resume tenant without deleting data */
+  isActive?: boolean;
 }
 
 export interface OrganizationStats {

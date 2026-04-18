@@ -11,13 +11,13 @@ export function DashboardLoadingCard({ className, minHeight = 'min-h-[12rem]' }:
   return (
     <div
       className={cn(
-        'flex items-center justify-center rounded-2xl border border-blue-100 bg-white shadow-sm',
+        'flex items-center justify-center rounded-2xl border border-border/80 bg-card shadow-sm ring-1 ring-border/40',
         minHeight,
         className
       )}
     >
       <div
-        className="h-9 w-9 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-600"
+        className="h-9 w-9 animate-spin rounded-full border-[3px] border-muted border-t-primary"
         aria-hidden
       />
       <span className="sr-only">Loading</span>

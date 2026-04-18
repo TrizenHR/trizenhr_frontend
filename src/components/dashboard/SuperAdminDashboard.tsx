@@ -7,11 +7,24 @@ import { QuickActions } from './QuickActions';
 import { StatCard } from './StatCard';
 import { DashboardShell } from './DashboardShell';
 import { UserRole } from '@/lib/types';
-import { Building2, CheckCircle, XCircle, TrendingUp, Users } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Building2, CheckCircle, MoreVertical, TrendingUp, Users, XCircle } from 'lucide-react';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function SuperAdminDashboard() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -55,28 +68,32 @@ export function SuperAdminDashboard() {
         premiumOrgs: 0,
       };
 
-  /** Blue & white only — plans distinguished by border + blue depth */
+  /** Plan tiers — depth via primary + neutral tokens */
   const getPlanBadgeClass = (plan: SubscriptionPlan) => {
     const map: Record<SubscriptionPlan, string> = {
-      [SubscriptionPlan.FREE]: 'border-blue-100 bg-blue-50 text-blue-900',
-      [SubscriptionPlan.BASIC]: 'border-blue-200 bg-blue-50 text-blue-950',
-      [SubscriptionPlan.PREMIUM]: 'border-blue-300 bg-white text-blue-950',
-      [SubscriptionPlan.ENTERPRISE]: 'border-blue-400 bg-blue-50 text-blue-950',
+      [SubscriptionPlan.FREE]: 'border-border bg-muted/70 text-foreground',
+      [SubscriptionPlan.BASIC]: 'border-primary/25 bg-primary/5 text-foreground',
+      [SubscriptionPlan.PREMIUM]: 'border-primary/35 bg-primary/10 text-foreground',
+      [SubscriptionPlan.ENTERPRISE]: 'border-primary/45 bg-primary/15 text-foreground',
     };
-    return map[plan] || 'border-blue-100 bg-blue-50 text-blue-900';
+    return map[plan] || 'border-border bg-muted/70 text-foreground';
   };
 
   return (
     <DashboardShell
       badge="System admin"
       title="Platform dashboard"
-      subtitle="Manage organizations, subscriptions, and platform-wide usage from one place."
+      subtitle="Welcome back. Manage organizations, subscriptions, and platform-wide usage from one place."
       action={
-        <Link href="/dashboard/organizations">
-          <Button className="rounded-xl bg-blue-600 font-semibold text-white shadow-sm hover:bg-blue-700">
+        <Button
+          asChild
+          className="h-11 rounded-xl border-0 bg-primary-foreground px-5 font-semibold text-primary shadow-md transition hover:bg-primary-foreground/90"
+        >
+          <Link href="/dashboard/organizations" className="inline-flex items-center gap-2">
+            <Building2 className="h-4 w-4 shrink-0" aria-hidden />
             Manage organizations
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       }
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -100,57 +117,100 @@ export function SuperAdminDashboard() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <div className="xl:col-span-8">
-          <Card className="border-blue-100 bg-white shadow-sm ring-1 ring-blue-950/5">
-            <CardHeader>
-              <CardTitle className="text-lg text-blue-950">Recent organizations</CardTitle>
-              <CardDescription className="text-blue-900/60">
-                Latest tenants on the platform
-              </CardDescription>
+          <Card className="overflow-hidden rounded-2xl border-border/80 bg-card shadow-sm ring-1 ring-border/40">
+            <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
+                  Recent organizations
+                </CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Review and manage newly registered business entities
+                </CardDescription>
+              </div>
+              <CardAction>
+                <Link
+                  href="/dashboard/organizations"
+                  className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  View all activity
+                </Link>
+              </CardAction>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
               {isLoading ? (
-                <p className="py-6 text-center text-sm text-blue-900/60">Loading…</p>
+                <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
               ) : organizations.length > 0 ? (
                 <div className="space-y-2">
                   {organizations.slice(0, 5).map((org) => (
                     <div
                       key={org._id}
-                      className="flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4 transition-colors hover:bg-blue-50 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-blue-950">{org.name}</p>
-                          {org.isActive ? (
-                            <Badge className="border border-blue-200 bg-white font-medium text-blue-800 shadow-none">
-                              Active
-                            </Badge>
-                          ) : (
-                            <Badge className="border border-blue-300 bg-blue-100 font-medium text-blue-950 shadow-none">
-                              Inactive
-                            </Badge>
-                          )}
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10"
+                          aria-hidden
+                        >
+                          <Building2 className="h-5 w-5" />
                         </div>
-                        <p className="text-sm text-blue-900/65">
-                          {org.subdomain ? `${org.subdomain}.trizenhr.com` : 'No subdomain'}
-                        </p>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold leading-tight text-foreground">{org.name}</p>
+                            {org.isActive ? (
+                              <Badge className="border border-primary/25 bg-primary/10 font-medium text-primary shadow-none">
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge className="border border-border bg-muted font-medium text-muted-foreground shadow-none">
+                                Inactive
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {org.subdomain ? `${org.subdomain}.trizenhr.com` : 'No subdomain'}
+                          </p>
+                        </div>
                       </div>
-                      <Badge
-                        className={`shrink-0 border font-medium shadow-none ${getPlanBadgeClass(org.subscriptionPlan)}`}
-                        variant="outline"
-                      >
-                        {org.subscriptionPlan}
-                      </Badge>
+                      <div className="flex shrink-0 items-center justify-end gap-2 sm:justify-end">
+                        <Badge
+                          className={`border font-medium uppercase tracking-wide shadow-none ${getPlanBadgeClass(org.subscriptionPlan)}`}
+                          variant="outline"
+                        >
+                          {org.subscriptionPlan}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                              aria-label={`Actions for ${org.name}`}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/organizations">Open organizations</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/users/create?orgId=${encodeURIComponent(org._id)}`}>
+                                Create admin
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-blue-100 bg-blue-50/50 py-10 text-center">
-                  <p className="mb-4 text-sm text-blue-900/70">No organizations yet</p>
-                  <Link href="/dashboard/organizations">
-                    <Button className="rounded-xl bg-blue-600 font-semibold text-white hover:bg-blue-700">
-                      Create first organization
-                    </Button>
-                  </Link>
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 py-12 text-center">
+                  <p className="mb-4 text-sm text-muted-foreground">No organizations yet</p>
+                  <Button asChild className="rounded-xl font-semibold">
+                    <Link href="/dashboard/organizations">Create first organization</Link>
+                  </Button>
                 </div>
               )}
             </CardContent>
