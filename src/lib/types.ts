@@ -6,6 +6,16 @@ export enum UserRole {
   EMPLOYEE = 'employee',
 }
 
+export interface PlatformNotificationPreferences {
+  pollIntervalSec?: number;
+  refreshOnTabFocus?: boolean;
+  showUnreadBadge?: boolean;
+}
+
+export interface PlatformPreferences {
+  notifications?: PlatformNotificationPreferences;
+}
+
 export interface User {
   _id: string;
   id: string;
@@ -25,6 +35,8 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  /** System Admin — persisted platform UI preferences */
+  platformPreferences?: PlatformPreferences;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -33,6 +45,22 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   timestamp: string;
+}
+
+/** In-app notification row (server-driven, role-aware). */
+export interface DashboardNotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  href?: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface NotificationListPayload {
+  items: DashboardNotificationItem[];
+  unreadCount: number;
 }
 
 export interface LoginResponse {
@@ -289,6 +317,8 @@ export interface Organization {
   name: string;
   subdomain?: string;
   isActive: boolean;
+  /** Present when the org was soft-deleted from the platform */
+  deletedAt?: string;
   subscriptionPlan: SubscriptionPlan;
   subscriptionExpiry?: string;
   settings: {

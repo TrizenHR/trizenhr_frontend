@@ -32,7 +32,10 @@ import {
   UpdateSalaryStructurePayload,
   BillingOverview,
   BillingInvoice,
+  NotificationListPayload,
+  PlatformNotificationPreferences,
 } from './types';
+import { isPlatformHost } from './is-platform-host';
 
 // Resolve API base URL
 // - In browser: prefer NEXT_PUBLIC_API_URL if provided, otherwise use same-origin /api
@@ -54,20 +57,6 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-// Helper to detect if current host is "platform" (no tenant subdomain)
-const isPlatformHost = () => {
-  if (typeof window === 'undefined') return true;
-  const host = window.location.hostname;
-
-  if (host === 'localhost' || host === '127.0.0.1') {
-    return true;
-  }
-
-  // e.g. "trizenhr.com" (2 parts) -> platform, "acme.trizenhr.com" (3+) -> tenant
-  const parts = host.split('.');
-  return parts.length <= 2;
-};
 
 // Request interceptor - attach JWT token and optional Super Admin org override
 api.interceptors.request.use(
@@ -154,6 +143,13 @@ export const authApi = {
 
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get<ApiResponse<User>>('/auth/me');
+    return response.data.data!;
+  },
+
+  updatePlatformPreferences: async (payload: {
+    notifications: Partial<PlatformNotificationPreferences>;
+  }): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>('/auth/me/platform-preferences', payload);
     return response.data.data!;
   },
 
@@ -652,6 +648,26 @@ export const organizationApi = {
     const response = await api.put<ApiResponse<Organization>>('/organizations/my/settings', {
       settings,
     });
+    return response.data.data!;
+  },
+};
+
+// Notifications (role-aware, server aggregated)
+export const notificationsApi = {
+  getList: async (): Promise<NotificationListPayload> => {
+    const response = await api.get<ApiResponse<NotificationListPayload>>('/notifications');
+    return response.data.data!;
+  },
+
+  markRead: async (keys: string[]): Promise<NotificationListPayload> => {
+    const response = await api.post<ApiResponse<NotificationListPayload>>('/notifications/mark-read', {
+      keys,
+    });
+    return response.data.data!;
+  },
+
+  markAllRead: async (): Promise<NotificationListPayload> => {
+    const response = await api.post<ApiResponse<NotificationListPayload>>('/notifications/mark-all-read');
     return response.data.data!;
   },
 };

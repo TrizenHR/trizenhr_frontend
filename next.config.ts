@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker
   output: 'standalone',
+
+  // Tree-shake icon imports — faster nav / smaller client bundles
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   
   // Cache busting configuration
   generateBuildId: async () => {

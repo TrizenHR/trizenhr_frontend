@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { dashboardApi } from '@/lib/api';
 import { DashboardStats } from '@/lib/types';
 import { QuickActions } from './QuickActions';
 import { TodayAttendanceSummary } from './TodayAttendanceSummary';
 import { StatCard } from './StatCard';
+import { DashboardShell } from './DashboardShell';
+import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
 import { Users, Building2, Calendar, TrendingUp } from 'lucide-react';
 
 export function AdminDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,49 +38,44 @@ export function AdminDashboard() {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">System-wide overview and management</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <DashboardShell
+      badge="Company admin"
+      title="Admin dashboard"
+      subtitle={`Organization-wide snapshot${user?.organization?.name ? ` — ${user.organization.name}` : ''}. Monitor users, attendance, and pending actions.`}
+    >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <StatCard
-          title="Total Users"
-          value={isLoading ? '...' : (stats?.totalUsers || 0)}
+          title="Total users"
+          value={isLoading ? '…' : stats?.totalUsers ?? 0}
           icon={Users}
           description="All roles"
         />
         <StatCard
           title="Departments"
-          value={isLoading ? '...' : (stats?.totalDepartments || 0)}
+          value={isLoading ? '…' : stats?.totalDepartments ?? 0}
           icon={Building2}
         />
         <StatCard
-          title="Present Today"
-          value={isLoading ? '...' : (stats?.todayAttendance?.present || 0)}
+          title="Present today"
+          value={isLoading ? '…' : stats?.todayAttendance?.present ?? 0}
           icon={TrendingUp}
-          description={`${attendancePercentage}% attendance`}
+          description={`${attendancePercentage}% of tracked staff`}
         />
         <StatCard
-          title="Pending Approvals"
-          value={isLoading ? '...' : (stats?.pendingLeaveApprovals || 0)}
+          title="Pending approvals"
+          value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
           icon={Calendar}
-          description="Requires action"
+          description="Leave requests"
         />
       </div>
 
-      {/* Attendance Summary & Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           {isLoading ? (
-            <div className="flex items-center justify-center p-12 bg-white rounded-lg border">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
-            </div>
+            <DashboardLoadingCard />
           ) : (
             <TodayAttendanceSummary
-              title="Today's Attendance (All Departments)"
+              title="Today's attendance (all departments)"
               stats={{
                 present: stats?.todayAttendance?.present || 0,
                 late: stats?.todayAttendance?.late || 0,
@@ -87,8 +86,10 @@ export function AdminDashboard() {
             />
           )}
         </div>
-        <QuickActions userRole={UserRole.ADMIN} />
+        <div className="xl:col-span-4">
+          <QuickActions userRole={UserRole.ADMIN} />
+        </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

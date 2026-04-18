@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/features/auth-context';
+import { useAuth } from '@/hooks/use-auth';
 import { organizationApi } from '@/lib/api';
 import { Organization, UserRole } from '@/lib/types';
 
@@ -31,12 +31,12 @@ export function OrganizationSwitcher() {
   }
 
   return (
-    <div className="flex items-center space-x-2 mr-4">
-      <div className="relative">
+    <div className="flex max-w-[min(16rem,calc(100vw-12rem))] min-w-0 items-center">
+      <div className="relative w-full">
         <select
           value={selectedOrganizationId || ''}
           onChange={(e) => setSelectedOrganizationId(e.target.value || null)}
-          className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500 text-sm w-64"
+          className="w-full appearance-none rounded border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm leading-tight text-gray-700 focus:border-blue-500 focus:bg-white focus:outline-none"
           disabled={loading}
         >
           <option value="">Global View (All Organizations)</option>

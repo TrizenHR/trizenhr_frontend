@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { organizationApi, userApi } from '@/lib/api';
+import { requestNotificationsRefresh } from '@/lib/notifications-events';
 import { Organization, SubscriptionPlan, CreateOrganizationPayload, UserRole } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -185,6 +186,7 @@ export default function OrganizationsPage() {
 
     try {
       await organizationApi.delete(id);
+      requestNotificationsRefresh();
       toast({
         title: 'Success',
         description: 'Organization deleted successfully',

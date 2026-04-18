@@ -1,5 +1,6 @@
 'use client';
 
+import { startTransition, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -10,10 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, LogOut, User, Settings, Menu } from 'lucide-react';
+import { LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
+import { OrganizationSwitcher } from '@/components/dashboard/OrganizationSwitcher';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 interface HeaderProps {
   title?: string;
@@ -24,10 +27,20 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
-    router.push('/login');
-  };
+    startTransition(() => {
+      router.push('/login');
+    });
+  }, [logout, router]);
+
+  const goToProfile = useCallback(() => {
+    startTransition(() => router.push('/dashboard/profile'));
+  }, [router]);
+
+  const goToSettings = useCallback(() => {
+    startTransition(() => router.push('/dashboard/settings'));
+  }, [router]);
 
   // Get user initials
   const initials = user
@@ -49,12 +62,9 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
         <h1 className="text-lg md:text-xl font-semibold text-gray-900 truncate">{title}</h1>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-4">
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-gray-600" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-        </Button>
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-4">
+        <OrganizationSwitcher />
+        <NotificationBell />
 
         {/* User Menu */}
         <DropdownMenu>
@@ -79,7 +89,7 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
-                router.push('/dashboard/profile');
+                goToProfile();
               }}
               className="cursor-pointer"
             >
@@ -89,7 +99,7 @@ export function Header({ title = 'Dashboard', onMenuClick }: HeaderProps) {
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
-                router.push('/dashboard/settings');
+                goToSettings();
               }}
               className="cursor-pointer"
             >
