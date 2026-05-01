@@ -68,6 +68,11 @@ export interface LoginResponse {
   user: {
     id: string;
     organizationId?: string;
+    organization?: {
+      _id: string;
+      name: string;
+      subscriptionPlan: string;
+    };
     email: string;
     firstName: string;
     lastName: string;

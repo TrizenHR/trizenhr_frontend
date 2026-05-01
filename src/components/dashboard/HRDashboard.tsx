@@ -10,10 +10,11 @@ import { StatCard } from './StatCard';
 import { DashboardShell } from './DashboardShell';
 import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
-import { Users, UserPlus, Calendar, FileText } from 'lucide-react';
+import { Users, UserPlus, Calendar, FileText, Building2 } from 'lucide-react';
 
 export function HRDashboard() {
   const { user } = useAuth();
+  const organizationName = user?.organization?.name || 'your organization';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,9 +42,15 @@ export function HRDashboard() {
     <DashboardShell
       badge="HR"
       title="HR dashboard"
-      subtitle={`People operations and attendance visibility${user?.organization?.name ? ` for ${user.organization.name}` : ''}.`}
+      subtitle={`People operations and attendance visibility for ${organizationName}.`}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-5">
+        <StatCard
+          title="Organization"
+          value={organizationName}
+          icon={Building2}
+          description="Current tenant"
+        />
         <StatCard
           title="Total employees"
           value={isLoading ? '…' : stats?.totalUsers ?? 0}

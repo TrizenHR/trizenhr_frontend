@@ -183,7 +183,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {user.role !== 'super_admin' && user.organization ? (
+          {user.role !== 'super_admin' && (user.organization || user.organizationId) ? (
             <Card className="overflow-hidden rounded-2xl border-border/80 bg-card shadow-sm ring-1 ring-border/40">
               <CardHeader className="border-b border-border/60 pb-3 pt-5">
                 <CardTitle className="text-base font-semibold tracking-tight">Organization</CardTitle>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     <p className="mt-1 truncate text-sm font-medium text-foreground">
-                      {user.organization.name}
+                      {user.organization?.name || 'Organization not available'}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border/70 bg-muted/15 p-3">
@@ -209,12 +209,16 @@ export default function ProfilePage() {
                         Plan
                       </p>
                     </div>
-                    <Badge
-                      className="mt-2 border border-primary/25 bg-primary/10 font-semibold text-primary shadow-none"
-                      variant="outline"
-                    >
-                      {user.organization.subscriptionPlan.toUpperCase()}
-                    </Badge>
+                    {user.organization?.subscriptionPlan ? (
+                      <Badge
+                        className="mt-2 border border-primary/25 bg-primary/10 font-semibold text-primary shadow-none"
+                        variant="outline"
+                      >
+                        {user.organization.subscriptionPlan.toUpperCase()}
+                      </Badge>
+                    ) : (
+                      <p className="mt-1 text-sm text-muted-foreground">Plan not available</p>
+                    )}
                   </div>
                 </div>
               </CardContent>

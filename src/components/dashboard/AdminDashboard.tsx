@@ -14,6 +14,7 @@ import { Users, Building2, Calendar, TrendingUp } from 'lucide-react';
 
 export function AdminDashboard() {
   const { user } = useAuth();
+  const organizationName = user?.organization?.name || 'your organization';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,9 +42,15 @@ export function AdminDashboard() {
     <DashboardShell
       badge="Company admin"
       title="Admin dashboard"
-      subtitle={`Organization-wide snapshot${user?.organization?.name ? ` — ${user.organization.name}` : ''}. Monitor users, attendance, and pending actions.`}
+      subtitle={`Organization-wide snapshot — ${organizationName}. Monitor users, attendance, and pending actions.`}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-5">
+        <StatCard
+          title="Organization"
+          value={organizationName}
+          icon={Building2}
+          description="Current tenant"
+        />
         <StatCard
           title="Total users"
           value={isLoading ? '…' : stats?.totalUsers ?? 0}

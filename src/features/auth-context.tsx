@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi } from '@/lib/api';
 import { User } from '@/lib/types';
+import axios from 'axios';
 
 interface AuthContextType {
   user: User | null;
@@ -42,14 +43,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(freshUser);
             localStorage.setItem('user', JSON.stringify(freshUser));
           } catch (error) {
-            // If token is invalid, clear auth data
+            // Only clear auth state when token is truly invalid/expired.
+            // For transient 5xx/network issues, keep existing session from localStorage.
             console.error('Failed to fetch user:', error);
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('selectedOrganizationId');
-            setToken(null);
-            setUser(null);
-            setSelectedState(null);
+            const status = axios.isAxiosError(error)
+              ? error.response?.status
+              : undefined;
+            if (status === 401) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              localStorage.removeItem('selectedOrganizationId');
+              setToken(null);
+              setUser(null);
+              setSelectedState(null);
+            }
           }
         }
       } catch (error) {
