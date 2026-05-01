@@ -32,13 +32,40 @@ import {
   UpdateSalaryStructurePayload,
 } from './types';
 
+const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
+const DEFAULT_PROD_API_URL = 'https://trizen-attendease-backend.llp.trizenventures.com/api';
+
+function normalizeApiUrl(value?: string): string {
+  const raw = (value || '').trim().replace(/^['"]|['"]$/g, '');
+  if (!raw) return '';
+  return raw.endsWith('/') ? raw.slice(0, -1) : raw;
+}
+
+function resolveApiBaseUrl(): string {
+  const fromEnv = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
+  if (fromEnv) return fromEnv;
+
+  if (typeof window === 'undefined') {
+    // During SSR/build, keep deterministic default.
+    return process.env.NODE_ENV === 'production' ? DEFAULT_PROD_API_URL : DEFAULT_DEV_API_URL;
+  }
+
+  // In browser production, never fall back to relative/same-origin API for auth calls.
+  return process.env.NODE_ENV === 'production' ? DEFAULT_PROD_API_URL : DEFAULT_DEV_API_URL;
+}
+
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: resolveApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  // Visible in browser devtools to verify deployed bundle API target.
+  console.info('[trizenhr api] baseURL =', api.defaults.baseURL);
+}
 
 // Request interceptor - attach JWT token
 api.interceptors.request.use(
