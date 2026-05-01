@@ -40,15 +40,7 @@ import { isPlatformHost } from './is-platform-host';
 // Resolve API base URL
 // - In browser: prefer NEXT_PUBLIC_API_URL if provided, otherwise use same-origin /api
 // - On server (SSR/ISR): fall back to NEXT_PUBLIC_API_URL or localhost
-const getBaseURL = () => {
-  if (typeof window !== 'undefined') {
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
-    }
-    return `${window.location.origin}/api`;
-  }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-};
+
 
 const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
 const DEFAULT_PROD_API_URL = 'https://trizen-attendease-backend.llp.trizenventures.com/api';
@@ -75,7 +67,6 @@ function resolveApiBaseUrl(): string {
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: resolveApiBaseUrl(),
-  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -86,7 +77,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
   console.info('[trizenhr api] baseURL =', api.defaults.baseURL);
 }
 
-// Request interceptor - attach JWT token
 // Request interceptor - attach JWT token and optional Super Admin org override
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

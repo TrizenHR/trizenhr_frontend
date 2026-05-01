@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { organizationApi } from '@/lib/api';
-import { Organization, SubscriptionPlan, CreateOrganizationPayload } from '@/lib/types';
 import { organizationApi, userApi } from '@/lib/api';
 import { requestNotificationsRefresh } from '@/lib/notifications-events';
 import { Organization, SubscriptionPlan, CreateOrganizationPayload, UserRole } from '@/lib/types';

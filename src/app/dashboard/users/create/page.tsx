@@ -41,7 +41,6 @@ export default function CreateUserPage() {
         return;
       }
 
-      router.push('/dashboard/users');
       router.push(user?.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create user');
