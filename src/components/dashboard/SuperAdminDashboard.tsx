@@ -5,12 +5,26 @@ import { organizationApi, dashboardApi } from '@/lib/api';
 import { Organization, SubscriptionPlan } from '@/lib/types';
 import { QuickActions } from './QuickActions';
 import { StatCard } from './StatCard';
+import { DashboardShell } from './DashboardShell';
 import { UserRole } from '@/lib/types';
-import { Building2, CheckCircle, XCircle, TrendingUp, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Building2, CheckCircle, MoreVertical, TrendingUp, Users, XCircle } from 'lucide-react';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function SuperAdminDashboard() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -25,7 +39,7 @@ export function SuperAdminDashboard() {
     try {
       const [orgsData, statsData] = await Promise.all([
         organizationApi.getAll(),
-        dashboardApi.getStats()
+        dashboardApi.getStats(),
       ]);
       setOrganizations(orgsData);
       setSystemStats(statsData);
@@ -36,126 +50,177 @@ export function SuperAdminDashboard() {
     }
   };
 
-  const stats = systemStats ? {
-    totalOrgs: systemStats.totalOrganizations || 0,
-    activeOrgs: systemStats.activeOrganizations || 0,
-    inactiveOrgs: systemStats.inactiveOrganizations || 0,
-    totalUsers: systemStats.totalUsers || 0,
-    premiumOrgs: (systemStats.organizationsByPlan?.premium || 0) + (systemStats.organizationsByPlan?.enterprise || 0),
-  } : {
-    totalOrgs: 0,
-    activeOrgs: 0,
-    inactiveOrgs: 0,
-    totalUsers: 0,
-    premiumOrgs: 0,
-  };
+  const stats = systemStats
+    ? {
+        totalOrgs: systemStats.totalOrganizations || 0,
+        activeOrgs: systemStats.activeOrganizations || 0,
+        inactiveOrgs: systemStats.inactiveOrganizations || 0,
+        totalUsers: systemStats.totalUsers || 0,
+        premiumOrgs:
+          (systemStats.organizationsByPlan?.premium || 0) +
+          (systemStats.organizationsByPlan?.enterprise || 0),
+      }
+    : {
+        totalOrgs: 0,
+        activeOrgs: 0,
+        inactiveOrgs: 0,
+        totalUsers: 0,
+        premiumOrgs: 0,
+      };
 
-  const getPlanBadgeColor = (plan: SubscriptionPlan) => {
-    const colors = {
-      [SubscriptionPlan.FREE]: 'bg-gray-100 text-gray-800',
-      [SubscriptionPlan.BASIC]: 'bg-blue-100 text-blue-800',
-      [SubscriptionPlan.PREMIUM]: 'bg-purple-100 text-purple-800',
-      [SubscriptionPlan.ENTERPRISE]: 'bg-yellow-100 text-yellow-800',
+  /** Plan tiers — depth via primary + neutral tokens */
+  const getPlanBadgeClass = (plan: SubscriptionPlan) => {
+    const map: Record<SubscriptionPlan, string> = {
+      [SubscriptionPlan.FREE]: 'border-border bg-muted/70 text-foreground',
+      [SubscriptionPlan.BASIC]: 'border-primary/25 bg-primary/5 text-foreground',
+      [SubscriptionPlan.PREMIUM]: 'border-primary/35 bg-primary/10 text-foreground',
+      [SubscriptionPlan.ENTERPRISE]: 'border-primary/45 bg-primary/15 text-foreground',
     };
-    return colors[plan] || 'bg-gray-100 text-gray-800';
+    return map[plan] || 'border-border bg-muted/70 text-foreground';
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">System Dashboard</h1>
-          <p className="text-muted-foreground">Manage platform and client organizations</p>
-        </div>
-        <Link href="/dashboard/organizations">
-          <Button>Manage Organizations</Button>
-        </Link>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <DashboardShell
+      badge="System admin"
+      title="Platform dashboard"
+      subtitle="Welcome back. Manage organizations, subscriptions, and platform-wide usage from one place."
+      action={
+        <Button
+          asChild
+          className="h-11 rounded-xl border-0 bg-primary-foreground px-5 font-semibold text-primary shadow-md transition hover:bg-primary-foreground/90"
+        >
+          <Link href="/dashboard/organizations" className="inline-flex items-center gap-2">
+            <Building2 className="h-4 w-4 shrink-0" aria-hidden />
+            Manage organizations
+          </Link>
+        </Button>
+      }
+    >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
-          title="Total Organizations"
+          title="Organizations"
           value={stats.totalOrgs}
           icon={Building2}
           description="All client orgs"
         />
+        <StatCard title="Active" value={stats.activeOrgs} icon={CheckCircle} description="Running" />
+        <StatCard title="Inactive" value={stats.inactiveOrgs} icon={XCircle} description="Paused" />
+        <StatCard title="Total users" value={stats.totalUsers} icon={Users} description="Platform-wide" />
         <StatCard
-          title="Active"
-          value={stats.activeOrgs}
-          icon={CheckCircle}
-          description="Running organizations"
-        />
-        <StatCard
-          title="Inactive"
-          value={stats.inactiveOrgs}
-          icon={XCircle}
-          description="Paused or disabled"
-        />
-        <StatCard
-          title="Total Users"
-          value={stats.totalUsers}
-          icon={Users}
-          description="Across all organizations"
-        />
-        <StatCard
-          title="Premium Tier"
+          title="Premium tier"
           value={stats.premiumOrgs}
           icon={TrendingUp}
           description="Premium + Enterprise"
+          className="sm:col-span-2 xl:col-span-1"
         />
       </div>
 
-      {/* Organizations Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Organizations</CardTitle>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-8">
+          <Card className="overflow-hidden rounded-2xl border-border/80 bg-card shadow-sm ring-1 ring-border/40">
+            <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
+                  Recent organizations
+                </CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  Review and manage newly registered business entities
+                </CardDescription>
+              </div>
+              <CardAction>
+                <Link
+                  href="/dashboard/organizations"
+                  className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  View all activity
+                </Link>
+              </CardAction>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
               {isLoading ? (
-                <p className="text-center text-muted-foreground py-4">Loading...</p>
+                <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
               ) : organizations.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {organizations.slice(0, 5).map((org) => (
                     <div
                       key={org._id}
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                      className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/15 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{org.name}</p>
-                          {org.isActive ? (
-                            <Badge className="bg-green-100 text-green-800">Active</Badge>
-                          ) : (
-                            <Badge className="bg-red-100 text-red-800">Inactive</Badge>
-                          )}
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10"
+                          aria-hidden
+                        >
+                          <Building2 className="h-5 w-5" />
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {org.subdomain ? `${org.subdomain}.trizenhr.com` : 'No subdomain'}
-                        </p>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold leading-tight text-foreground">{org.name}</p>
+                            {org.isActive ? (
+                              <Badge className="border border-primary/25 bg-primary/10 font-medium text-primary shadow-none">
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge className="border border-border bg-muted font-medium text-muted-foreground shadow-none">
+                                Inactive
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {org.subdomain ? `${org.subdomain}.trizenhr.com` : 'No subdomain'}
+                          </p>
+                        </div>
                       </div>
-                      <Badge className={getPlanBadgeColor(org.subscriptionPlan)} variant="outline">
-                        {org.subscriptionPlan}
-                      </Badge>
+                      <div className="flex shrink-0 items-center justify-end gap-2 sm:justify-end">
+                        <Badge
+                          className={`border font-medium uppercase tracking-wide shadow-none ${getPlanBadgeClass(org.subscriptionPlan)}`}
+                          variant="outline"
+                        >
+                          {org.subscriptionPlan}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                              aria-label={`Actions for ${org.name}`}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/organizations">Open organizations</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/users/create?orgId=${encodeURIComponent(org._id)}`}>
+                                Create admin
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">No organizations yet</p>
-                  <Link href="/dashboard/organizations">
-                    <Button>Create First Organization</Button>
-                  </Link>
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 py-12 text-center">
+                  <p className="mb-4 text-sm text-muted-foreground">No organizations yet</p>
+                  <Button asChild className="rounded-xl font-semibold">
+                    <Link href="/dashboard/organizations">Create first organization</Link>
+                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        <QuickActions userRole={UserRole.SUPER_ADMIN} />
+        <div className="xl:col-span-4">
+          <QuickActions userRole={UserRole.SUPER_ADMIN} />
+        </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

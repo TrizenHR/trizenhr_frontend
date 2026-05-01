@@ -26,12 +26,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { CheckCircle2, XCircle, Calendar, User, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 type ActionType = 'approve' | 'reject' | null;
 
 export default function LeaveApprovalsPage() {
+  const { user } = useAuth();
   const [pendingLeaves, setPendingLeaves] = useState<Leave[]>([]);
   const [approvedLeaves, setApprovedLeaves] = useState<Leave[]>([]);
   const [rejectedLeaves, setRejectedLeaves] = useState<Leave[]>([]);
@@ -69,7 +71,10 @@ export default function LeaveApprovalsPage() {
   const loadApprovedLeaves = async () => {
     try {
       setIsLoadingApproved(true);
-      const response = await leaveApi.getAllLeaves({ status: LeaveStatus.APPROVED });
+      const response =
+        user?.role === 'supervisor'
+          ? await leaveApi.getTeamLeaves({ status: LeaveStatus.APPROVED })
+          : await leaveApi.getAllLeaves({ status: LeaveStatus.APPROVED });
       setApprovedLeaves(response.records);
     } catch (error: any) {
       toast({
@@ -85,7 +90,10 @@ export default function LeaveApprovalsPage() {
   const loadRejectedLeaves = async () => {
     try {
       setIsLoadingRejected(true);
-      const response = await leaveApi.getAllLeaves({ status: LeaveStatus.REJECTED });
+      const response =
+        user?.role === 'supervisor'
+          ? await leaveApi.getTeamLeaves({ status: LeaveStatus.REJECTED })
+          : await leaveApi.getAllLeaves({ status: LeaveStatus.REJECTED });
       setRejectedLeaves(response.records);
     } catch (error: any) {
       toast({

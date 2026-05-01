@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { UserRole } from '@/lib/types';
+import { UserRole, type User } from '@/lib/types';
 import { hasAnyRole } from '@/lib/permissions';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,8 +28,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  roles?: UserRole[]; // If specified, only these roles can see this item
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  roles?: UserRole[];
 }
 
 interface NavSection {
@@ -36,67 +37,63 @@ interface NavSection {
   items: NavItem[];
 }
 
-// Navigation structure - reorganized for clarity
 const navigationSections: NavSection[] = [
   {
-    // Dashboard - always visible
-    items: [
-      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    ],
+    items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
   },
   {
     title: 'Personal',
     items: [
-      { 
-        label: 'My Attendance', 
-        href: '/dashboard/my-attendance', 
+      {
+        label: 'My Attendance',
+        href: '/dashboard/my-attendance',
         icon: Clock,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
-      { 
-        label: 'My Leave', 
-        href: '/dashboard/my-leave', 
+      {
+        label: 'My Leave',
+        href: '/dashboard/my-leave',
         icon: FileText,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
-      { 
-        label: 'My Calendar', 
-        href: '/dashboard/my-calendar', 
+      {
+        label: 'My Calendar',
+        href: '/dashboard/my-calendar',
         icon: Calendar,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
-      { 
-        label: 'My Salary', 
-        href: '/dashboard/my-salary', 
+      {
+        label: 'My Salary',
+        href: '/dashboard/my-salary',
         icon: Wallet,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE]
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
     ],
   },
   {
     title: 'Team Management',
     items: [
-      { 
-        label: 'Team Attendance', 
-        href: '/dashboard/team-attendance', 
+      {
+        label: 'Team Attendance',
+        href: '/dashboard/team-attendance',
         icon: Users,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
-      { 
-        label: 'Team Leaves', 
-        href: '/dashboard/team-leaves', 
+      {
+        label: 'Team Leaves',
+        href: '/dashboard/team-leaves',
         icon: Calendar,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
-      { 
-        label: 'Leave Approvals', 
-        href: '/dashboard/leave-approvals', 
+      {
+        label: 'Leave Approvals',
+        href: '/dashboard/leave-approvals',
         icon: ClipboardList,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
-      { 
-        label: 'Employees', 
-        href: '/dashboard/employees', 
+      {
+        label: 'Employees',
+        href: '/dashboard/employees',
         icon: Users,
         roles: [UserRole.HR],
       },
@@ -111,35 +108,41 @@ const navigationSections: NavSection[] = [
         icon: Building2,
         roles: [UserRole.SUPER_ADMIN],
       },
-      { 
-        label: 'Departments', 
-        href: '/dashboard/departments', 
+      {
+        label: 'Departments',
+        href: '/dashboard/departments',
         icon: Building2,
-        roles: [UserRole.ADMIN], // HR can only view, Super Admin excluded
+        roles: [UserRole.ADMIN],
       },
-      { 
-        label: 'Manage Holidays', 
-        href: '/dashboard/manage-holidays', 
+      {
+        label: 'Manage Holidays',
+        href: '/dashboard/manage-holidays',
         icon: Calendar,
-        roles: [UserRole.ADMIN], // HR can only view, Super Admin excluded
+        roles: [UserRole.ADMIN],
       },
-      { 
-        label: 'Reports', 
-        href: '/dashboard/reports', 
+      {
+        label: 'Reports',
+        href: '/dashboard/reports',
         icon: FileText,
-        roles: [UserRole.ADMIN, UserRole.HR], // Super Admin excluded
+        roles: [UserRole.ADMIN, UserRole.HR],
       },
       {
         label: 'Salary Structures',
         href: '/dashboard/salary-structures',
         icon: DollarSign,
-        roles: [UserRole.ADMIN], // Admin only, HR and Super Admin excluded
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Manage Users',
+        href: '/dashboard/users',
+        icon: UserCog,
+        roles: [UserRole.ADMIN],
       },
       {
         label: 'Payroll Processing',
         href: '/dashboard/payroll',
         icon: Wallet,
-        roles: [UserRole.ADMIN], // Admin only, HR and Super Admin excluded
+        roles: [UserRole.ADMIN],
       },
       {
         label: 'System Users',
@@ -162,119 +165,144 @@ interface SidebarProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+function isNavItemActive(pathname: string, href: string): boolean {
+  if (href === '/dashboard') {
+    return pathname === '/dashboard';
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function filterItemsByRole(items: NavItem[], user: User | null) {
+  return items.filter((item) => {
+    if (!item.roles) return true;
+    if (!user) return false;
+    return hasAnyRole(user.role as UserRole, item.roles);
+  });
+}
+
 export function Sidebar({ open, onOpenChange }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  // Filter navigation items based on user role
-  const filterItemsByRole = (items: NavItem[]) => {
-    return items.filter((item) => {
-      if (!item.roles) return true; // No role restriction
-      if (!user) return false; // Not authenticated
-      return hasAnyRole(user.role as UserRole, item.roles);
-    });
-  };
-
-  // Filter sections to only show sections with visible items
-  // Super Admin: Only show Dashboard and Organization sections (no personal/team sections)
-  const visibleSections = navigationSections
-    .filter((section) => {
-      // For Super Admin, hide Personal and Team Management sections
-      if (user?.role === UserRole.SUPER_ADMIN) {
-        if (section.title === 'Personal' || section.title === 'Team Management') {
-          return false;
+  const visibleSections = useMemo(() => {
+    return navigationSections
+      .filter((section) => {
+        if (user?.role === UserRole.SUPER_ADMIN) {
+          if (section.title === 'Personal' || section.title === 'Team Management') {
+            return false;
+          }
         }
-      }
-      return true;
-    })
-    .map((section) => ({
-      ...section,
-      items: filterItemsByRole(section.items),
-    }))
-    .filter((section) => section.items.length > 0);
+        return true;
+      })
+      .map((section) => ({
+        ...section,
+        items: filterItemsByRole(section.items, user),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [user]);
 
-  const visibleBottomItems = filterItemsByRole(bottomNavItems);
+  const visibleBottomItems = useMemo(() => filterItemsByRole(bottomNavItems, user), [user]);
 
-  const sidebarContent = (
-    <>
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
-        <Image src="/assets/logo.png" alt="Logo" width={32} height={32} className="rounded" />
-        <div>
-          <span className="block font-semibold text-gray-900">TrizenHR</span>
-          <span className="block text-xs text-gray-500">by Trizen Ventures</span>
-        </div>
-      </div>
+  const closeAfterNavigate = useCallback(() => {
+    if (isMobile) onOpenChange?.(false);
+  }, [isMobile, onOpenChange]);
 
-      {/* Main Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-6">
-          {visibleSections.map((section, sectionIndex) => (
-            <div key={sectionIndex}>
-              {section.title && (
-                <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  {section.title}
-                </h3>
-              )}
-              <ul className="space-y-1">
-                {section.items.map((item) => (
-                  <li key={item.href}>
-                    <NavLink 
-                      item={item} 
-                      isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
-                      onNavigate={() => {
-                        if (isMobile && onOpenChange) {
-                          onOpenChange(false);
-                        }
-                      }}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </nav>
-
-      {/* Bottom Navigation */}
-      <div className="border-t border-gray-200 p-4">
-        <ul className="space-y-1">
-          {visibleBottomItems.map((item) => (
-            <li key={item.href}>
-              <NavLink 
-                item={item} 
-                isActive={pathname === item.href}
-                onNavigate={() => {
-                  if (isMobile && onOpenChange) {
-                    onOpenChange(false);
-                  }
-                }}
+  const mainNav = (
+    <nav
+      className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 pb-4 pt-3 sm:px-4"
+      aria-label="Main navigation"
+    >
+      <div className="flex flex-col">
+        {visibleSections.map((section, sectionIndex) => (
+          <div key={section.title ?? `section-${sectionIndex}`}>
+            {sectionIndex > 0 && (
+              <div
+                className="mx-1 my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+                aria-hidden
               />
-            </li>
-          ))}
-        </ul>
+            )}
+            {section.title && (
+              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {section.title}
+              </h3>
+            )}
+            <ul className="flex flex-col gap-2" role="list">
+              {section.items.map((item) => (
+                <li key={item.href}>
+                  <NavLink
+                    item={item}
+                    isActive={isNavItemActive(pathname, item.href)}
+                    onNavigate={closeAfterNavigate}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
+    </nav>
+  );
+
+  const accountNav = (
+    <div className="shrink-0 border-t border-border/70 bg-background/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm sm:px-4">
+      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        Account
+      </p>
+      <ul className="flex flex-col gap-2" role="list" aria-label="Account links">
+        {visibleBottomItems.map((item) => (
+          <li key={item.href}>
+            <NavLink
+              item={item}
+              isActive={isNavItemActive(pathname, item.href)}
+              onNavigate={closeAfterNavigate}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  const header = (
+    <header className="flex shrink-0 items-center gap-3 border-b border-border/70 bg-background/80 px-4 py-4 backdrop-blur-sm sm:px-5">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl">
+        <Image src="/assets/logo.png" alt="" width={32} height={32} priority className="size-8 object-contain" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-base font-bold tracking-tight text-foreground">TrizenHR</p>
+        <p className="truncate text-xs font-medium text-muted-foreground">Admin console</p>
+      </div>
+    </header>
+  );
+
+  const mobileShellClass = cn(
+    'flex h-full min-h-0 w-full flex-col bg-background pt-14'
+  );
+
+  const column = (
+    <>
+      {header}
+      {mainNav}
+      {accountNav}
     </>
   );
 
-  // Mobile: Use Sheet component
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="w-64 p-0">
-          <aside className="flex h-full w-full flex-col bg-white">
-            {sidebarContent}
-          </aside>
+        <SheetContent
+          side="left"
+          className="w-[min(20rem,calc(100vw-1rem))] max-w-none border-0 border-r border-border/70 bg-background p-0 shadow-2xl sm:max-w-none [&>button]:right-3 [&>button]:top-3 [&>button]:z-[60] [&>button]:flex [&>button]:size-9 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:border [&>button]:border-border/70 [&>button]:bg-background [&>button]:text-muted-foreground [&>button]:shadow-sm"
+        >
+          <aside className={mobileShellClass}>{column}</aside>
         </SheetContent>
       </Sheet>
     );
   }
 
-  // Desktop: Regular sidebar
   return (
-    <aside className="hidden md:flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
-      {sidebarContent}
+    <aside className="hidden h-screen w-64 shrink-0 border-r border-border/70 bg-background/90 shadow-[6px_0_28px_-18px_rgba(15,23,42,0.08)] backdrop-blur-sm md:flex md:flex-col">
+      {column}
     </aside>
   );
 }
@@ -285,22 +313,42 @@ interface NavLinkProps {
   onNavigate?: () => void;
 }
 
-function NavLink({ item, isActive, onNavigate }: NavLinkProps) {
+const NavLink = memo(function NavLink({ item, isActive, onNavigate }: NavLinkProps) {
   const Icon = item.icon;
 
   return (
     <Link
       href={item.href}
+      prefetch
       onClick={onNavigate}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+        'group relative flex min-h-[44px] items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors duration-100 ease-out sm:min-h-0 sm:py-1',
+        'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         isActive
-          ? 'bg-blue-50 text-blue-700'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          ? 'bg-primary/15 text-foreground ring-1 ring-primary/20 shadow-sm'
+          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
       )}
     >
-      <Icon className={cn('h-5 w-5', isActive ? 'text-blue-700' : 'text-gray-400')} />
-      {item.label}
+      {isActive ? (
+        <span
+          aria-hidden
+          className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary"
+        />
+      ) : null}
+      <span
+        className={cn(
+          'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-100 ease-out',
+          isActive
+            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+            : 'bg-primary/10 text-primary ring-1 ring-primary/10 group-hover:bg-primary/15'
+        )}
+      >
+        <Icon className="size-[18px]" strokeWidth={2} aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug sm:text-sm">
+        {item.label}
+      </span>
     </Link>
   );
-}
+});

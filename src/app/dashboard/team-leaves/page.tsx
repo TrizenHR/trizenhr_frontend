@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Calendar as CalendarIcon, TrendingUp, Users, Clock } from 'lucide-react';
 import { format, isAfter } from 'date-fns';
 import Link from 'next/link';
 
 export default function TeamLeavesPage() {
+  const { user } = useAuth();
   const [upcomingLeaves, setUpcomingLeaves] = useState<Leave[]>([]);
   const [currentMonthLeaves, setCurrentMonthLeaves] = useState<Leave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +48,10 @@ export default function TeamLeavesPage() {
       setCurrentMonthLeaves(approvedMonthLeaves);
 
       // Get all leaves for stats
-      const allLeaves = await leaveApi.getAllLeaves({});
+      const allLeaves =
+        user?.role === 'supervisor'
+          ? await leaveApi.getTeamLeaves({})
+          : await leaveApi.getAllLeaves({});
       
       // Calculate on leave today
       const today = new Date();

@@ -14,36 +14,47 @@ interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({ 
-  title, 
-  value, 
-  icon: Icon, 
-  trend, 
+export function StatCard({
+  title,
+  value,
+  icon: Icon,
+  trend,
   description,
-  className 
+  className,
 }: StatCardProps) {
   return (
-    <Card className={cn('border-gray-200', className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
-        {Icon && <Icon className="h-4 w-4 text-gray-400" />}
+    <Card
+      className={cn(
+        'gap-0 overflow-hidden rounded-2xl border-border/80 bg-card py-0 shadow-sm ring-1 ring-border/40 transition-all hover:shadow-md',
+        className
+      )}
+    >
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2 pt-4">
+        <CardTitle className="text-[11px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground">
+          {title}
+        </CardTitle>
+        {Icon && (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/15">
+            <Icon className="h-[18px] w-[18px]" aria-hidden />
+          </span>
+        )}
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-semibold text-gray-900">{value}</div>
+      <CardContent className="pb-4">
+        <div className="text-2xl font-bold tabular-nums tracking-tight text-foreground">{value}</div>
         {(description || trend) && (
-          <div className="mt-1 flex items-center gap-2 text-xs">
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             {trend && (
               <span
                 className={cn(
-                  'font-medium',
-                  trend.isPositive ? 'text-green-600' : 'text-red-600'
+                  'font-semibold',
+                  trend.isPositive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
                 {trend.isPositive ? '+' : ''}
                 {trend.value}%
               </span>
             )}
-            {description && <span className="text-gray-500">{description}</span>}
+            {description && <span className="text-muted-foreground">{description}</span>}
           </div>
         )}
       </CardContent>

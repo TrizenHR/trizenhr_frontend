@@ -7,6 +7,7 @@ import { Attendance, AttendanceStats } from '@/lib/types';
 import { StatCard } from './StatCard';
 import { QuickActions } from './QuickActions';
 import { RecentAttendanceWidget } from './RecentAttendanceWidget';
+import { DashboardShell } from './DashboardShell';
 import { UserRole } from '@/lib/types';
 import { Calendar, Clock, TrendingUp } from 'lucide-react';
 import { formatWorkingHours } from '@/lib/format';
@@ -31,7 +32,7 @@ export function EmployeeDashboard() {
 
       const [monthStats, attendanceHistory] = await Promise.all([
         attendanceApi.getMyStats(currentMonth, currentYear),
-        attendanceApi.getMyAttendance({ page: 1, limit: 5 }), // Get last 5 records
+        attendanceApi.getMyAttendance({ page: 1, limit: 5 }),
       ]);
 
       setStats(monthStats);
@@ -49,41 +50,41 @@ export function EmployeeDashboard() {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Welcome, {user?.firstName}!</h1>
-        <p className="text-muted-foreground">Here's your attendance overview</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <DashboardShell
+      badge="Employee"
+      title={`Welcome, ${user?.firstName || 'there'}!`}
+      subtitle="Your attendance overview for this month — stay on track with quick stats and shortcuts."
+    >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
-          title="Attendance Rate"
-          value={isLoading ? '...' : `${attendancePercentage}%`}
+          title="Attendance rate"
+          value={isLoading ? '…' : `${attendancePercentage}%`}
           icon={TrendingUp}
           description="This month"
         />
         <StatCard
-          title="Working Hours"
-          value={isLoading ? '...' : formatWorkingHours(stats?.totalWorkingHours || 0)}
+          title="Working hours"
+          value={isLoading ? '…' : formatWorkingHours(stats?.totalWorkingHours || 0)}
           icon={Clock}
           description="This month"
         />
         <StatCard
-          title="Days Present"
-          value={isLoading ? '...' : `${stats?.presentDays || 0}/${stats?.totalDays || 0}`}
+          title="Days present"
+          value={isLoading ? '…' : `${stats?.presentDays ?? 0}/${stats?.totalDays ?? 0}`}
           icon={Calendar}
           description="This month"
+          className="sm:col-span-2 xl:col-span-1"
         />
       </div>
 
-      {/* Recent Attendance & Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           <RecentAttendanceWidget records={recentRecords} isLoading={isLoadingRecords} />
         </div>
-        <QuickActions userRole={UserRole.EMPLOYEE} />
+        <div className="xl:col-span-4">
+          <QuickActions userRole={UserRole.EMPLOYEE} />
+        </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

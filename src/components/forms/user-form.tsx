@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 import { CreateUserFormData, createUserSchema } from '@/lib/validations';
-import { UserRole, Organization } from '@/lib/types';
+import { UserRole, Organization, Department } from '@/lib/types';
 import { getAllowedRolesToCreate, getRoleDisplayName } from '@/lib/permissions';
-import { organizationApi } from '@/lib/api';
+import { organizationApi, departmentApi, userApi } from '@/lib/api';
 
 interface UserFormProps {
   onSubmit: (data: CreateUserFormData) => Promise<void>;
@@ -31,14 +32,28 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   const router = useRouter();
   const allowedRoles = getAllowedRolesToCreate(userRole);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
+  const [loadingDepts, setLoadingDepts] = useState(false);
+  const [employeeIdSuggestions, setEmployeeIdSuggestions] = useState<string[]>([]);
+  const [nextEmployeeId, setNextEmployeeId] = useState<string | null>(null);
+  const [useCustomEmployeeId, setUseCustomEmployeeId] = useState(false);
 
   const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
+  const isHR = userRole === UserRole.HR;
+  const lockEmployeeId = isHR && !useCustomEmployeeId;
 
   // Load organizations for Super Admin
   useEffect(() => {
     if (isSuperAdmin) {
       loadOrganizations();
+    }
+  }, [isSuperAdmin]);
+
+  // Load departments for dropdown (non–Super Admin is org-scoped)
+  useEffect(() => {
+    if (!isSuperAdmin) {
+      loadDepartments();
     }
   }, [isSuperAdmin]);
 
@@ -51,6 +66,18 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
       console.error('Failed to load organizations:', error);
     } finally {
       setLoadingOrgs(false);
+    }
+  };
+
+  const loadDepartments = async () => {
+    try {
+      setLoadingDepts(true);
+      const data = await departmentApi.getAll();
+      setDepartments(data);
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+    } finally {
+      setLoadingDepts(false);
     }
   };
 
@@ -68,8 +95,30 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
     },
   });
 
+  // Load suggested next employee ID for org-scoped roles
+  useEffect(() => {
+    const loadNextEmployeeId = async () => {
+      if (isSuperAdmin) return;
+      try {
+        const { nextEmployeeId, existingSample } = await userApi.getNextEmployeeId();
+        setNextEmployeeId(nextEmployeeId);
+        setEmployeeIdSuggestions(existingSample);
+
+        // Prefill only when no default employeeId is provided
+        if (!defaultValues?.employeeId) {
+          setValue('employeeId', nextEmployeeId);
+        }
+      } catch (error) {
+        console.error('Failed to load next employee ID:', error);
+      }
+    };
+
+    loadNextEmployeeId();
+  }, [isSuperAdmin, defaultValues, setValue]);
+
   const selectedRole = watch('role');
   const selectedOrganization = watch('organizationId');
+  const selectedDepartment = watch('department');
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -183,15 +232,86 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="employeeId">Employee ID</Label>
-        <Input id="employeeId" {...register('employeeId')} disabled={isLoading} />
-        {errors.employeeId && <p className="text-sm text-red-500">{errors.employeeId.message}</p>}
+        <Label htmlFor="employeeId">
+          Employee ID <span className="text-red-500">*</span>
+        </Label>
+        {isHR && (
+          <div className="flex items-center justify-between rounded-md border p-2">
+            <Label htmlFor="useCustomEmployeeId" className="text-sm font-normal">
+              Use custom Employee ID
+            </Label>
+            <Switch
+              id="useCustomEmployeeId"
+              checked={useCustomEmployeeId}
+              onCheckedChange={(checked) => {
+                setUseCustomEmployeeId(checked);
+                if (!checked && nextEmployeeId) {
+                  setValue('employeeId', nextEmployeeId);
+                }
+              }}
+              disabled={isLoading}
+            />
+          </div>
+        )}
+        <Input
+          id="employeeId"
+          placeholder={
+            lockEmployeeId
+              ? nextEmployeeId
+                ? `Auto: ${nextEmployeeId}`
+                : 'Auto-generated'
+              : 'e.g. 6 or EMP006'
+          }
+          {...register('employeeId')}
+          disabled={isLoading}
+          readOnly={lockEmployeeId}
+          className={[
+            errors.employeeId ? 'border-red-500' : '',
+            lockEmployeeId ? 'bg-muted cursor-not-allowed' : '',
+          ].join(' ').trim()}
+        />
+        {errors.employeeId && (
+          <p className="text-sm text-red-500">{errors.employeeId.message}</p>
+        )}
+        {lockEmployeeId ? (
+          <p className="text-sm text-gray-500">
+            Auto-generated for HR. Enable "Use custom Employee ID" to enter a manual value.
+          </p>
+        ) : (
+          <p className="text-sm text-gray-500">
+            You can enter digits (e.g. 6) or a code (e.g. EMP006). It will be normalized and stored as EMP###.
+          </p>
+        )}
+        {employeeIdSuggestions.length > 0 && (
+          <p className="text-xs text-gray-500">
+            Existing IDs: {employeeIdSuggestions.join(', ')}
+            {nextEmployeeId ? `. Suggested next: ${nextEmployeeId}` : ''}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="department">Department</Label>
-        <Input id="department" {...register('department')} disabled={isLoading} />
-        {errors.department && <p className="text-sm text-red-500">{errors.department.message}</p>}
+        <Select
+          value={selectedDepartment ?? '__none__'}
+          onValueChange={(value) => setValue('department', value === '__none__' ? '' : value)}
+          disabled={isLoading || loadingDepts}
+        >
+          <SelectTrigger className={errors.department ? 'border-red-500' : ''}>
+            <SelectValue placeholder={loadingDepts ? 'Loading departments...' : 'Select department'} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">None</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept._id} value={dept.name}>
+                {dept.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.department && (
+          <p className="text-sm text-red-500">{errors.department.message}</p>
+        )}
       </div>
 
       <div className="flex gap-3 pt-4">

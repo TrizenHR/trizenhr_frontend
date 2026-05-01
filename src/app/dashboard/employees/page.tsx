@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { userApi } from '@/lib/api';
 import { User, UserRole } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,10 +25,11 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Grid3x3, List, Mail, Briefcase, Calendar as CalendarIcon, UserCheck, UserX } from 'lucide-react';
+import { Users, Grid3x3, List, Mail, Briefcase, Calendar as CalendarIcon, UserCheck, UserX, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function EmployeesPage() {
+  const router = useRouter();
   const [employees, setEmployees] = useState<User[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<User[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -126,6 +128,12 @@ export default function EmployeesPage() {
   };
 
   const uniqueDepartments = Array.from(new Set(employees.filter(e => e.department).map(e => e.department)));
+
+  const goToEditUser = (employee: User) => {
+    const userId = employee.id || employee._id;
+    if (!userId) return;
+    router.push(`/dashboard/users/${userId}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -290,6 +298,7 @@ export default function EmployeesPage() {
                     <TableHead>Department</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -324,11 +333,22 @@ export default function EmployeesPage() {
                             <Badge className="bg-red-100 text-red-800">Inactive</Badge>
                           )}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => goToEditUser(employee)}
+                            className="cursor-pointer"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         No employees found
                       </TableCell>
                     </TableRow>
@@ -379,6 +399,17 @@ export default function EmployeesPage() {
                           <span>Joined {format(new Date(employee.createdAt), 'MMM yyyy')}</span>
                         </div>
                       )}
+                      <div className="pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => goToEditUser(employee)}
+                          className="cursor-pointer w-full"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit User
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))

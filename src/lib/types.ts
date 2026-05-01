@@ -6,6 +6,16 @@ export enum UserRole {
   EMPLOYEE = 'employee',
 }
 
+export interface PlatformNotificationPreferences {
+  pollIntervalSec?: number;
+  refreshOnTabFocus?: boolean;
+  showUnreadBadge?: boolean;
+}
+
+export interface PlatformPreferences {
+  notifications?: PlatformNotificationPreferences;
+}
+
 export interface User {
   _id: string;
   id: string;
@@ -25,6 +35,8 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  /** System Admin — persisted platform UI preferences */
+  platformPreferences?: PlatformPreferences;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -33,6 +45,22 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   timestamp: string;
+}
+
+/** In-app notification row (server-driven, role-aware). */
+export interface DashboardNotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  href?: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface NotificationListPayload {
+  items: DashboardNotificationItem[];
+  unreadCount: number;
 }
 
 export interface LoginResponse {
@@ -289,6 +317,8 @@ export interface Organization {
   name: string;
   subdomain?: string;
   isActive: boolean;
+  /** Present when the org was soft-deleted from the platform */
+  deletedAt?: string;
   subscriptionPlan: SubscriptionPlan;
   subscriptionExpiry?: string;
   settings: {
@@ -310,6 +340,45 @@ export interface Organization {
   updatedAt: string;
 }
 
+// Billing Types
+export enum BillingInvoiceStatus {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  PAID = 'paid',
+  FAILED = 'failed',
+}
+
+export interface BillingInvoice {
+  _id: string;
+  organizationId: string;
+  periodStart: string;
+  periodEnd: string;
+  plan: SubscriptionPlan;
+  pricePerUserPerDay: number;
+  averageBillableUsers: number;
+  amount: number;
+  currency: string;
+  status: BillingInvoiceStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingOverview {
+  organizationId: string;
+  organizationName: string;
+  subscriptionPlan: SubscriptionPlan | string;
+  pricePerUserPerDay: number;
+  billingCycle: string;
+  currency: string;
+  activeUsers: number;
+  currentMonthEstimate: number;
+  monthlyHistory: {
+    month: string; // 'YYYY-MM'
+    amount: number;
+    status: BillingInvoiceStatus;
+  }[];
+}
+
 export interface CreateOrganizationPayload {
   name: string;
   subdomain?: string;
@@ -317,6 +386,8 @@ export interface CreateOrganizationPayload {
   subscriptionExpiry?: Date;
   settings?: Partial<Organization['settings']>;
   microsoftAuth?: MicrosoftAuthConfig;
+  /** Set via update only — pause/resume tenant without deleting data */
+  isActive?: boolean;
 }
 
 export interface OrganizationStats {

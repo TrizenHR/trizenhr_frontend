@@ -128,6 +128,7 @@ export default function MyAttendancePage() {
         limit: pagination.limit,
         startDate: filters.startDate || undefined,
         endDate: filters.endDate || undefined,
+        status: filters.status || undefined,
       });
       
       setAttendanceRecords(response.records || []);
@@ -202,6 +203,7 @@ export default function MyAttendancePage() {
       setIsCheckingIn(true);
       const attendance = await attendanceApi.checkIn(photo);
       setTodayAttendance(attendance);
+      await Promise.all([loadMonthlyStats(), loadAttendanceHistory()]);
       resetCamera();
       
       // Check if photo was successfully uploaded
@@ -245,6 +247,7 @@ export default function MyAttendancePage() {
       setIsCheckingOut(true);
       const attendance = await attendanceApi.checkOut();
       setTodayAttendance(attendance);
+      await Promise.all([loadMonthlyStats(), loadAttendanceHistory()]);
       
       toast({
         title: 'Check-out Successful',
@@ -353,8 +356,8 @@ export default function MyAttendancePage() {
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Working Hours</p>
                     <p className="text-sm font-medium">
-                      {todayAttendance.workingHours
-                        ? formatWorkingHours(todayAttendance.workingHours)
+                      {todayAttendance.workingHours != null
+                        ? formatWorkingHours(todayAttendance.workingHours || 0)
                         : 'In progress...'}
                     </p>
                   </div>

@@ -13,10 +13,12 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500">Loading...</p>
-        </div>
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
+        <div
+          className="h-9 w-9 animate-spin rounded-full border-[3px] border-muted border-t-primary"
+          aria-hidden
+        />
+        <p className="text-sm font-medium text-muted-foreground">Loading your dashboard…</p>
       </div>
     );
   }
@@ -35,9 +37,10 @@ export default function DashboardPage() {
       return <EmployeeDashboard />;
     default:
       return (
-        <div className="flex h-full items-center justify-center">
-          <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
-            <p className="text-gray-700">Unknown user role</p>
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <div className="max-w-md rounded-2xl border border-border/80 bg-card p-8 text-center shadow-sm ring-1 ring-border/40">
+            <p className="font-medium text-foreground">Unknown user role</p>
+            <p className="mt-2 text-sm text-muted-foreground">Contact support if this persists.</p>
           </div>
         </div>
       );

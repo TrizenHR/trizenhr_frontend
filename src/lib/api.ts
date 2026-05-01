@@ -30,7 +30,25 @@ import {
   PayrollRecord,
   CreateSalaryStructurePayload,
   UpdateSalaryStructurePayload,
+  BillingOverview,
+  BillingInvoice,
+  NotificationListPayload,
+  PlatformNotificationPreferences,
 } from './types';
+import { isPlatformHost } from './is-platform-host';
+
+// Resolve API base URL
+// - In browser: prefer NEXT_PUBLIC_API_URL if provided, otherwise use same-origin /api
+// - On server (SSR/ISR): fall back to NEXT_PUBLIC_API_URL or localhost
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
+    return `${window.location.origin}/api`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+};
 
 const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
 const DEFAULT_PROD_API_URL = 'https://trizen-attendease-backend.llp.trizenventures.com/api';
@@ -57,6 +75,7 @@ function resolveApiBaseUrl(): string {
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: resolveApiBaseUrl(),
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -68,18 +87,31 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
 }
 
 // Request interceptor - attach JWT token
+// Request interceptor - attach JWT token and optional Super Admin org override
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       const selectedOrgId = localStorage.getItem('selectedOrganizationId');
-      
+      const storedUser = localStorage.getItem('user');
+      let userRole: string | undefined;
+
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          userRole = parsed.role;
+        } catch {
+          // ignore parse errors
+        }
+      }
+
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      // Inject organizationId override for Super Admin
-      if (selectedOrgId) {
+      // Inject organizationId override for Super Admin on the platform domain only.
+      // For tenant subdomains, organization is derived from subdomain on the backend.
+      if (selectedOrgId && userRole === 'super_admin' && isPlatformHost()) {
         config.params = { ...config.params, organizationId: selectedOrgId };
       }
     }
@@ -94,12 +126,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    // Only treat 401 as an authentication failure.
+    // 403 means "authenticated but not allowed" and should NOT log the user out.
+    if (error.response?.status === 401) {
       // Clear auth data
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        
+
         // Redirect to login if not already there
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
@@ -141,6 +175,13 @@ export const authApi = {
     return response.data.data!;
   },
 
+  updatePlatformPreferences: async (payload: {
+    notifications: Partial<PlatformNotificationPreferences>;
+  }): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>('/auth/me/platform-preferences', payload);
+    return response.data.data!;
+  },
+
   changePassword: async (data: ChangePasswordPayload): Promise<void> => {
     await api.post('/auth/change-password', data);
   },
@@ -157,6 +198,7 @@ export const userApi = {
     department?: string;
     isActive?: boolean;
     search?: string;
+    organizationId?: string;
   }): Promise<User[]> => {
     const response = await api.get<ApiResponse<User[]>>('/users', {
       params: filters,
@@ -209,6 +251,13 @@ export const userApi = {
     const response = await api.get<ApiResponse<any>>('/users/stats');
     return response.data.data!;
   },
+
+  getNextEmployeeId: async (): Promise<{ nextEmployeeId: string; existingSample: string[] }> => {
+    const response = await api.get<
+      ApiResponse<{ nextEmployeeId: string; existingSample: string[] }>
+    >('/users/next-employee-id');
+    return response.data.data!;
+  },
 };
 
 // Attendance API
@@ -245,6 +294,7 @@ export const attendanceApi = {
   getMyAttendance: async (filters?: {
     startDate?: Date;
     endDate?: Date;
+    status?: AttendanceStatus;
     page?: number;
     limit?: number;
   }): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
@@ -414,6 +464,28 @@ export const leaveApi = {
   },
 
   /**
+   * Get team leaves with filters (Supervisor gets only their team; HR/Admin gets all)
+   */
+  getTeamLeaves: async (filters?: LeaveFilters): Promise<{
+    records: Leave[];
+    pagination: LeavePagination;
+  }> => {
+    const response = await api.get<
+      ApiResponse<Leave[]> & { pagination: LeavePagination }
+    >('/leaves/team', {
+      params: {
+        ...filters,
+        startDate: filters?.startDate?.toISOString(),
+        endDate: filters?.endDate?.toISOString(),
+      },
+    });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  /**
    * Get leaves for calendar view
    */
   getCalendarLeaves: async (
@@ -489,7 +561,7 @@ export const holidayApi = {
   },
 
   checkDate: async (date: Date): Promise<{ isHoliday: boolean; holiday: Holiday | null }> => {
-    const response = await api.get<ApiResponse<{ isHoliday: boolean; holiday: Holiday |  null }>>(
+    const response = await api.get<ApiResponse<{ isHoliday: boolean; holiday: Holiday | null }>>(
       `/holidays/check/${date.toISOString().split('T')[0]}`
     );
     return response.data.data!;
@@ -609,6 +681,26 @@ export const organizationApi = {
   },
 };
 
+// Notifications (role-aware, server aggregated)
+export const notificationsApi = {
+  getList: async (): Promise<NotificationListPayload> => {
+    const response = await api.get<ApiResponse<NotificationListPayload>>('/notifications');
+    return response.data.data!;
+  },
+
+  markRead: async (keys: string[]): Promise<NotificationListPayload> => {
+    const response = await api.post<ApiResponse<NotificationListPayload>>('/notifications/mark-read', {
+      keys,
+    });
+    return response.data.data!;
+  },
+
+  markAllRead: async (): Promise<NotificationListPayload> => {
+    const response = await api.post<ApiResponse<NotificationListPayload>>('/notifications/mark-all-read');
+    return response.data.data!;
+  },
+};
+
 // Dashboard API (Admin/HR/Supervisor)
 export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {
@@ -695,6 +787,25 @@ export const payrollApi = {
   getPayrollRecord: async (recordId: string): Promise<PayrollRecord> => {
     const response = await api.get<ApiResponse<PayrollRecord>>(`/payroll/records/${recordId}`);
     return response.data.data!;
+  },
+};
+
+// Billing API
+export const billingApi = {
+  /**
+   * Get billing overview for the current organization (Company Admin / Super Admin)
+   */
+  getOverview: async (): Promise<BillingOverview> => {
+    const response = await api.get<ApiResponse<BillingOverview>>('/billing/overview');
+    return response.data.data!;
+  },
+
+  /**
+   * Get billing invoices for the current organization
+   */
+  getInvoices: async (): Promise<BillingInvoice[]> => {
+    const response = await api.get<ApiResponse<BillingInvoice[]>>('/billing/invoices');
+    return response.data.data || [];
   },
 };
 

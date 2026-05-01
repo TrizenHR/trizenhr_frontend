@@ -65,10 +65,10 @@ export default function DepartmentsPage() {
       setIsLoading(true);
       const [depts, users] = await Promise.all([
         departmentApi.getAll(),
-        userApi.getAllUsers(),
+        userApi.getAllUsers({ isActive: true }),
       ]);
       setDepartments(depts);
-      setAllUsers(users);
+      setAllUsers(users.filter((u) => u.isActive !== false));
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -540,7 +540,7 @@ export default function DepartmentsPage() {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="__no_employees__" disabled>
                         No available employees
                       </SelectItem>
                     )}

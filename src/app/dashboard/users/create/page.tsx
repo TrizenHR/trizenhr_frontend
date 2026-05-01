@@ -42,6 +42,7 @@ export default function CreateUserPage() {
       }
 
       router.push('/dashboard/users');
+      router.push(user?.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create user');
       setIsLoading(false);
@@ -83,9 +84,9 @@ export default function CreateUserPage() {
           <CardDescription>Fill in the details for the new user</CardDescription>
         </CardHeader>
         <CardContent>
-          <UserForm 
-            onSubmit={handleSubmit} 
-            isLoading={isLoading} 
+          <UserForm
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
             userRole={user.role as UserRole}
             defaultValues={preSelectedOrgId ? { organizationId: preSelectedOrgId } : undefined}
           />

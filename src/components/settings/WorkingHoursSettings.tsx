@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Clock } from 'lucide-react';
+import { Clock, Info } from 'lucide-react';
 
 interface WorkingHoursSettingsProps {
   workingHours: {
@@ -26,52 +26,49 @@ export default function WorkingHoursSettings({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden rounded-2xl border-border/80 bg-card shadow-sm ring-1 ring-border/40">
+      <CardHeader className="border-b border-border/60 pb-3 pt-5">
         <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          <CardTitle>Working Hours</CardTitle>
+          <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <CardTitle className="text-base font-semibold tracking-tight">Working hours</CardTitle>
         </div>
-        <CardDescription>
-          Configure the standard working hours for your organization
+        <CardDescription className="text-sm">
+          Set the standard start and end time for the workday.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="startTime">Start Time</Label>
+      <CardContent className="space-y-4 py-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="startTime" className="text-[11px] font-semibold text-muted-foreground">
+              Start time
+            </Label>
             <Input
               id="startTime"
               type="time"
               value={workingHours.startTime}
               onChange={handleStartTimeChange}
-              className="w-full"
+              className="h-10 w-full rounded-xl"
             />
-            <p className="text-sm text-muted-foreground">
-              The time when employees should start their workday
-            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="endTime">End Time</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="endTime" className="text-[11px] font-semibold text-muted-foreground">
+              End time
+            </Label>
             <Input
               id="endTime"
               type="time"
               value={workingHours.endTime}
               onChange={handleEndTimeChange}
-              className="w-full"
+              className="h-10 w-full rounded-xl"
             />
-            <p className="text-sm text-muted-foreground">
-              The time when employees should end their workday
-            </p>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <strong>Note:</strong> These working hours are used to calculate late arrivals and
-            determine standard attendance expectations. Employees checking in after the start time
-            will be marked as late.
+        <div className="flex gap-3 rounded-xl border border-border/70 bg-muted/15 p-3">
+          <Info className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
+          <p className="text-sm text-muted-foreground">
+            These hours are used for attendance expectations (e.g. late check-ins).
           </p>
         </div>
       </CardContent>

@@ -9,7 +9,10 @@ export const createUserSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   role: z.nativeEnum(UserRole),
   department: z.string().optional(),
-  employeeId: z.string().optional(),
+  employeeId: z
+    .string()
+    .min(1, 'Employee ID is required')
+    .regex(/^(?:[0-9]+|EMP[0-9]+)$/i, 'Employee ID must be digits (e.g. 6) or code (e.g. EMP006)'),
   supervisorId: z.string().optional(),
 });
 

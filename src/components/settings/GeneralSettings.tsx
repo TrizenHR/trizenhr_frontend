@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe } from 'lucide-react';
+import { Globe, Info } from 'lucide-react';
 
 interface GeneralSettingsProps {
   timezone: string;
@@ -53,22 +53,24 @@ export default function GeneralSettings({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden rounded-2xl border-border/80 bg-card shadow-sm ring-1 ring-border/40">
+      <CardHeader className="border-b border-border/60 pb-3 pt-5">
         <div className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          <CardTitle>General Settings</CardTitle>
+          <Globe className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <CardTitle className="text-base font-semibold tracking-tight">General</CardTitle>
         </div>
-        <CardDescription>
-          Configure timezone and fiscal year settings for your organization
+        <CardDescription className="text-sm">
+          Configure timezone and fiscal year behavior.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
+      <CardContent className="space-y-4 py-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="timezone" className="text-[11px] font-semibold text-muted-foreground">
+              Timezone
+            </Label>
             <Select value={timezone} onValueChange={handleTimezoneChange}>
-              <SelectTrigger id="timezone">
+              <SelectTrigger id="timezone" className="h-10 rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -79,18 +81,17 @@ export default function GeneralSettings({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">
-              Timezone used for all date and time calculations
-            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="fiscalYearStart">Fiscal Year Start</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="fiscalYearStart" className="text-[11px] font-semibold text-muted-foreground">
+              Fiscal year start
+            </Label>
             <Select
               value={fiscalYearStart.toString()}
               onValueChange={handleFiscalYearStartChange}
             >
-              <SelectTrigger id="fiscalYearStart">
+              <SelectTrigger id="fiscalYearStart" className="h-10 rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -101,16 +102,13 @@ export default function GeneralSettings({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">
-              Month when the fiscal year begins (used for leave balance resets)
-            </p>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <strong>Note:</strong> The fiscal year start determines when leave balances are reset
-            for all employees. All attendance and leave records are stored in the selected
+        <div className="flex gap-3 rounded-xl border border-border/70 bg-muted/15 p-3">
+          <Info className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
+          <p className="text-sm text-muted-foreground">
+            Leave balances reset at the fiscal year start. Attendance and leave records use the selected
             timezone.
           </p>
         </div>

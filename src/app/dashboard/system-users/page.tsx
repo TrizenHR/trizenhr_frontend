@@ -52,9 +52,11 @@ export default function SystemUsersPage() {
   const loadSystemUsers = async () => {
     try {
       setIsLoading(true);
-      // Get all users and filter for Super Admins only
-      const allUsers = await userApi.getAllUsers();
-      const systemUsers = allUsers.filter((u) => u.role === UserRole.SUPER_ADMIN);
+      // Load only active users so soft-deleted System Admins are hidden immediately
+      const allUsers = await userApi.getAllUsers({ isActive: true });
+      const systemUsers = allUsers.filter(
+        (u) => u.role === UserRole.SUPER_ADMIN && u.isActive !== false
+      );
       setUsers(systemUsers);
     } catch (error: any) {
       toast({

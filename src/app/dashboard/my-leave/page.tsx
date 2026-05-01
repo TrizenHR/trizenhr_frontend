@@ -180,7 +180,7 @@ export default function MyLeavePage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="cursor-pointer">
               <Plus className="mr-2 h-4 w-4" />
               Request Leave
             </Button>

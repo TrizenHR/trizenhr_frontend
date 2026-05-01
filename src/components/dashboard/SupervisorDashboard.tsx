@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { dashboardApi } from '@/lib/api';
 import { DashboardStats } from '@/lib/types';
 import { QuickActions } from './QuickActions';
 import { TodayAttendanceSummary } from './TodayAttendanceSummary';
 import { StatCard } from './StatCard';
+import { DashboardShell } from './DashboardShell';
+import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
 import { Users, UserCheck, Calendar, TrendingUp } from 'lucide-react';
 
 export function SupervisorDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,48 +38,43 @@ export function SupervisorDashboard() {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Team Dashboard</h1>
-        <p className="text-muted-foreground">Manage and monitor your team</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <DashboardShell
+      badge="Supervisor"
+      title="Team dashboard"
+      subtitle={`Monitor your team's attendance and approvals${user?.firstName ? ` — hi ${user.firstName}` : ''}.`}
+    >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <StatCard
-          title="Team Size"
-          value={isLoading ? '...' : (stats?.teamSize || 0)}
+          title="Team size"
+          value={isLoading ? '…' : stats?.teamSize ?? 0}
           icon={Users}
         />
         <StatCard
-          title="Present Today"
-          value={isLoading ? '...' : (stats?.todayAttendance?.present || 0)}
+          title="Present today"
+          value={isLoading ? '…' : stats?.todayAttendance?.present ?? 0}
           icon={UserCheck}
           description={`${attendancePercentage}% attendance`}
         />
         <StatCard
-          title="On Leave"
-          value={isLoading ? '...' : (stats?.todayAttendance?.onLeave || 0)}
+          title="On leave"
+          value={isLoading ? '…' : stats?.todayAttendance?.onLeave ?? 0}
           icon={Calendar}
         />
         <StatCard
-          title="Pending Approvals"
-          value={isLoading ? '...' : (stats?.pendingLeaveApprovals || 0)}
+          title="Pending approvals"
+          value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
           icon={TrendingUp}
           description="Leave requests"
         />
       </div>
 
-      {/* Team Attendance & Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           {isLoading ? (
-            <div className="flex items-center justify-center p-12 bg-white rounded-lg border">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
-            </div>
+            <DashboardLoadingCard />
           ) : (
             <TodayAttendanceSummary
-              title="Team Attendance Today"
+              title="Team attendance today"
               stats={{
                 present: stats?.todayAttendance?.present || 0,
                 late: stats?.todayAttendance?.late || 0,
@@ -86,8 +85,10 @@ export function SupervisorDashboard() {
             />
           )}
         </div>
-        <QuickActions userRole={UserRole.SUPERVISOR} />
+        <div className="xl:col-span-4">
+          <QuickActions userRole={UserRole.SUPERVISOR} />
+        </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

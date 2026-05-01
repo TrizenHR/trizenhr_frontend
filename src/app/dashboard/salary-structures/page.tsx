@@ -62,7 +62,7 @@ export default function SalaryStructuresPage() {
       setIsLoading(true);
       const [structuresData, usersData] = await Promise.all([
         payrollApi.getAllSalaryStructures(),
-        userApi.getAllUsers(),
+        userApi.getAllUsers({ isActive: true }),
       ]);
       setStructures(structuresData);
       setUsers(usersData);

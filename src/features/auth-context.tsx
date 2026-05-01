@@ -105,8 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       localStorage.removeItem('selectedOrganizationId');
     }
-    // Force reload to ensure all queries strictly respect the new context
-    window.location.reload(); 
   };
 
   const value: AuthContextType = {

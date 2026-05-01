@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { dashboardApi } from '@/lib/api';
 import { DashboardStats } from '@/lib/types';
 import { QuickActions } from './QuickActions';
 import { TodayAttendanceSummary } from './TodayAttendanceSummary';
 import { StatCard } from './StatCard';
+import { DashboardShell } from './DashboardShell';
+import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
 import { Users, UserPlus, Calendar, FileText } from 'lucide-react';
 
 export function HRDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,48 +38,39 @@ export function HRDashboard() {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">HR Dashboard</h1>
-        <p className="text-muted-foreground">Employee and attendance management</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <DashboardShell
+      badge="HR"
+      title="HR dashboard"
+      subtitle={`People operations and attendance visibility${user?.organization?.name ? ` for ${user.organization.name}` : ''}.`}
+    >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <StatCard
-          title="Total Employees"
-          value={isLoading ? '...' : (stats?.totalUsers || 0)}
+          title="Total employees"
+          value={isLoading ? '…' : stats?.totalUsers ?? 0}
           icon={Users}
         />
         <StatCard
-          title="Present Today"
-          value={isLoading ? '...' : (stats?.todayAttendance?.present || 0)}
+          title="Present today"
+          value={isLoading ? '…' : stats?.todayAttendance?.present ?? 0}
           icon={UserPlus}
           description={`${attendancePercentage}% attendance`}
         />
         <StatCard
-          title="Pending Leaves"
-          value={isLoading ? '...' : (stats?.pendingLeaveApprovals || 0)}
+          title="Pending leaves"
+          value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
           icon={Calendar}
-          description="Requires approval"
+          description="Awaiting approval"
         />
-        <StatCard
-          title="Reports"
-          value="View"
-          icon={FileText}
-        />
+        <StatCard title="Reports" value="View" icon={FileText} description="Analytics & exports" />
       </div>
 
-      {/* Attendance Summary & Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           {isLoading ? (
-            <div className="flex items-center justify-center p-12 bg-white rounded-lg border">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
-            </div>
+            <DashboardLoadingCard />
           ) : (
             <TodayAttendanceSummary
-              title="Today's Attendance Summary"
+              title="Today's attendance summary"
               stats={{
                 present: stats?.todayAttendance?.present || 0,
                 late: stats?.todayAttendance?.late || 0,
@@ -86,8 +81,10 @@ export function HRDashboard() {
             />
           )}
         </div>
-        <QuickActions userRole={UserRole.HR} />
+        <div className="xl:col-span-4">
+          <QuickActions userRole={UserRole.HR} />
+        </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }
