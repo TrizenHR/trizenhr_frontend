@@ -10,10 +10,11 @@ import { StatCard } from './StatCard';
 import { DashboardShell } from './DashboardShell';
 import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
-import { Users, UserCheck, Calendar, TrendingUp } from 'lucide-react';
+import { Users, UserCheck, Calendar, TrendingUp, Building2 } from 'lucide-react';
 
 export function SupervisorDashboard() {
   const { user } = useAuth();
+  const organizationName = user?.organization?.name || 'your organization';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,9 +42,15 @@ export function SupervisorDashboard() {
     <DashboardShell
       badge="Supervisor"
       title="Team dashboard"
-      subtitle={`Monitor your team's attendance and approvals${user?.firstName ? ` — hi ${user.firstName}` : ''}.`}
+      subtitle={`Monitor your team's attendance and approvals in ${organizationName}${user?.firstName ? ` — hi ${user.firstName}` : ''}.`}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-5">
+        <StatCard
+          title="Organization"
+          value={organizationName}
+          icon={Building2}
+          description="Current tenant"
+        />
         <StatCard
           title="Team size"
           value={isLoading ? '…' : stats?.teamSize ?? 0}

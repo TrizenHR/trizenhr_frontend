@@ -9,7 +9,7 @@ import { QuickActions } from './QuickActions';
 import { RecentAttendanceWidget } from './RecentAttendanceWidget';
 import { DashboardShell } from './DashboardShell';
 import { UserRole } from '@/lib/types';
-import { Calendar, Clock, TrendingUp } from 'lucide-react';
+import { Building2, Calendar, Clock, TrendingUp } from 'lucide-react';
 import { formatWorkingHours } from '@/lib/format';
 
 export function EmployeeDashboard() {
@@ -48,6 +48,7 @@ export function EmployeeDashboard() {
   const attendancePercentage = stats
     ? Math.round(((stats.presentDays + stats.lateDays) / (stats.totalDays || 1)) * 100)
     : 0;
+  const organizationLabel = user?.organization?.name || 'Organization not available';
 
   return (
     <DashboardShell
@@ -74,6 +75,13 @@ export function EmployeeDashboard() {
           icon={Calendar}
           description="This month"
           className="sm:col-span-2 xl:col-span-1"
+        />
+        <StatCard
+          title="Organization"
+          value={organizationLabel}
+          icon={Building2}
+          description={user?.organization?.name ? 'Your company' : 'Unable to resolve organization name'}
+          className="sm:col-span-2 xl:col-span-3"
         />
       </div>
 

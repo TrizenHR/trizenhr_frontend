@@ -30,7 +30,13 @@ interface UserFormProps {
 
 export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserFormProps) {
   const router = useRouter();
-  const allowedRoles = getAllowedRolesToCreate(userRole);
+  const isOrgScopedCreation = Boolean(defaultValues?.organizationId);
+  const allowedRoles = getAllowedRolesToCreate(userRole).filter((role) => {
+    if (isOrgScopedCreation && role === UserRole.SUPER_ADMIN) {
+      return false;
+    }
+    return true;
+  });
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
