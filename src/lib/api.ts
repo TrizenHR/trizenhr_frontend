@@ -37,44 +37,37 @@ import {
 } from './types';
 import { isPlatformHost } from './is-platform-host';
 
-// Resolve API base URL
-// - In browser: prefer NEXT_PUBLIC_API_URL if provided, otherwise use same-origin /api
-// - On server (SSR/ISR): fall back to NEXT_PUBLIC_API_URL or localhost
+// API base URL comes only from NEXT_PUBLIC_API_URL (see client/.env.example). No baked-in hostnames.
 
-
-const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
-const DEFAULT_PROD_API_URL = 'https://trizen-attendease-backend.llp.trizenventures.com/api';
-
-function normalizeApiUrl(value?: string): string {
+export function normalizeApiUrl(value?: string): string {
   const raw = (value || '').trim().replace(/^['"]|['"]$/g, '');
   if (!raw) return '';
   return raw.endsWith('/') ? raw.slice(0, -1) : raw;
 }
 
 function resolveApiBaseUrl(): string {
-  const fromEnv = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
-  if (fromEnv) return fromEnv;
-
-  if (typeof window === 'undefined') {
-    // During SSR/build, keep deterministic default.
-    return process.env.NODE_ENV === 'production' ? DEFAULT_PROD_API_URL : DEFAULT_DEV_API_URL;
-  }
-
-  // In browser production, never fall back to relative/same-origin API for auth calls.
-  return process.env.NODE_ENV === 'production' ? DEFAULT_PROD_API_URL : DEFAULT_DEV_API_URL;
+  return normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 }
+
+/** Resolved at module load; must match axios `baseURL`. */
+export const API_BASE_URL = resolveApiBaseUrl();
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: resolveApiBaseUrl(),
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  // Visible in browser devtools to verify deployed bundle API target.
-  console.info('[trizenhr api] baseURL =', api.defaults.baseURL);
+if (typeof window !== 'undefined') {
+  if (!API_BASE_URL) {
+    console.error(
+      '[trizenhr api] NEXT_PUBLIC_API_URL is not set. Add it to .env (local) or build args (production).'
+    );
+  } else if (process.env.NODE_ENV === 'production') {
+    console.info('[trizenhr api] baseURL =', api.defaults.baseURL);
+  }
 }
 
 // Request interceptor - attach JWT token and optional Super Admin org override

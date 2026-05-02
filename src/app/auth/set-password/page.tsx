@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, CheckCircle2, ShieldCheck, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { API_BASE_URL } from '@/lib/api';
 
 const setPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -58,8 +59,12 @@ function SetPasswordContent() {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      await axios.post(`${apiUrl}/auth/accept-invitation`, {
+      if (!API_BASE_URL) {
+        toast.error('Server configuration error. NEXT_PUBLIC_API_URL is not set.');
+        setIsLoading(false);
+        return;
+      }
+      await axios.post(`${API_BASE_URL}/auth/accept-invitation`, {
         email,
         organizationId,
         password: data.password,
