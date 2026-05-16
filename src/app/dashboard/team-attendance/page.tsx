@@ -73,7 +73,7 @@ export default function TeamAttendancePage() {
 
       const isSupervisor = user?.role === UserRole.SUPERVISOR;
       const users = isSupervisor
-        ? await userApi.getTeamMembers(currentUserId)
+        ? await userApi.getAllUsers({ isActive: true, role: UserRole.EMPLOYEE })
         : await userApi.getAllUsers({ isActive: true });
 
       // Get attendance for selected date

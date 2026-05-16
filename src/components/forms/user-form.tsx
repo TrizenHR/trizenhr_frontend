@@ -96,7 +96,7 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      role: UserRole.EMPLOYEE,
+      role: isOrgScopedCreation ? UserRole.ADMIN : UserRole.EMPLOYEE,
       ...defaultValues,
     },
   });
@@ -203,83 +203,92 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
         <Label htmlFor="role">
           Role <span className="text-red-500">*</span>
         </Label>
-        <Select
-          value={selectedRole}
-          onValueChange={(value: string) => setValue('role', value as UserRole)}
-          disabled={isLoading}
-        >
-          <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
-            <SelectValue placeholder="Select role" />
-          </SelectTrigger>
-          <SelectContent>
-            {allowedRoles.map((role) => (
-              <SelectItem key={role} value={role}>
-                {getRoleDisplayName(role)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isOrgScopedCreation ? (
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <span className="font-semibold text-gray-900">{getRoleDisplayName(UserRole.ADMIN)}</span>
+            <p className="text-xs text-gray-500 mt-1">Creating the primary administrator for this organization.</p>
+          </div>
+        ) : (
+          <Select
+            value={selectedRole}
+            onValueChange={(value: string) => setValue('role', value as UserRole)}
+            disabled={isLoading}
+          >
+            <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              {allowedRoles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {getRoleDisplayName(role)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="employeeId">
-          Employee ID <span className="text-red-500">*</span>
-        </Label>
-        {isHR && (
-          <div className="flex items-center justify-between rounded-md border p-2">
-            <Label htmlFor="useCustomEmployeeId" className="text-sm font-normal">
-              Use custom Employee ID
-            </Label>
-            <Switch
-              id="useCustomEmployeeId"
-              checked={useCustomEmployeeId}
-              onCheckedChange={(checked) => {
-                setUseCustomEmployeeId(checked);
-                if (!checked && nextEmployeeId) {
-                  setValue('employeeId', nextEmployeeId);
-                }
-              }}
-              disabled={isLoading}
-            />
-          </div>
-        )}
-        <Input
-          id="employeeId"
-          placeholder={
-            lockEmployeeId
-              ? nextEmployeeId
-                ? `Auto: ${nextEmployeeId}`
-                : 'Auto-generated'
-              : 'e.g. 6 or EMP006'
-          }
-          {...register('employeeId')}
-          disabled={isLoading}
-          readOnly={lockEmployeeId}
-          className={[
-            errors.employeeId ? 'border-red-500' : '',
-            lockEmployeeId ? 'bg-muted cursor-not-allowed' : '',
-          ].join(' ').trim()}
-        />
-        {errors.employeeId && (
-          <p className="text-sm text-red-500">{errors.employeeId.message}</p>
-        )}
-        {lockEmployeeId ? (
-          <p className="text-sm text-gray-500">
-            Auto-generated for HR. Enable "Use custom Employee ID" to enter a manual value.
-          </p>
-        ) : (
-          <p className="text-sm text-gray-500">
-            You can enter digits (e.g. 6) or a code (e.g. EMP006). It will be normalized and stored as EMP###.
-          </p>
-        )}
-        {employeeIdSuggestions.length > 0 && (
-          <p className="text-xs text-gray-500">
-            Existing IDs: {employeeIdSuggestions.join(', ')}
-            {nextEmployeeId ? `. Suggested next: ${nextEmployeeId}` : ''}
-          </p>
-        )}
-      </div>
+      {selectedRole !== UserRole.ADMIN && (
+        <div className="space-y-2">
+          <Label htmlFor="employeeId">
+            Employee ID <span className="text-red-500">*</span>
+          </Label>
+          {isHR && (
+            <div className="flex items-center justify-between rounded-md border p-2">
+              <Label htmlFor="useCustomEmployeeId" className="text-sm font-normal">
+                Use custom Employee ID
+              </Label>
+              <Switch
+                id="useCustomEmployeeId"
+                checked={useCustomEmployeeId}
+                onCheckedChange={(checked) => {
+                  setUseCustomEmployeeId(checked);
+                  if (!checked && nextEmployeeId) {
+                    setValue('employeeId', nextEmployeeId);
+                  }
+                }}
+                disabled={isLoading}
+              />
+            </div>
+          )}
+          <Input
+            id="employeeId"
+            placeholder={
+              lockEmployeeId
+                ? nextEmployeeId
+                  ? `Auto: ${nextEmployeeId}`
+                  : 'Auto-generated'
+                : 'e.g. 6 or EMP006'
+            }
+            {...register('employeeId')}
+            disabled={isLoading}
+            readOnly={lockEmployeeId}
+            className={[
+              errors.employeeId ? 'border-red-500' : '',
+              lockEmployeeId ? 'bg-muted cursor-not-allowed' : '',
+            ].join(' ').trim()}
+          />
+          {errors.employeeId && (
+            <p className="text-sm text-red-500">{errors.employeeId.message}</p>
+          )}
+          {lockEmployeeId ? (
+            <p className="text-sm text-gray-500">
+              Auto-generated for HR. Enable "Use custom Employee ID" to enter a manual value.
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">
+              You can enter digits (e.g. 6) or a code (e.g. EMP006). It will be normalized and stored as EMP###.
+            </p>
+          )}
+          {employeeIdSuggestions.length > 0 && (
+            <p className="text-xs text-gray-500">
+              Existing IDs: {employeeIdSuggestions.join(', ')}
+              {nextEmployeeId ? `. Suggested next: ${nextEmployeeId}` : ''}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="department">Department</Label>
