@@ -86,7 +86,7 @@ export interface LoginResponse {
 export interface CreateUserPayload {
   organizationId?: string; // For Super Admin creating users in specific organization
   email: string;
-  password: string;
+  password?: string;
   firstName: string;
   lastName: string;
   role: UserRole;

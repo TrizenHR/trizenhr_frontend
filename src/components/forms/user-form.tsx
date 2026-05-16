@@ -200,21 +200,6 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">
-          Password <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="password"
-          type="password"
-          {...register('password')}
-          disabled={isLoading}
-          className={errors.password ? 'border-red-500' : ''}
-        />
-        {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
-        <p className="text-sm text-gray-500">Minimum 6 characters</p>
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="role">
           Role <span className="text-red-500">*</span>
         </Label>

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/features/auth-context';
 import { LoginFormData, loginSchema } from '@/lib/validations';
 import { toast } from 'sonner';
@@ -21,6 +21,10 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [isForgotSubmitted, setIsForgotSubmitted] = useState(false);
 
   const {
     register,
@@ -52,6 +56,25 @@ export default function LoginPage() {
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to initiate Microsoft login');
       setIsMicrosoftLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await authApi.forgotPassword(forgotEmail);
+      setIsForgotSubmitted(true);
+      toast.success('Reset link sent to your email');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to send reset link');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,97 +122,170 @@ export default function LoginPage() {
                 <span className="font-semibold">Attendance Dashboard</span>
               </Link>
             </div>
-            <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
-            <CardDescription>Sign in to access your dashboard</CardDescription>
+            <CardTitle className="text-2xl font-semibold">
+              {isForgotPassword ? 'Reset password' : 'Welcome back'}
+            </CardTitle>
+            <CardDescription>
+              {isForgotPassword 
+                ? 'Enter your email to receive a password reset link' 
+                : 'Sign in to access your dashboard'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Microsoft Sign-In Button */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mb-4 flex items-center justify-center gap-2"
-              onClick={handleMicrosoftLogin}
-              disabled={isMicrosoftLoading || isLoading}
-            >
-              {isMicrosoftLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Connecting to Microsoft...
-                </>
-              ) : (
-                <>
-                  <svg className="h-5 w-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-                    <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-                    <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-                    <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-                  </svg>
-                  Sign in with Microsoft
-                </>
-              )}
-            </Button>
-
-            <div className="relative mb-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">
-                  Or continue with email
-                </span>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@company.com"
-                  {...register('email')}
-                  disabled={isLoading}
-                  className={errors.email ? 'border-red-500' : ''}
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="#"
-                    className="text-sm text-gray-500 hover:text-gray-700"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register('password')}
-                  disabled={isLoading}
-                  className={errors.password ? 'border-red-500' : ''}
-                />
-                {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
-                )}
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
+            {isForgotPassword ? (
+              <div className="space-y-4">
+                {isForgotSubmitted ? (
+                  <div className="rounded-lg bg-green-50 p-4 text-center">
+                    <p className="text-sm text-green-800">
+                      If an account exists with <strong>{forgotEmail}</strong>, you will receive a password reset link shortly.
+                    </p>
+                    <Button 
+                      variant="link" 
+                      onClick={() => {
+                        setIsForgotPassword(false);
+                        setIsForgotSubmitted(false);
+                      }}
+                      className="mt-2 text-green-800 font-semibold"
+                    >
+                      Return to sign in
+                    </Button>
+                  </div>
                 ) : (
-                  'Sign in'
+                  <form onSubmit={handleForgotSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-email">Email</Label>
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="name@company.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        disabled={isLoading}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending link...
+                        </>
+                      ) : (
+                        'Send reset link'
+                      )}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full" 
+                      onClick={() => setIsForgotPassword(false)}
+                      disabled={isLoading}
+                    >
+                      Back to sign in
+                    </Button>
+                  </form>
                 )}
-              </Button>
-            </form>
+              </div>
+            ) : (
+              <>
+                {/* Microsoft Sign-In Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mb-4 flex items-center justify-center gap-2"
+                  onClick={handleMicrosoftLogin}
+                  disabled={isMicrosoftLoading || isLoading}
+                >
+                  {isMicrosoftLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Connecting to Microsoft...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-5 w-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+                        <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+                        <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+                        <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+                      </svg>
+                      Sign in with Microsoft
+                    </>
+                  )}
+                </Button>
+
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">
+                      Or continue with email
+                    </span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@company.com"
+                      {...register('email')}
+                      disabled={isLoading}
+                      className={errors.email ? 'border-red-500' : ''}
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-red-500">{errors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <button
+                        type="button"
+                        onClick={() => setIsForgotPassword(true)}
+                        className="text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...register('password')}
+                        disabled={isLoading}
+                        className={`${errors.password ? 'border-red-500' : ''} pr-10`}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-sm text-red-500">{errors.password.message}</p>
+                    )}
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign in'
+                    )}
+                  </Button>
+                </form>
+              </>
+            )}
 
             <p className="mt-6 text-center text-sm text-gray-500">
               <Link href="/" className="hover:text-gray-700">
