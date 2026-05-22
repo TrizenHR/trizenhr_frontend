@@ -195,8 +195,10 @@ export function SuperAdminDashboard() {
                               <Link href="/dashboard/organizations">Open organizations</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/users/create?orgId=${encodeURIComponent(org._id)}`}>
-                                Create admin
+                              <Link
+                                href={`/dashboard/users/create?orgId=${encodeURIComponent(org._id)}&staff=1`}
+                              >
+                                Create Admin User
                               </Link>
                             </DropdownMenuItem>
                           </DropdownMenuContent>

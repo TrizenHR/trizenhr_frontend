@@ -672,8 +672,8 @@ export default function OrganizationsPage() {
                         <div className="flex justify-end gap-0.5">
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground" asChild>
                             <Link
-                              href={`/dashboard/users/create?orgId=${encodeURIComponent(org._id)}`}
-                              title="Create company admin"
+                              href={`/dashboard/users/create?orgId=${encodeURIComponent(org._id)}&staff=1`}
+                              title="Add user to organization"
                               prefetch={false}
                             >
                               <Users className="h-4 w-4" />
@@ -852,11 +852,19 @@ export default function OrganizationsPage() {
                 </Button>
                 <Button variant="secondary" className="rounded-xl" asChild>
                   <Link
-                    href={`/dashboard/users/create?orgId=${encodeURIComponent(viewedOrg._id)}`}
+                    href={`/dashboard/users/create?orgId=${encodeURIComponent(viewedOrg._id)}&staff=1`}
                     prefetch={false}
                   >
                     <Users className="mr-2 h-4 w-4" />
-                    Create admin
+                    Add user
+                  </Link>
+                </Button>
+                <Button variant="outline" className="rounded-xl" asChild>
+                  <Link
+                    href={`/dashboard/users/create?orgId=${encodeURIComponent(viewedOrg._id)}`}
+                    prefetch={false}
+                  >
+                    Invite company admin
                   </Link>
                 </Button>
                 <Button type="button" className="rounded-xl" onClick={() => handleEdit(viewedOrg)}>

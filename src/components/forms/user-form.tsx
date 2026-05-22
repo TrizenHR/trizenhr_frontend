@@ -29,6 +29,8 @@ interface UserFormProps {
   userRole: UserRole;
   /** When set (e.g. ?orgId=), organization is fixed for Super Admin creates */
   lockedOrganizationId?: string;
+  /** true = invite company admin only; false = pick HR/manager/employee (?staff=1) */
+  inviteCompanyAdmin?: boolean;
 }
 
 export function UserForm({
@@ -37,9 +39,10 @@ export function UserForm({
   defaultValues,
   userRole,
   lockedOrganizationId,
+  inviteCompanyAdmin = false,
 }: UserFormProps) {
   const router = useRouter();
-  const isOrgScopedCreation = Boolean(defaultValues?.organizationId);
+  const isOrgScopedCreation = Boolean(defaultValues?.organizationId) && inviteCompanyAdmin;
   const allowedRoles = getAllowedRolesToCreate(userRole).filter((role) => {
     if (isOrgScopedCreation && role === UserRole.SUPER_ADMIN) {
       return false;
@@ -105,13 +108,20 @@ export function UserForm({
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      // Org-scoped create (e.g. ?orgId=…) is usually adding staff, not another company admin
-      role: UserRole.EMPLOYEE,
+      role: inviteCompanyAdmin ? UserRole.ADMIN : UserRole.EMPLOYEE,
       ...defaultValues,
+      ...(inviteCompanyAdmin ? { role: UserRole.ADMIN } : {}),
     },
   });
 
   const selectedRole = watch('role');
+
+  // Org admin invite link must submit admin — UI label alone does not set react-hook-form value
+  useEffect(() => {
+    if (inviteCompanyAdmin) {
+      setValue('role', UserRole.ADMIN);
+    }
+  }, [inviteCompanyAdmin, setValue]);
   const selectedOrganization = watch('organizationId');
   const selectedDepartment = watch('department');
 

@@ -20,8 +20,10 @@ export default function CreateUserPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get pre-selected organization from URL if present
   const preSelectedOrgId = searchParams.get('orgId');
+  /** ?staff=1 — add HR/manager/employee; bare ?orgId= — invite company admin only */
+  const inviteStaff = searchParams.get('staff') === '1';
+  const inviteCompanyAdmin = Boolean(preSelectedOrgId) && !inviteStaff;
 
   const handleSubmit = async (data: CreateUserFormData) => {
     setIsLoading(true);
@@ -81,8 +83,16 @@ export default function CreateUserPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create User</h1>
-          <p className="text-gray-500">Add a new user to the system</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {inviteCompanyAdmin ? 'Invite Company Admin' : 'Create User'}
+          </h1>
+          <p className="text-gray-500">
+            {inviteCompanyAdmin
+              ? 'Send an invitation to the organization’s company administrator'
+              : preSelectedOrgId
+                ? 'Add a user to the selected organization'
+                : 'Add a new user to the system'}
+          </p>
         </div>
       </div>
 
@@ -98,7 +108,10 @@ export default function CreateUserPage() {
             isLoading={isLoading}
             userRole={user.role as UserRole}
             lockedOrganizationId={preSelectedOrgId || undefined}
-            defaultValues={preSelectedOrgId ? { organizationId: preSelectedOrgId } : undefined}
+            inviteCompanyAdmin={inviteCompanyAdmin}
+            defaultValues={
+              preSelectedOrgId ? { organizationId: preSelectedOrgId } : undefined
+            }
           />
         </CardContent>
       </Card>
