@@ -234,10 +234,20 @@ export default function OrganizationsPage() {
           description: 'Organization updated successfully',
         });
       } else {
-        await organizationApi.create(formData);
+        const createPayload = { ...formData };
+        const adminEmail = createPayload.companyAdminEmail?.trim();
+        if (adminEmail) {
+          createPayload.companyAdminEmail = adminEmail;
+        } else {
+          delete createPayload.companyAdminEmail;
+          delete createPayload.companyAdminName;
+        }
+        await organizationApi.create(createPayload);
         toast({
           title: 'Success',
-          description: 'Organization created successfully',
+          description: adminEmail
+            ? 'Organization created and company admin invitation sent'
+            : 'Organization created successfully',
         });
       }
       setIsDialogOpen(false);
@@ -340,6 +350,8 @@ export default function OrganizationsPage() {
     setFormData({
       name: '',
       subdomain: '',
+      companyAdminEmail: '',
+      companyAdminName: '',
       subscriptionPlan: SubscriptionPlan.FREE,
       microsoftAuth: {
         tenantId: '',
@@ -918,6 +930,43 @@ export default function OrganizationsPage() {
                     </p>
                   )}
                 </div>
+
+                {!isEditing && (
+                  <div className="space-y-4 rounded-xl border border-border/80 bg-muted/20 p-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">Company admin invite</h4>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Optional. Invites the <span className="font-medium">Company Admin</span> from{' '}
+                        <span className="font-medium">support@trizenhr.com</span>. To invite HR, managers, or
+                        employees from <span className="font-medium">support@trizenventures.com</span>, add them
+                        under Users after the organisation is created.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="companyAdminEmail">Company admin email</Label>
+                      <Input
+                        id="companyAdminEmail"
+                        type="email"
+                        placeholder="admin@company.com"
+                        value={formData.companyAdminEmail || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, companyAdminEmail: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="companyAdminName">Company admin name (optional)</Label>
+                      <Input
+                        id="companyAdminName"
+                        placeholder="Jane Doe"
+                        value={formData.companyAdminName || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, companyAdminName: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="plan">Subscription Plan</Label>

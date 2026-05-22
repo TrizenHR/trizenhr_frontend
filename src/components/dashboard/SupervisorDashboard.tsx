@@ -14,7 +14,15 @@ import { Users, UserCheck, Calendar, TrendingUp, Building2 } from 'lucide-react'
 
 export function SupervisorDashboard() {
   const { user } = useAuth();
-  const organizationName = user?.organization?.name || 'your organization';
+  const [organizationName, setOrganizationName] = useState(
+    user?.organization?.name || 'your organization'
+  );
+
+  useEffect(() => {
+    if (user?.organization?.name) {
+      setOrganizationName(user.organization.name);
+    }
+  }, [user?.organization?.name]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

@@ -15,6 +15,7 @@ import { Loader2, CheckCircle2, ShieldCheck, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { API_BASE_URL } from '@/lib/api';
+import { getCompanyLoginUrl } from '@/lib/host';
 
 const setPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -35,6 +36,9 @@ function SetPasswordContent() {
   const email = searchParams.get('email');
   const role = searchParams.get('role');
   const organizationId = searchParams.get('organizationId');
+  const subdomain = searchParams.get('subdomain');
+
+  const tenantLoginUrl = subdomain ? getCompanyLoginUrl(subdomain) : '';
 
   const {
     register,
@@ -72,10 +76,13 @@ function SetPasswordContent() {
 
       setIsSuccess(true);
       toast.success('Password set successfully!');
-      
-      // Auto-redirect to login after 3 seconds
+
       setTimeout(() => {
-        router.push('/login');
+        if (tenantLoginUrl) {
+          window.location.href = tenantLoginUrl;
+        } else {
+          router.push('/login');
+        }
       }, 3000);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to set password. Link may have expired.');
@@ -97,7 +104,7 @@ function SetPasswordContent() {
             Your password has been set successfully. You are being redirected to the login page...
           </CardDescription>
           <Button className="mt-8 w-full" asChild>
-            <Link href="/login">Go to Login Now</Link>
+            <Link href={tenantLoginUrl || '/login'}>Go to Login Now</Link>
           </Button>
         </CardContent>
       </Card>

@@ -57,3 +57,10 @@ export function getCompanyLoginUrl(subdomain: string): string {
   const base = `${protocol}//${host}${port && root === 'localhost' ? `:${port}` : ''}`;
   return `${base}/login`;
 }
+
+/** Tenant set-password URL for invitation emails (same host rules as login). */
+export function getCompanySetPasswordUrl(subdomain: string): string {
+  const loginUrl = getCompanyLoginUrl(subdomain);
+  if (!loginUrl) return '';
+  return loginUrl.replace(/\/login\/?$/, '/auth/set-password');
+}

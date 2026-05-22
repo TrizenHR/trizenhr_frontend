@@ -18,6 +18,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Refresh profile; returns null if session invalid, undefined if backend unreachable. */
+async function refreshCurrentUser(): Promise<User | null | undefined> {
+  try {
+    return await authApi.getCurrentUser();
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401) {
+        return null;
+      }
+      // Network Error / backend restarting — keep cached session
+      if (!error.response) {
+        console.warn(
+          '[auth] Profile refresh skipped (API unreachable). Using cached session.'
+        );
+        return undefined;
+      }
+    }
+    console.warn('[auth] Profile refresh failed:', error);
+    return undefined;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -37,26 +59,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(JSON.parse(storedUser));
           if (storedOrgId) setSelectedState(storedOrgId);
 
-          // Optionally fetch fresh user data from API
-          try {
-            const freshUser = await authApi.getCurrentUser();
+          const freshUser = await refreshCurrentUser();
+          if (freshUser) {
             setUser(freshUser);
             localStorage.setItem('user', JSON.stringify(freshUser));
-          } catch (error) {
-            // Only clear auth state when token is truly invalid/expired.
-            // For transient 5xx/network issues, keep existing session from localStorage.
-            console.error('Failed to fetch user:', error);
-            const status = axios.isAxiosError(error)
-              ? error.response?.status
-              : undefined;
-            if (status === 401) {
-              localStorage.removeItem('token');
-              localStorage.removeItem('user');
-              localStorage.removeItem('selectedOrganizationId');
-              setToken(null);
-              setUser(null);
-              setSelectedState(null);
-            }
+          } else if (freshUser === null) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('selectedOrganizationId');
+            setToken(null);
+            setUser(null);
+            setSelectedState(null);
           }
         }
       } catch (error) {
@@ -69,16 +82,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser();
   }, []);
 
-  const login= async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       const response = await authApi.login(email, password);
 
-      // Store token and user data
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
-
       setToken(response.token);
-      setUser(response.user as any);
+      setUser(response.user as User);
+
+      // Refresh profile in background (includes organization name when API is up)
+      void refreshCurrentUser().then((freshUser) => {
+        if (freshUser) {
+          setUser(freshUser);
+          localStorage.setItem('user', JSON.stringify(freshUser));
+        }
+      });
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

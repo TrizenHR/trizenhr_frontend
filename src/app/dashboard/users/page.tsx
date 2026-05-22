@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Search, MoreVertical, Edit, Trash2, UserPlus, Loader2, ShieldX } from 'lucide-react';
+import { Plus, Search, MoreVertical, Edit, Trash2, UserPlus, Loader2, ShieldX, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { userApi } from '@/lib/api';
 import { User, UserRole } from '@/lib/types';
@@ -38,6 +38,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -85,6 +86,24 @@ export default function UsersPage() {
     }
 
     setFilteredUsers(filtered);
+  };
+
+  const handleResendInvitation = async (targetUser: User) => {
+    const userId = targetUser.id || targetUser._id;
+    if (targetUser.role === UserRole.SUPER_ADMIN) {
+      toast.error('Cannot resend invitation to system admins');
+      return;
+    }
+
+    try {
+      setResendingId(userId);
+      const result = await userApi.resendInvitation(userId);
+      toast.success(result.message || 'Invitation email sent');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to resend invitation');
+    } finally {
+      setResendingId(null);
+    }
   };
 
   const handleDelete = async (userId: string) => {
@@ -243,6 +262,15 @@ export default function UsersPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {user.role !== UserRole.SUPER_ADMIN && (
+                            <DropdownMenuItem
+                              onClick={() => handleResendInvitation(user)}
+                              disabled={resendingId === userId}
+                            >
+                              <Mail className="mr-2 h-4 w-4" />
+                              {resendingId === userId ? 'Sending…' : 'Resend invitation'}
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => router.push(`/dashboard/users/${userId}`)}
                           >

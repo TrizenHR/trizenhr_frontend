@@ -20,15 +20,24 @@ import { CreateUserFormData, createUserSchema } from '@/lib/validations';
 import { UserRole, Organization, Department } from '@/lib/types';
 import { getAllowedRolesToCreate, getRoleDisplayName } from '@/lib/permissions';
 import { organizationApi, departmentApi, userApi } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface UserFormProps {
   onSubmit: (data: CreateUserFormData) => Promise<void>;
   isLoading?: boolean;
   defaultValues?: Partial<CreateUserFormData>;
   userRole: UserRole;
+  /** When set (e.g. ?orgId=), organization is fixed for Super Admin creates */
+  lockedOrganizationId?: string;
 }
 
-export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserFormProps) {
+export function UserForm({
+  onSubmit,
+  isLoading,
+  defaultValues,
+  userRole,
+  lockedOrganizationId,
+}: UserFormProps) {
   const router = useRouter();
   const isOrgScopedCreation = Boolean(defaultValues?.organizationId);
   const allowedRoles = getAllowedRolesToCreate(userRole).filter((role) => {
@@ -96,22 +105,37 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      role: isOrgScopedCreation ? UserRole.ADMIN : UserRole.EMPLOYEE,
+      // Org-scoped create (e.g. ?orgId=…) is usually adding staff, not another company admin
+      role: UserRole.EMPLOYEE,
       ...defaultValues,
     },
   });
 
-  // Load suggested next employee ID for org-scoped roles
+  const selectedRole = watch('role');
+  const selectedOrganization = watch('organizationId');
+  const selectedDepartment = watch('department');
+
+  // Load suggested next employee ID (required for employee role validation)
   useEffect(() => {
     const loadNextEmployeeId = async () => {
-      if (isSuperAdmin) return;
+      const orgId =
+        lockedOrganizationId ||
+        selectedOrganization ||
+        defaultValues?.organizationId;
+
+      // Super Admin must have an org context (e.g. ?orgId= on create page)
+      if (isSuperAdmin && !orgId) {
+        return;
+      }
+
       try {
-        const { nextEmployeeId, existingSample } = await userApi.getNextEmployeeId();
+        const { nextEmployeeId, existingSample } = await userApi.getNextEmployeeId(
+          isSuperAdmin ? orgId : undefined
+        );
         setNextEmployeeId(nextEmployeeId);
         setEmployeeIdSuggestions(existingSample);
 
-        // Prefill only when no default employeeId is provided
-        if (!defaultValues?.employeeId) {
+        if (!defaultValues?.employeeId && selectedRole !== UserRole.ADMIN) {
           setValue('employeeId', nextEmployeeId);
         }
       } catch (error) {
@@ -120,16 +144,31 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
     };
 
     loadNextEmployeeId();
-  }, [isSuperAdmin, defaultValues, setValue]);
+  }, [
+    isSuperAdmin,
+    lockedOrganizationId,
+    selectedOrganization,
+    defaultValues?.organizationId,
+    defaultValues?.employeeId,
+    selectedRole,
+    setValue,
+  ]);
 
-  const selectedRole = watch('role');
-  const selectedOrganization = watch('organizationId');
-  const selectedDepartment = watch('department');
+  useEffect(() => {
+    if (lockedOrganizationId) {
+      setValue('organizationId', lockedOrganizationId);
+    }
+  }, [lockedOrganizationId, setValue]);
+
+  const onInvalid = (fieldErrors: typeof errors) => {
+    const first = Object.values(fieldErrors).find((e) => e?.message);
+    toast.error(first?.message || 'Please fill in all required fields (including Employee ID).');
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Organization Selector - Only for Super Admin */}
-      {isSuperAdmin && (
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
+      {/* Organization Selector - Only for Super Admin (hidden when org is fixed via URL) */}
+      {isSuperAdmin && !lockedOrganizationId && (
         <div className="space-y-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <Label htmlFor="organizationId">
             Organization <span className="text-red-500">*</span>
@@ -154,7 +193,6 @@ export function UserForm({ onSubmit, isLoading, defaultValues, userRole }: UserF
           <p className="text-sm text-blue-700">Select which organization this user belongs to</p>
         </div>
       )}
-
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">

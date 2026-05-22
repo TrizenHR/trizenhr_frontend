@@ -25,11 +25,26 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Grid3x3, List, Mail, Briefcase, Calendar as CalendarIcon, UserCheck, UserX, Edit } from 'lucide-react';
+import {
+  Users,
+  Grid3x3,
+  List,
+  Mail,
+  Briefcase,
+  Calendar as CalendarIcon,
+  UserCheck,
+  UserX,
+  Edit,
+  Send,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
 
 export default function EmployeesPage() {
   const router = useRouter();
+  const { user: currentUser } = useAuth();
+  const canResendInvite =
+    currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_ADMIN;
   const [employees, setEmployees] = useState<User[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<User[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -38,6 +53,7 @@ export default function EmployeesPage() {
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -114,6 +130,30 @@ export default function EmployeesPage() {
     }
 
     setFilteredEmployees(filtered);
+  };
+
+  const handleResendInvitation = async (employee: User) => {
+    const id = employee.id || employee._id;
+    if (employee.role === UserRole.SUPER_ADMIN) {
+      toast({ title: 'Cannot resend', description: 'Not applicable for system admins', variant: 'destructive' });
+      return;
+    }
+    try {
+      setResendingId(id);
+      const result = await userApi.resendInvitation(id);
+      toast({
+        title: 'Invitation sent',
+        description: result.message || `Email sent to ${employee.email}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to send invitation',
+        description: error.response?.data?.message || 'Check backend and email-service logs',
+        variant: 'destructive',
+      });
+    } finally {
+      setResendingId(null);
+    }
   };
 
   const getRoleBadgeColor = (role: UserRole) => {
@@ -333,7 +373,19 @@ export default function EmployeesPage() {
                             <Badge className="bg-red-100 text-red-800">Inactive</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right space-x-2">
+                          {canResendInvite && employee.role !== UserRole.SUPER_ADMIN && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={resendingId === (employee.id || employee._id)}
+                              onClick={() => handleResendInvitation(employee)}
+                              className="cursor-pointer"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              {resendingId === (employee.id || employee._id) ? 'Sending…' : 'Resend invite'}
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"

@@ -14,9 +14,17 @@ import { Users, Building2, Calendar, TrendingUp } from 'lucide-react';
 
 export function AdminDashboard() {
   const { user } = useAuth();
-  const organizationName = user?.organization?.name || 'your organization';
+  const [organizationName, setOrganizationName] = useState(
+    user?.organization?.name || 'your organization'
+  );
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.organization?.name) {
+      setOrganizationName(user.organization.name);
+    }
+  }, [user?.organization?.name]);
 
   useEffect(() => {
     loadDashboardStats();

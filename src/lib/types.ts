@@ -387,6 +387,9 @@ export interface BillingOverview {
 export interface CreateOrganizationPayload {
   name: string;
   subdomain?: string;
+  /** Sends company-admin invite from support@trizenhr.com (create only) */
+  companyAdminEmail?: string;
+  companyAdminName?: string;
   subscriptionPlan?: SubscriptionPlan;
   subscriptionExpiry?: Date;
   settings?: Partial<Organization['settings']>;

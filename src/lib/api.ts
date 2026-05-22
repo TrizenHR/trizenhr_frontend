@@ -202,9 +202,14 @@ export const userApi = {
     return response.data.data!;
   },
 
-  createUser: async (data: CreateUserPayload): Promise<User> => {
+  createUser: async (data: CreateUserPayload): Promise<ApiResponse<User>> => {
     const response = await api.post<ApiResponse<User>>('/users', data);
-    return response.data.data!;
+    return response.data;
+  },
+
+  resendInvitation: async (id: string): Promise<ApiResponse> => {
+    const response = await api.post<ApiResponse>(`/users/${id}/resend-invitation`);
+    return response.data;
   },
 
   updateUser: async (id: string, data: UpdateUserPayload): Promise<User> => {
@@ -243,10 +248,14 @@ export const userApi = {
     return response.data.data!;
   },
 
-  getNextEmployeeId: async (): Promise<{ nextEmployeeId: string; existingSample: string[] }> => {
+  getNextEmployeeId: async (
+    organizationId?: string
+  ): Promise<{ nextEmployeeId: string; existingSample: string[] }> => {
     const response = await api.get<
       ApiResponse<{ nextEmployeeId: string; existingSample: string[] }>
-    >('/users/next-employee-id');
+    >('/users/next-employee-id', {
+      params: organizationId ? { organizationId } : undefined,
+    });
     return response.data.data!;
   },
 };

@@ -27,8 +27,13 @@ export default function CreateUserPage() {
     setIsLoading(true);
 
     try {
-      await userApi.createUser(data);
-      toast.success('User created successfully');
+      const result = await userApi.createUser(data);
+      const message = result.message || 'User created successfully';
+      if (message.toLowerCase().includes('invitation email failed')) {
+        toast.warning(message);
+      } else {
+        toast.success(message);
+      }
 
       // Super Admin does not have access to org-level users list.
       // Route them to the relevant system-level page after creation.
@@ -43,7 +48,12 @@ export default function CreateUserPage() {
 
       router.push(user?.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create user');
+      const msg = error.response?.data?.message || 'Failed to create user';
+      toast.error(msg);
+      if (msg.toLowerCase().includes('email already')) {
+        toast.info('Delete the existing user or use Resend invitation on the Users page.');
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -87,6 +97,7 @@ export default function CreateUserPage() {
             onSubmit={handleSubmit}
             isLoading={isLoading}
             userRole={user.role as UserRole}
+            lockedOrganizationId={preSelectedOrgId || undefined}
             defaultValues={preSelectedOrgId ? { organizationId: preSelectedOrgId } : undefined}
           />
         </CardContent>
