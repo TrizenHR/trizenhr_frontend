@@ -14,8 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { CreateUserFormData, createUserSchema } from '@/lib/validations';
 import { UserRole, Organization, Department } from '@/lib/types';
 import { getAllowedRolesToCreate, getRoleDisplayName } from '@/lib/permissions';
@@ -43,23 +42,26 @@ export function UserForm({
 }: UserFormProps) {
   const router = useRouter();
   const isOrgScopedCreation = Boolean(defaultValues?.organizationId) && inviteCompanyAdmin;
+
+  // Super Admin always creates Company Admin — no role selection
+  const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
+  const roleIsLocked = isSuperAdmin;
+
   const allowedRoles = getAllowedRolesToCreate(userRole).filter((role) => {
-    if (isOrgScopedCreation && role === UserRole.SUPER_ADMIN) {
-      return false;
-    }
+    // Super Admin flow: only Company Admin is allowed (no System Admin creation via this form)
+    if (isSuperAdmin) return role === UserRole.ADMIN;
+    if (isOrgScopedCreation && role === UserRole.SUPER_ADMIN) return false;
     return true;
   });
+
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [loadingDepts, setLoadingDepts] = useState(false);
   const [employeeIdSuggestions, setEmployeeIdSuggestions] = useState<string[]>([]);
   const [nextEmployeeId, setNextEmployeeId] = useState<string | null>(null);
-  const [useCustomEmployeeId, setUseCustomEmployeeId] = useState(false);
-
-  const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
-  const isHR = userRole === UserRole.HR;
-  const lockEmployeeId = isHR && !useCustomEmployeeId;
+  const [loadingEmployeeId, setLoadingEmployeeId] = useState(false);
+  const [noDepartmentsWarning, setNoDepartmentsWarning] = useState(false);
 
   // Load organizations for Super Admin
   useEffect(() => {
@@ -87,11 +89,12 @@ export function UserForm({
     }
   };
 
-  const loadDepartments = async () => {
+  const loadDepartments = async (orgId?: string) => {
     try {
       setLoadingDepts(true);
-      const data = await departmentApi.getAll();
+      const data = await departmentApi.getAll(orgId);
       setDepartments(data);
+      setNoDepartmentsWarning(data.length === 0);
     } catch (error) {
       console.error('Failed to load departments:', error);
     } finally {
@@ -108,24 +111,31 @@ export function UserForm({
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      role: inviteCompanyAdmin ? UserRole.ADMIN : UserRole.EMPLOYEE,
+      role: isSuperAdmin ? UserRole.ADMIN : inviteCompanyAdmin ? UserRole.ADMIN : UserRole.EMPLOYEE,
       ...defaultValues,
-      ...(inviteCompanyAdmin ? { role: UserRole.ADMIN } : {}),
+      ...(isSuperAdmin || inviteCompanyAdmin ? { role: UserRole.ADMIN } : {}),
     },
   });
 
   const selectedRole = watch('role');
-
-  // Org admin invite link must submit admin — UI label alone does not set react-hook-form value
-  useEffect(() => {
-    if (inviteCompanyAdmin) {
-      setValue('role', UserRole.ADMIN);
-    }
-  }, [inviteCompanyAdmin, setValue]);
   const selectedOrganization = watch('organizationId');
   const selectedDepartment = watch('department');
 
-  // Load suggested next employee ID (required for employee role validation)
+  // Lock role to Company Admin for Super Admin, and for org-scoped admin invite
+  useEffect(() => {
+    if (isSuperAdmin || inviteCompanyAdmin) {
+      setValue('role', UserRole.ADMIN);
+    }
+  }, [isSuperAdmin, inviteCompanyAdmin, setValue]);
+
+  // When Super Admin selects an org, reload departments for that org
+  useEffect(() => {
+    if (isSuperAdmin && selectedOrganization) {
+      loadDepartments(selectedOrganization);
+    }
+  }, [isSuperAdmin, selectedOrganization]);
+
+  // Re-fetch suggested employee ID whenever role or department changes
   useEffect(() => {
     const loadNextEmployeeId = async () => {
       const orgId =
@@ -133,23 +143,32 @@ export function UserForm({
         selectedOrganization ||
         defaultValues?.organizationId;
 
-      // Super Admin must have an org context (e.g. ?orgId= on create page)
-      if (isSuperAdmin && !orgId) {
+      if (isSuperAdmin && !orgId) return;
+
+      const isAdminRole = selectedRole === UserRole.ADMIN;
+
+      // Non-admin roles need department in the ID — wait for dept selection
+      if (!isAdminRole && !selectedDepartment) {
+        setNextEmployeeId(null);
+        setEmployeeIdSuggestions([]);
+        setValue('employeeId', '');
         return;
       }
 
       try {
-        const { nextEmployeeId, existingSample } = await userApi.getNextEmployeeId(
-          isSuperAdmin ? orgId : undefined
+        setLoadingEmployeeId(true);
+        const { nextEmployeeId: next, existingSample } = await userApi.getNextEmployeeId(
+          isSuperAdmin ? orgId : undefined,
+          selectedRole,
+          isAdminRole ? undefined : selectedDepartment
         );
-        setNextEmployeeId(nextEmployeeId);
+        setNextEmployeeId(next || null);
         setEmployeeIdSuggestions(existingSample);
-
-        if (!defaultValues?.employeeId && selectedRole !== UserRole.ADMIN) {
-          setValue('employeeId', nextEmployeeId);
-        }
+        setValue('employeeId', next || '');
       } catch (error) {
         console.error('Failed to load next employee ID:', error);
+      } finally {
+        setLoadingEmployeeId(false);
       }
     };
 
@@ -159,8 +178,8 @@ export function UserForm({
     lockedOrganizationId,
     selectedOrganization,
     defaultValues?.organizationId,
-    defaultValues?.employeeId,
     selectedRole,
+    selectedDepartment,
     setValue,
   ]);
 
@@ -172,12 +191,14 @@ export function UserForm({
 
   const onInvalid = (fieldErrors: typeof errors) => {
     const first = Object.values(fieldErrors).find((e) => e?.message);
-    toast.error(first?.message || 'Please fill in all required fields (including Employee ID).');
+    toast.error(first?.message || 'Please fill in all required fields.');
   };
+
+  const isAdmin = selectedRole === UserRole.ADMIN;
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
-      {/* Organization Selector - Only for Super Admin (hidden when org is fixed via URL) */}
+      {/* Organization Selector — Super Admin only */}
       {isSuperAdmin && !lockedOrganizationId && (
         <div className="space-y-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <Label htmlFor="organizationId">
@@ -199,10 +220,13 @@ export function UserForm({
               ))}
             </SelectContent>
           </Select>
-          {errors.organizationId && <p className="text-sm text-red-500">{errors.organizationId.message}</p>}
+          {errors.organizationId && (
+            <p className="text-sm text-red-500">{errors.organizationId.message}</p>
+          )}
           <p className="text-sm text-blue-700">Select which organization this user belongs to</p>
         </div>
       )}
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">
@@ -218,7 +242,6 @@ export function UserForm({
             <p className="text-sm text-red-500">{errors.firstName.message}</p>
           )}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="lastName">
             Last Name <span className="text-red-500">*</span>
@@ -229,7 +252,9 @@ export function UserForm({
             disabled={isLoading}
             className={errors.lastName ? 'border-red-500' : ''}
           />
-          {errors.lastName && <p className="text-sm text-red-500">{errors.lastName.message}</p>}
+          {errors.lastName && (
+            <p className="text-sm text-red-500">{errors.lastName.message}</p>
+          )}
         </div>
       </div>
 
@@ -247,14 +272,19 @@ export function UserForm({
         {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
       </div>
 
+      {/* Role */}
       <div className="space-y-2">
         <Label htmlFor="role">
           Role <span className="text-red-500">*</span>
         </Label>
-        {isOrgScopedCreation ? (
+        {roleIsLocked || isOrgScopedCreation ? (
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <span className="font-semibold text-gray-900">{getRoleDisplayName(UserRole.ADMIN)}</span>
-            <p className="text-xs text-gray-500 mt-1">Creating the primary administrator for this organization.</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {isSuperAdmin
+                ? 'System Admin can only create Company Admin accounts.'
+                : 'Creating the primary administrator for this organization.'}
+            </p>
           </div>
         ) : (
           <Select
@@ -277,79 +307,58 @@ export function UserForm({
         {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
       </div>
 
-      {selectedRole !== UserRole.ADMIN && (
-        <div className="space-y-2">
-          <Label htmlFor="employeeId">
-            Employee ID <span className="text-red-500">*</span>
-          </Label>
-          {isHR && (
-            <div className="flex items-center justify-between rounded-md border p-2">
-              <Label htmlFor="useCustomEmployeeId" className="text-sm font-normal">
-                Use custom Employee ID
-              </Label>
-              <Switch
-                id="useCustomEmployeeId"
-                checked={useCustomEmployeeId}
-                onCheckedChange={(checked) => {
-                  setUseCustomEmployeeId(checked);
-                  if (!checked && nextEmployeeId) {
-                    setValue('employeeId', nextEmployeeId);
-                  }
-                }}
-                disabled={isLoading}
-              />
-            </div>
-          )}
-          <Input
-            id="employeeId"
-            placeholder={
-              lockEmployeeId
-                ? nextEmployeeId
-                  ? `Auto: ${nextEmployeeId}`
-                  : 'Auto-generated'
-                : 'e.g. 6 or EMP006'
-            }
-            {...register('employeeId')}
-            disabled={isLoading}
-            readOnly={lockEmployeeId}
-            className={[
-              errors.employeeId ? 'border-red-500' : '',
-              lockEmployeeId ? 'bg-muted cursor-not-allowed' : '',
-            ].join(' ').trim()}
-          />
-          {errors.employeeId && (
-            <p className="text-sm text-red-500">{errors.employeeId.message}</p>
-          )}
-          {lockEmployeeId ? (
-            <p className="text-sm text-gray-500">
-              Auto-generated for HR. Enable "Use custom Employee ID" to enter a manual value.
-            </p>
-          ) : (
-            <p className="text-sm text-gray-500">
-              You can enter digits (e.g. 6) or a code (e.g. EMP006). It will be normalized and stored as EMP###.
-            </p>
-          )}
-          {employeeIdSuggestions.length > 0 && (
-            <p className="text-xs text-gray-500">
-              Existing IDs: {employeeIdSuggestions.join(', ')}
-              {nextEmployeeId ? `. Suggested next: ${nextEmployeeId}` : ''}
-            </p>
-          )}
-        </div>
-      )}
-
+      {/* Department — required for non-admin roles */}
       <div className="space-y-2">
-        <Label htmlFor="department">Department</Label>
+        <Label htmlFor="department">
+          Department {!isAdmin && <span className="text-red-500">*</span>}
+        </Label>
+
+        {!isAdmin && noDepartmentsWarning && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              No departments are available for this organization. Please{' '}
+              <a
+                href="/dashboard/departments"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline"
+              >
+                create a department
+              </a>{' '}
+              before adding users. Once created,{' '}
+              <button
+                type="button"
+                className="font-medium underline"
+                onClick={() => loadDepartments()}
+              >
+                click here to refresh
+              </button>
+              .
+            </span>
+          </div>
+        )}
+
         <Select
           value={selectedDepartment ?? '__none__'}
           onValueChange={(value) => setValue('department', value === '__none__' ? '' : value)}
-          disabled={isLoading || loadingDepts}
+          disabled={isLoading || loadingDepts || (!isAdmin && noDepartmentsWarning)}
         >
           <SelectTrigger className={errors.department ? 'border-red-500' : ''}>
-            <SelectValue placeholder={loadingDepts ? 'Loading departments...' : 'Select department'} />
+            <SelectValue
+              placeholder={
+                loadingDepts
+                  ? 'Loading departments...'
+                  : isAdmin
+                  ? 'Not applicable for Company Admin'
+                  : departments.length === 0
+                  ? 'No departments available — create one first'
+                  : 'Select department'
+              }
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__none__">None</SelectItem>
+            {isAdmin && <SelectItem value="__none__">Not applicable</SelectItem>}
             {departments.map((dept) => (
               <SelectItem key={dept._id} value={dept.name}>
                 {dept.name}
@@ -362,12 +371,59 @@ export function UserForm({
         )}
       </div>
 
+      {/* Employee ID — always auto-generated, read-only */}
+      <div className="space-y-2">
+        <Label htmlFor="employeeId">
+          Employee ID
+          <span className="ml-2 text-xs font-normal text-gray-500">
+            {isAdmin
+              ? '(org code + role + count  e.g. TRZAD001)'
+              : '(org code + dept + role + count  e.g. TRZENЕМ001)'}
+          </span>
+        </Label>
+        <div className="relative">
+          <Input
+            id="employeeId"
+            placeholder={
+              loadingEmployeeId
+                ? 'Generating...'
+                : !isAdmin && !selectedDepartment
+                ? 'Select a department first'
+                : nextEmployeeId ?? 'Auto-generated on save'
+            }
+            {...register('employeeId')}
+            disabled={isLoading}
+            readOnly
+            className="bg-muted cursor-not-allowed"
+          />
+          {loadingEmployeeId && (
+            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-gray-400" />
+          )}
+        </div>
+        {!isAdmin && !selectedDepartment && !noDepartmentsWarning && (
+          <p className="text-sm text-amber-600">Select a department to preview the Employee ID.</p>
+        )}
+        {nextEmployeeId && (
+          <p className="text-xs text-gray-500">
+            {employeeIdSuggestions.length > 0
+              ? `Existing: ${employeeIdSuggestions.join(', ')} · `
+              : ''}
+            Next: <span className="font-medium text-gray-700">{nextEmployeeId}</span>
+          </p>
+        )}
+      </div>
+
       <div className="flex gap-3 pt-4">
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading || (!isAdmin && noDepartmentsWarning)}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Create User
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          disabled={isLoading}
+        >
           Cancel
         </Button>
       </div>

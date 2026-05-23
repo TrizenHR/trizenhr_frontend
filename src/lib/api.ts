@@ -249,12 +249,18 @@ export const userApi = {
   },
 
   getNextEmployeeId: async (
-    organizationId?: string
+    organizationId?: string,
+    role?: string,
+    department?: string
   ): Promise<{ nextEmployeeId: string; existingSample: string[] }> => {
+    const params: Record<string, string> = {};
+    if (organizationId) params.organizationId = organizationId;
+    if (role) params.role = role;
+    if (department) params.department = department;
     const response = await api.get<
       ApiResponse<{ nextEmployeeId: string; existingSample: string[] }>
     >('/users/next-employee-id', {
-      params: organizationId ? { organizationId } : undefined,
+      params: Object.keys(params).length ? params : undefined,
     });
     return response.data.data!;
   },
@@ -595,8 +601,10 @@ export const holidayApi = {
 };
 
 export const departmentApi = {
-  getAll: async (): Promise<Department[]> => {
-    const response = await api.get<ApiResponse<Department[]>>('/departments');
+  getAll: async (organizationId?: string): Promise<Department[]> => {
+    const response = await api.get<ApiResponse<Department[]>>('/departments', {
+      params: organizationId ? { organizationId } : undefined,
+    });
     return response.data.data!;
   },
 

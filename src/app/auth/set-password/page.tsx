@@ -78,11 +78,7 @@ function SetPasswordContent() {
       toast.success('Password set successfully!');
 
       setTimeout(() => {
-        if (tenantLoginUrl) {
-          window.location.href = tenantLoginUrl;
-        } else {
-          router.push('/login');
-        }
+        window.location.href = 'https://trizenhr.com/login';
       }, 3000);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to set password. Link may have expired.');
@@ -103,8 +99,13 @@ function SetPasswordContent() {
           <CardDescription className="mt-2 text-slate-600">
             Your password has been set successfully. You are being redirected to the login page...
           </CardDescription>
-          <Button className="mt-8 w-full" asChild>
-            <Link href={tenantLoginUrl || '/login'}>Go to Login Now</Link>
+          <Button
+            className="mt-8 w-full"
+            onClick={() => {
+              window.location.href = 'https://trizenhr.com/login';
+            }}
+          >
+            Go to Login Now
           </Button>
         </CardContent>
       </Card>

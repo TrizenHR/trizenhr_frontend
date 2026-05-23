@@ -9,20 +9,16 @@ export const createUserSchema = z
     lastName: z.string().min(1, 'Last name is required'),
     role: z.nativeEnum(UserRole),
     department: z.string().optional(),
-    employeeId: z
-      .string()
-      .regex(/^(?:[0-9]+|EMP[0-9]+)$/i, 'Employee ID must be digits (e.g. 6) or code (e.g. EMP006)')
-      .optional()
-      .or(z.literal('')),
+    employeeId: z.string().optional().or(z.literal('')),
     supervisorId: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    // Employee ID is required for everyone EXCEPT Company Admin (ADMIN)
-    if (data.role !== UserRole.ADMIN && !data.employeeId) {
+    // Department is required for everyone EXCEPT Company Admin (ADMIN)
+    if (data.role !== UserRole.ADMIN && (!data.department || !data.department.trim())) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Employee ID is required',
-        path: ['employeeId'],
+        message: 'Department is required. Please create a department first.',
+        path: ['department'],
       });
     }
   });
