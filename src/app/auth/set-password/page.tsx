@@ -15,7 +15,6 @@ import { Loader2, CheckCircle2, ShieldCheck, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { API_BASE_URL } from '@/lib/api';
-import { getCompanyLoginUrl } from '@/lib/host';
 
 const setPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -35,9 +34,6 @@ function SetPasswordContent() {
   const email = searchParams.get('email');
   const role = searchParams.get('role');
   const organizationId = searchParams.get('organizationId');
-  const subdomain = searchParams.get('subdomain');
-
-  const tenantLoginUrl = subdomain ? getCompanyLoginUrl(subdomain) : '';
 
   const {
     register,
