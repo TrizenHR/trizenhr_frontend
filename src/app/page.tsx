@@ -692,6 +692,11 @@ function Footer({ onBookDemo }: { onBookDemo: () => void }) {
                 </Link>
               </li>
               <li>
+                <Link href="/privacy-policy" className="text-slate-300 transition-colors hover:text-white">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
                 <Link href="/login" className="text-slate-300 transition-colors hover:text-white">
                   Login
                 </Link>
