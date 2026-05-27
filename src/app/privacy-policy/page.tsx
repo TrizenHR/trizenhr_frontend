@@ -145,7 +145,10 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Privacy Policy</h1>
                   <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                    
+                    <p>
+                      <span className="font-medium text-foreground">Effective Date:</span>{' '}
+                      {effectiveDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
                     <p>
                       <span className="font-medium text-foreground">Last Updated:</span>{' '}
                       {lastUpdated.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
