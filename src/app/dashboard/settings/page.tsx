@@ -13,8 +13,10 @@ import { UserRole } from '@/lib/types';
 import { organizationApi } from '@/lib/api';
 import { Organization } from '@/lib/types';
 import WorkingHoursSettings from '@/components/settings/WorkingHoursSettings';
+import WorkingDaysSettings from '@/components/settings/WorkingDaysSettings';
 import LeavePolicySettings from '@/components/settings/LeavePolicySettings';
 import GeneralSettings from '@/components/settings/GeneralSettings';
+import { WeeklyOffPattern } from '@/lib/types';
 import { SystemAdminPlatformSettings } from '@/components/settings/SystemAdminPlatformSettings';
 import { SettingsOrganizationContext } from '@/components/settings/SettingsOrganizationContext';
 import { isPlatformHost } from '@/lib/is-platform-host';
@@ -46,7 +48,12 @@ export default function SettingsPage() {
       setOrgLoading(true);
       setOrgAccessDenied(false);
       const currentSettings = await organizationApi.getMySettings();
-      setSettings(currentSettings);
+      setSettings({
+        ...currentSettings,
+        workingDays: currentSettings.workingDays ?? {
+          weeklyOffPattern: WeeklyOffPattern.MON_FRI,
+        },
+      });
     } catch (error: unknown) {
       const err = error as { response?: { status?: number }; message?: string };
       if (err?.response?.status === 403) {
@@ -227,9 +234,12 @@ export default function SettingsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-5 w-full">
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl bg-muted/40 p-1 sm:grid-cols-4">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl bg-muted/40 p-1 sm:grid-cols-3 lg:grid-cols-5">
             <TabsTrigger value="working-hours" className="rounded-xl text-xs sm:text-sm">
               Working hours
+            </TabsTrigger>
+            <TabsTrigger value="working-days" className="rounded-xl text-xs sm:text-sm">
+              Working days
             </TabsTrigger>
             <TabsTrigger value="leave-policy" className="rounded-xl text-xs sm:text-sm">
               Leave policy
@@ -248,6 +258,15 @@ export default function SettingsPage() {
             <WorkingHoursSettings
               workingHours={settings.workingHours}
               onChange={(workingHours) => handleSettingsChange({ workingHours })}
+            />
+          </TabsContent>
+
+          <TabsContent value="working-days" className="mt-4 outline-none">
+            <WorkingDaysSettings
+              workingDays={
+                settings.workingDays ?? { weeklyOffPattern: WeeklyOffPattern.MON_FRI }
+              }
+              onChange={(workingDays) => handleSettingsChange({ workingDays })}
             />
           </TabsContent>
 

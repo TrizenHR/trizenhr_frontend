@@ -6,7 +6,12 @@ import { Attendance, AttendanceStatus, AttendanceStats } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AttendanceStatsCard, AttendanceTable, AttendanceFilters } from '@/components/attendance';
+import {
+  AttendanceStatsCard,
+  AttendanceTable,
+  AttendanceFilters,
+  AttendanceRegularizationPanel,
+} from '@/components/attendance';
 import { useCamera } from '@/hooks/useCamera';
 import { Camera, X, Check, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -457,6 +462,8 @@ export default function MyAttendancePage() {
           </Card>
         </div>
       )}
+
+      <AttendanceRegularizationPanel />
 
       {/* Monthly Statistics */}
       <AttendanceStatsCard

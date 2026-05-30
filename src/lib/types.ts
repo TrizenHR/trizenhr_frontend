@@ -166,6 +166,35 @@ export interface AttendanceFilters {
   limit?: number;
 }
 
+export enum RegularizationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
+export interface AttendanceRegularization {
+  _id: string;
+  organizationId: string;
+  userId: string | User;
+  date: string;
+  requestedCheckIn?: string;
+  requestedCheckOut?: string;
+  requestedStatus: AttendanceStatus;
+  reason: string;
+  status: RegularizationStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum WeeklyOffPattern {
+  MON_FRI = 'mon_fri',
+  MON_SAT = 'mon_sat',
+  SECOND_FOURTH_SAT = 'second_fourth_sat',
+}
+
 // Leave Types
 export enum LeaveType {
   SICK = 'sick',
@@ -330,6 +359,9 @@ export interface Organization {
     workingHours: {
       startTime: string;
       endTime: string;
+    };
+    workingDays?: {
+      weeklyOffPattern: WeeklyOffPattern;
     };
     leavePolicy: {
       sickLeave: number;

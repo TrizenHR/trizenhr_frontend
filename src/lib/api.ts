@@ -10,6 +10,7 @@ import {
   AttendanceStatus,
   AttendanceStats,
   AttendancePagination,
+  AttendanceRegularization,
   Leave,
   LeaveBalance,
   LeaveRequestPayload,
@@ -382,6 +383,70 @@ export const attendanceApi = {
       records: response.data.data!,
       pagination: response.data.pagination,
     };
+  },
+
+  createRegularization: async (data: {
+    date: string;
+    requestedCheckIn?: string;
+    requestedCheckOut?: string;
+    requestedStatus: AttendanceStatus;
+    reason: string;
+  }): Promise<AttendanceRegularization> => {
+    const response = await api.post<ApiResponse<AttendanceRegularization>>(
+      '/attendance/regularization',
+      data
+    );
+    return response.data.data!;
+  },
+
+  getMyRegularizations: async (filters?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ records: AttendanceRegularization[]; pagination: AttendancePagination }> => {
+    const response = await api.get<
+      ApiResponse<AttendanceRegularization[]> & { pagination: AttendancePagination }
+    >('/attendance/regularization/my', { params: filters });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  getPendingRegularizations: async (filters?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ records: AttendanceRegularization[]; pagination: AttendancePagination }> => {
+    const response = await api.get<
+      ApiResponse<AttendanceRegularization[]> & { pagination: AttendancePagination }
+    >('/attendance/regularization/pending', { params: filters });
+    return {
+      records: response.data.data!,
+      pagination: response.data.pagination,
+    };
+  },
+
+  approveRegularization: async (id: string, notes?: string): Promise<AttendanceRegularization> => {
+    const response = await api.patch<ApiResponse<AttendanceRegularization>>(
+      `/attendance/regularization/${id}/approve`,
+      { notes }
+    );
+    return response.data.data!;
+  },
+
+  rejectRegularization: async (id: string, notes: string): Promise<AttendanceRegularization> => {
+    const response = await api.patch<ApiResponse<AttendanceRegularization>>(
+      `/attendance/regularization/${id}/reject`,
+      { notes }
+    );
+    return response.data.data!;
+  },
+
+  markAutoAbsent: async (date?: string): Promise<{ marked: number; skipped: number }> => {
+    const response = await api.post<ApiResponse<{ marked: number; skipped: number }>>(
+      '/attendance/mark-absent',
+      { date }
+    );
+    return response.data.data!;
   },
 };
 

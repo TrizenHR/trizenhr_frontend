@@ -92,6 +92,12 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
       {
+        label: 'Attendance corrections',
+        href: '/dashboard/attendance-regularizations',
+        icon: FileText,
+        roles: [UserRole.HR, UserRole.SUPERVISOR],
+      },
+      {
         label: 'Employees',
         href: '/dashboard/employees',
         icon: Users,

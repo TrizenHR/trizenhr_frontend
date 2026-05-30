@@ -25,8 +25,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Users, TrendingUp, Download } from 'lucide-react';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { Users, TrendingUp, Download, UserX } from 'lucide-react';
+import { format, startOfDay, endOfDay, isBefore, parseISO } from 'date-fns';
+import { hasAnyRole } from '@/lib/permissions';
 
 type TeamMemberStatus = {
   user: User;
@@ -53,6 +54,30 @@ export default function TeamAttendancePage() {
   });
 
   const { toast } = useToast();
+  const canMarkAutoAbsent = hasAnyRole(user?.role, [
+    UserRole.HR,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+  ]);
+  const selectedDateIsPast = isBefore(parseISO(selectedDate), startOfDay(new Date()));
+
+  const handleMarkAutoAbsent = async () => {
+    try {
+      const result = await attendanceApi.markAutoAbsent(selectedDate);
+      toast({
+        title: 'Auto absent complete',
+        description: `Marked ${result.marked} absent (${result.skipped} skipped)`,
+      });
+      await loadTeamAttendance();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } }; message?: string };
+      toast({
+        title: 'Error',
+        description: err.response?.data?.error || err.message || 'Failed to mark absent',
+        variant: 'destructive',
+      });
+    }
+  };
 
   useEffect(() => {
     loadTeamAttendance();
@@ -73,7 +98,7 @@ export default function TeamAttendancePage() {
 
       const isSupervisor = user?.role === UserRole.SUPERVISOR;
       const users = isSupervisor
-        ? await userApi.getAllUsers({ isActive: true, role: UserRole.EMPLOYEE })
+        ? await userApi.getTeamMembers(currentUserId)
         : await userApi.getAllUsers({ isActive: true });
 
       // Get attendance for selected date
@@ -249,10 +274,18 @@ export default function TeamAttendancePage() {
           <h1 className="text-3xl font-bold">Team Attendance</h1>
           <p className="text-muted-foreground">Monitor your team's attendance</p>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex gap-2">
+          {canMarkAutoAbsent && selectedDateIsPast && (
+            <Button onClick={handleMarkAutoAbsent} variant="secondary">
+              <UserX className="mr-2 h-4 w-4" />
+              Mark auto absent
+            </Button>
+          )}
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
