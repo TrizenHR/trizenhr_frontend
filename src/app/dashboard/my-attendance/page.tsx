@@ -394,7 +394,7 @@ export default function MyAttendancePage() {
                   )}
                 </div>
 
-                {todayAttendance && (
+                {todayAttendance?.status && (
                   <Badge variant={todayAttendance.status === 'present' ? 'default' : 'secondary'}>
                     {todayAttendance.status?.replace('_', ' ').toUpperCase() ?? ''}
                   </Badge>

@@ -20,15 +20,6 @@ import {
   UserCog,
   IndianRupee,
   Wallet,
-  AlertTriangle,
-  FilePen,
-  Timer,
-  BarChart3,
-  Shield,
-  LayoutGrid,
-  Settings2,
-  CreditCard,
-  FileCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -257,37 +248,6 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/payroll',
         icon: Wallet,
         roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Reports',
-        href: '/dashboard/reports',
-        icon: BarChart3,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Org Settings',
-        href: '/dashboard/org-settings',
-        icon: Settings2,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Modules',
-        href: '/dashboard/modules',
-        icon: LayoutGrid,
-        roles: [UserRole.ADMIN],
-      },
-    ],
-  },
-
-  // ── SUPER ADMIN : Platform ────────────────────────────────────
-  {
-    title: 'Platform',
-    items: [
-      {
-        label: 'Organizations',
-        href: '/dashboard/organizations',
-        icon: Building2,
-        roles: [UserRole.SUPER_ADMIN],
       },
       {
         label: 'System Users',
