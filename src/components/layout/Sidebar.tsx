@@ -20,6 +20,12 @@ import {
   UserCog,
   IndianRupee,
   Wallet,
+  FilePen,
+  AlertTriangle,
+  FileCheck,
+  BarChart3,
+  Shield,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';

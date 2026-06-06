@@ -37,8 +37,6 @@ import {
   PayrollRecord,
   BillingOverview,
   BillingInvoice,
-  NotificationListPayload,
-  PlatformNotificationPreferences,
   DemoInvitationDefaults,
   DemoInvitation,
   DemoInvitationStatus,
@@ -336,6 +334,9 @@ export const attendanceApi = {
   getMyPolicy: async (): Promise<AttendancePolicySummary> => {
     const response = await api.get<ApiResponse<AttendancePolicySummary>>('/attendance/my-policy');
     return response.data.data!;
+  },
+
+  getTodayAttendance: async (): Promise<Attendance | null> => {
     const response = await api.get<
       ApiResponse<{ record: Attendance | null; policy?: unknown } | Attendance | null>
     >('/attendance/today');
