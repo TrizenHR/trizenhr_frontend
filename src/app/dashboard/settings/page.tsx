@@ -18,6 +18,7 @@ import LeavePolicySettings from '@/components/settings/LeavePolicySettings';
 import GeneralSettings from '@/components/settings/GeneralSettings';
 import { WeeklyOffPattern } from '@/lib/types';
 import { SystemAdminPlatformSettings } from '@/components/settings/SystemAdminPlatformSettings';
+import { DemoInvitationDefaultsSettings } from '@/components/settings/DemoInvitationDefaultsSettings';
 import { SettingsOrganizationContext } from '@/components/settings/SettingsOrganizationContext';
 import { isPlatformHost } from '@/lib/is-platform-host';
 
@@ -349,8 +350,9 @@ export default function SettingsPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="platform" className="mt-4 outline-none">
+          <TabsContent value="platform" className="mt-4 space-y-6 outline-none">
             <SystemAdminPlatformSettings />
+            <DemoInvitationDefaultsSettings />
           </TabsContent>
 
           <TabsContent value="organization" className="mt-4 space-y-0 outline-none">

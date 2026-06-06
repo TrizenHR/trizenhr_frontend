@@ -44,6 +44,12 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   data?: T;
   error?: string;
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
   timestamp: string;
 }
 
@@ -544,5 +550,63 @@ export interface UpdateSalaryStructurePayload {
   allowances?: Allowance[];
   deductions?: Deduction[];
   effectiveFrom?: Date | string;
+}
+
+export enum DemoInvitationStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  SUSPENDED = 'suspended',
+  EXPIRED = 'expired',
+  REVOKED = 'revoked',
+}
+
+export interface DemoInvitationDefaults {
+  inviteLinkTtlHours: number;
+  demoAccessTtlDays: number;
+}
+
+export interface DemoInvitation {
+  _id: string;
+  companyName: string;
+  email: string;
+  role: UserRole;
+  status: DemoInvitationStatus;
+  inviteExpiresAt: string;
+  demoAccessExpiresAt?: string;
+  acceptedAt?: string;
+  demoTenantId: string;
+  demoTenantName?: string;
+  demoTenantSubdomain?: string;
+  userId?: string;
+  inviteLinkTtlHours: number;
+  demoAccessTtlDays: number;
+  notes?: string;
+  invitedBy?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDemoInvitationPayload {
+  email: string;
+  role: UserRole;
+  notes?: string;
+  inviteLinkTtlHours?: number;
+  demoAccessTtlDays?: number;
+}
+
+export interface ValidatedDemoInvite {
+  email: string;
+  role: string;
+  companyName: string;
+  organizationId: string;
+  organizationName: string;
+  subdomain?: string;
+  inviteExpiresAt: string;
+  demoAccessTtlDays: number;
 }
 

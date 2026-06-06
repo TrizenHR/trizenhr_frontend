@@ -35,6 +35,11 @@ import {
   BillingInvoice,
   NotificationListPayload,
   PlatformNotificationPreferences,
+  DemoInvitationDefaults,
+  DemoInvitation,
+  DemoInvitationStatus,
+  CreateDemoInvitationPayload,
+  ValidatedDemoInvite,
 } from './types';
 import { isPlatformHost } from './is-platform-host';
 
@@ -181,6 +186,22 @@ export const authApi = {
   resetPassword: async (payload: any): Promise<void> => {
     await api.post('/auth/reset-password', payload);
   },
+
+  acceptInvitation: async (payload: {
+    token?: string;
+    email?: string;
+    organizationId?: string;
+    password: string;
+  }): Promise<void> => {
+    await api.post('/auth/accept-invitation', payload);
+  },
+
+  validateDemoInvite: async (token: string): Promise<ValidatedDemoInvite> => {
+    const response = await api.get<ApiResponse<ValidatedDemoInvite>>('/auth/demo-invite/validate', {
+      params: { token },
+    });
+    return response.data.data!;
+  },
 };
 
 // User API
@@ -291,8 +312,15 @@ export const attendanceApi = {
    * Get today's attendance status
    */
   getTodayStatus: async (): Promise<Attendance | null> => {
-    const response = await api.get<ApiResponse<Attendance>>('/attendance/today');
-    return response.data.data || null;
+    const response = await api.get<
+      ApiResponse<{ record: Attendance | null; policy?: unknown } | Attendance | null>
+    >('/attendance/today');
+    const payload = response.data.data;
+    if (!payload) return null;
+    if (typeof payload === 'object' && payload !== null && 'record' in payload) {
+      return payload.record ?? null;
+    }
+    return payload as Attendance;
   },
 
   /**
@@ -750,6 +778,71 @@ export const organizationApi = {
     const response = await api.put<ApiResponse<Organization>>('/organizations/my/settings', {
       settings,
     });
+    return response.data.data!;
+  },
+};
+
+// Platform API (Super Admin only)
+export const platformApi = {
+  getDemoInvitationDefaults: async (): Promise<DemoInvitationDefaults> => {
+    const response = await api.get<ApiResponse<DemoInvitationDefaults>>(
+      '/platform/settings/demo-invitations'
+    );
+    return response.data.data!;
+  },
+
+  updateDemoInvitationDefaults: async (
+    payload: Partial<DemoInvitationDefaults>
+  ): Promise<DemoInvitationDefaults> => {
+    const response = await api.patch<ApiResponse<DemoInvitationDefaults>>(
+      '/platform/settings/demo-invitations',
+      payload
+    );
+    return response.data.data!;
+  },
+
+  listDemoInvites: async (params?: {
+    status?: DemoInvitationStatus;
+    email?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ items: DemoInvitation[]; meta: ApiResponse['meta'] }> => {
+    const response = await api.get<ApiResponse<DemoInvitation[]>>('/platform/demo-invites', {
+      params,
+    });
+    return { items: response.data.data ?? [], meta: response.data.meta };
+  },
+
+  createDemoInvite: async (payload: CreateDemoInvitationPayload): Promise<DemoInvitation> => {
+    const response = await api.post<ApiResponse<DemoInvitation>>('/platform/demo-invites', payload);
+    return response.data.data!;
+  },
+
+  revokeDemoInvite: async (id: string): Promise<DemoInvitation> => {
+    const response = await api.post<ApiResponse<DemoInvitation>>(
+      `/platform/demo-invites/${id}/revoke`
+    );
+    return response.data.data!;
+  },
+
+  suspendDemoInvite: async (id: string): Promise<DemoInvitation> => {
+    const response = await api.post<ApiResponse<DemoInvitation>>(
+      `/platform/demo-invites/${id}/suspend`
+    );
+    return response.data.data!;
+  },
+
+  restoreDemoInvite: async (id: string): Promise<DemoInvitation> => {
+    const response = await api.post<ApiResponse<DemoInvitation>>(
+      `/platform/demo-invites/${id}/restore`
+    );
+    return response.data.data!;
+  },
+
+  resendDemoInvite: async (id: string): Promise<DemoInvitation> => {
+    const response = await api.post<ApiResponse<DemoInvitation>>(
+      `/platform/demo-invites/${id}/resend`
+    );
     return response.data.data!;
   },
 };

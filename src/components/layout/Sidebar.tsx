@@ -17,6 +17,7 @@ import {
   UserCog,
   DollarSign,
   Wallet,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -149,6 +150,12 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/payroll',
         icon: Wallet,
         roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Demo Invitations',
+        href: '/dashboard/demo-invitations',
+        icon: Mail,
+        roles: [UserRole.SUPER_ADMIN],
       },
       {
         label: 'System Users',
