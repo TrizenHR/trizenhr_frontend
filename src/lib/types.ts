@@ -37,6 +37,8 @@ export interface User {
   updatedAt: string;
   /** System Admin — persisted platform UI preferences */
   platformPreferences?: PlatformPreferences;
+  /** Profile picture URL or base64 data URI */
+  profilePicture?: string;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -189,6 +191,75 @@ export interface AttendanceRegularization {
   updatedAt: string;
 }
 
+// Attendance Policy Types
+export enum PolicyDayType {
+  FULL_DAY = 'FULL_DAY',
+  HALF_DAY = 'HALF_DAY',
+  WEEKLY_OFF = 'WEEKLY_OFF',
+}
+
+export enum PolicyStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export enum WeekDay {
+  MON = 'MON',
+  TUE = 'TUE',
+  WED = 'WED',
+  THU = 'THU',
+  FRI = 'FRI',
+  SAT = 'SAT',
+  SUN = 'SUN',
+}
+
+export interface DefaultFullDayRule {
+  startTime: string;
+  endTime: string;
+  expectedHours: number;
+  graceMinutes: number;
+}
+
+export interface WeekRule {
+  day: WeekDay;
+  dayType: PolicyDayType;
+  useDefaultTiming: boolean;
+  startTime?: string;
+  endTime?: string;
+  expectedHours?: number;
+  graceMinutes?: number;
+}
+
+export interface AttendancePolicy {
+  _id: string;
+  policyName: string;
+  defaultFullDayRule: DefaultFullDayRule;
+  weekRules: WeekRule[];
+  autoAbsentEnabled: boolean;
+  allowRegularization: boolean;
+  isDefault: boolean;
+  status: PolicyStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AttendancePolicySummary {
+  dayType: PolicyDayType;
+  startTime?: string;
+  endTime?: string;
+  expectedHours?: number;
+  graceMinutes?: number;
+  isWorkingDay: boolean;
+  isWeeklyOff: boolean;
+  isHoliday: boolean;
+  hasLeave: boolean;
+  attendanceStatus: string;
+  policyId?: string;
+  policyName?: string;
+  weekRules?: WeekRule[];
+  defaultFullDayRule?: DefaultFullDayRule;
+}
+
 export enum WeeklyOffPattern {
   MON_FRI = 'mon_fri',
   MON_SAT = 'mon_sat',
@@ -320,6 +391,13 @@ export interface Department {
   name: string;
   description?: string;
   headOfDepartment?: string | User;
+  defaultAttendancePolicyId?:
+    | string
+    | {
+        _id: string;
+        policyName: string;
+        status?: PolicyStatus;
+      };
   members: (string | User)[];
   createdAt: string;
   updatedAt: string;
@@ -329,6 +407,7 @@ export interface DepartmentFormData {
   name: string;
   description?: string;
   headOfDepartment?: string;
+  defaultAttendancePolicyId?: string | null;
 }
 
 // Organization Types

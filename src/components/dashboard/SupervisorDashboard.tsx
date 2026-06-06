@@ -63,23 +63,27 @@ export function SupervisorDashboard() {
           title="Team size"
           value={isLoading ? '…' : stats?.teamSize ?? 0}
           icon={Users}
+          color="blue"
         />
         <StatCard
           title="Present today"
           value={isLoading ? '…' : stats?.todayAttendance?.present ?? 0}
           icon={UserCheck}
           description={`${attendancePercentage}% attendance`}
+          color="green"
         />
         <StatCard
           title="On leave"
           value={isLoading ? '…' : stats?.todayAttendance?.onLeave ?? 0}
           icon={Calendar}
+          color="orange"
         />
         <StatCard
           title="Pending approvals"
           value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
           icon={TrendingUp}
           description="Leave requests"
+          color="orange"
         />
       </div>
 

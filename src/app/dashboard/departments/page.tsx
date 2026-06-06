@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { departmentApi, userApi } from '@/lib/api';
-import { Department, DepartmentFormData, User } from '@/lib/types';
+import { attendancePolicyApi, departmentApi, userApi } from '@/lib/api';
+import { AttendancePolicy, Department, DepartmentFormData, User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ import { canManageDepartments } from '@/lib/permissions';
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [attendancePolicies, setAttendancePolicies] = useState<AttendancePolicy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
@@ -49,6 +50,7 @@ export default function DepartmentsPage() {
     name: '',
     description: '',
     headOfDepartment: '',
+    defaultAttendancePolicyId: null,
   });
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -69,6 +71,8 @@ export default function DepartmentsPage() {
       ]);
       setDepartments(depts);
       setAllUsers(users.filter((u) => u.isActive !== false));
+      const policies = await attendancePolicyApi.getAll('ACTIVE');
+      setAttendancePolicies(policies);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -82,18 +86,28 @@ export default function DepartmentsPage() {
 
   const openAddDialog = () => {
     setEditingDept(null);
-    setFormData({ name: '', description: '', headOfDepartment: '' });
+    setFormData({
+      name: '',
+      description: '',
+      headOfDepartment: '',
+      defaultAttendancePolicyId: null,
+    });
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (dept: Department) => {
     setEditingDept(dept);
+    const policyId =
+      typeof dept.defaultAttendancePolicyId === 'object' && dept.defaultAttendancePolicyId
+        ? dept.defaultAttendancePolicyId._id
+        : (dept.defaultAttendancePolicyId as string) || null;
     setFormData({
       name: dept.name,
       description: dept.description || '',
       headOfDepartment: typeof dept.headOfDepartment === 'object' && dept.headOfDepartment
         ? dept.headOfDepartment._id
         : (dept.headOfDepartment as string) || '',
+      defaultAttendancePolicyId: policyId,
     });
     setIsDialogOpen(true);
   };
@@ -444,6 +458,31 @@ export default function DepartmentsPage() {
                     {allUsers.map((user) => (
                       <SelectItem key={user._id} value={user._id}>
                         {user.firstName} {user.lastName} ({user.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="defaultAttendancePolicy">Default Attendance Policy</Label>
+                <Select
+                  value={formData.defaultAttendancePolicyId || 'none'}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      defaultAttendancePolicyId: value === 'none' ? null : value,
+                    })
+                  }
+                >
+                  <SelectTrigger id="defaultAttendancePolicy">
+                    <SelectValue placeholder="Select attendance policy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {attendancePolicies.map((policy) => (
+                      <SelectItem key={policy._id} value={policy._id}>
+                        {policy.policyName}
                       </SelectItem>
                     ))}
                   </SelectContent>

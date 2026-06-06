@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, CheckCircle2, DollarSign, FileText } from 'lucide-react';
+import { Clock, CheckCircle2, IndianRupee, FileText } from 'lucide-react';
 
 /**
  * "How It Works" section inspired by Zoho/Keka flow demonstrations
@@ -29,7 +29,7 @@ export function HowItWorksSection() {
     },
     {
       number: 3,
-      icon: DollarSign,
+      icon: IndianRupee,
       title: 'Process Payroll',
       description: 'Calculate salaries with accurate attendance, leaves, and statutory components.',
       color: 'from-violet-500 to-purple-500',

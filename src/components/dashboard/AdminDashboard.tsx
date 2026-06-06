@@ -64,23 +64,27 @@ export function AdminDashboard() {
           value={isLoading ? '…' : stats?.totalUsers ?? 0}
           icon={Users}
           description="All roles"
+          color="blue"
         />
         <StatCard
           title="Departments"
           value={isLoading ? '…' : stats?.totalDepartments ?? 0}
           icon={Building2}
+          color="green"
         />
         <StatCard
           title="Present today"
           value={isLoading ? '…' : stats?.todayAttendance?.present ?? 0}
           icon={TrendingUp}
           description={`${attendancePercentage}% of tracked staff`}
+          color="green"
         />
         <StatCard
           title="Pending approvals"
           value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
           icon={Calendar}
           description="Leave requests"
+          color="orange"
         />
       </div>
 

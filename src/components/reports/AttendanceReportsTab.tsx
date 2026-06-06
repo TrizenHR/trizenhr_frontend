@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { attendanceApi, departmentApi } from '@/lib/api';
-import { Attendance, AttendanceStatus, Department } from '@/lib/types';
+import { attendanceApi, departmentApi, userApi } from '@/lib/api';
+import { Attendance, AttendanceStatus, Department, User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,6 +38,7 @@ export default function AttendanceReportsTab() {
   const { toast } = useToast();
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -51,6 +52,7 @@ export default function AttendanceReportsTab() {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<AttendanceStatus | 'all'>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [selectedUser, setSelectedUser] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Summary stats
@@ -63,15 +65,16 @@ export default function AttendanceReportsTab() {
     onLeave: 0,
   });
 
-  // Load departments on mount
+  // Load departments and users on mount
   useEffect(() => {
     loadDepartments();
+    loadUsers();
   }, []);
 
   // Load attendance when filters or pagination changes
   useEffect(() => {
     loadAttendance();
-  }, [pagination.page, startDate, endDate, selectedStatus, selectedDepartment]);
+  }, [pagination.page, startDate, endDate, selectedStatus, selectedDepartment, selectedUser]);
 
   const loadDepartments = async () => {
     try {
@@ -83,6 +86,15 @@ export default function AttendanceReportsTab() {
         description: 'Failed to load departments',
         variant: 'destructive',
       });
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const allUsers = await userApi.getAllUsers({ isActive: true });
+      setUsers(allUsers);
+    } catch (error: any) {
+      // Silently fail
     }
   };
 
@@ -98,6 +110,7 @@ export default function AttendanceReportsTab() {
       if (endDate) filters.endDate = endDate;
       if (selectedStatus !== 'all') filters.status = selectedStatus;
       if (selectedDepartment !== 'all') filters.department = selectedDepartment;
+      if (selectedUser !== 'all') filters.userId = selectedUser;
 
       const result = await attendanceApi.getAllAttendance(filters);
       setAttendanceRecords(result.records);
@@ -132,6 +145,7 @@ export default function AttendanceReportsTab() {
       if (endDate) filters.endDate = endDate;
       if (selectedStatus !== 'all') filters.status = selectedStatus;
       if (selectedDepartment !== 'all') filters.department = selectedDepartment;
+      if (selectedUser !== 'all') filters.userId = selectedUser;
       filters.limit = 10000; // Large limit to get all records
 
       const result = await attendanceApi.getAllAttendance(filters);
@@ -194,11 +208,12 @@ export default function AttendanceReportsTab() {
     setEndDate(null);
     setSelectedStatus('all');
     setSelectedDepartment('all');
+    setSelectedUser('all');
     setSearchQuery('');
     setPagination({ ...pagination, page: 1 });
   };
 
-  const hasActiveFilters = startDate || endDate || selectedStatus !== 'all' || selectedDepartment !== 'all';
+  const hasActiveFilters = startDate || endDate || selectedStatus !== 'all' || selectedDepartment !== 'all' || selectedUser !== 'all';
 
   // Filter records by search query (client-side)
   const filteredRecords = searchQuery
@@ -273,7 +288,7 @@ export default function AttendanceReportsTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {/* Date Range */}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Start Date</label>
@@ -354,6 +369,27 @@ export default function AttendanceReportsTab() {
                       {dept.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* User Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground">Employee</label>
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Employees</SelectItem>
+                  {users.map((user) => {
+                    const uid = user._id || user.id;
+                    return (
+                      <SelectItem key={uid} value={uid}>
+                        {user.firstName} {user.lastName}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

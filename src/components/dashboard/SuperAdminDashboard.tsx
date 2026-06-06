@@ -103,15 +103,16 @@ export function SuperAdminDashboard() {
           icon={Building2}
           description="All client orgs"
         />
-        <StatCard title="Active" value={stats.activeOrgs} icon={CheckCircle} description="Running" />
-        <StatCard title="Inactive" value={stats.inactiveOrgs} icon={XCircle} description="Paused" />
-        <StatCard title="Total users" value={stats.totalUsers} icon={Users} description="Platform-wide" />
+        <StatCard title="Active" value={stats.activeOrgs} icon={CheckCircle} description="Running" color="green" />
+        <StatCard title="Inactive" value={stats.inactiveOrgs} icon={XCircle} description="Paused" color="red" />
+        <StatCard title="Total users" value={stats.totalUsers} icon={Users} description="Platform-wide" color="blue" />
         <StatCard
           title="Premium tier"
           value={stats.premiumOrgs}
           icon={TrendingUp}
           description="Premium + Enterprise"
           className="sm:col-span-2 xl:col-span-1"
+          color="orange"
         />
       </div>
 

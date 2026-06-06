@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { authApi } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,13 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, KeyRound, Loader2, Shield } from 'lucide-react';
+import { Building2, KeyRound, Loader2, Shield, Camera, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isUploadingPic, setIsUploadingPic] = useState(false);
   const [passwords, setPasswords] = useState({
     oldPassword: '',
     newPassword: '',
@@ -25,7 +28,6 @@ export default function ProfilePage() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!passwords.oldPassword || !passwords.newPassword || !passwords.confirmPassword) {
       toast({
         title: 'Validation Error',
@@ -65,7 +67,6 @@ export default function ProfilePage() {
         description: 'Password changed successfully',
       });
 
-      // Reset form
       setPasswords({
         oldPassword: '',
         newPassword: '',
@@ -79,6 +80,68 @@ export default function ProfilePage() {
       });
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid File',
+        description: 'Please select an image file (JPG, PNG, GIF, WebP)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Profile picture must be smaller than 5MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingPic(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      if (user) {
+        const updatedUser = { ...user, profilePicture: base64 };
+        updateUser(updatedUser);
+        toast({
+          title: 'Profile Picture Updated',
+          description: 'Your profile picture has been updated successfully.',
+        });
+      }
+      setIsUploadingPic(false);
+    };
+    reader.onerror = () => {
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to read the image file. Please try again.',
+        variant: 'destructive',
+      });
+      setIsUploadingPic(false);
+    };
+    reader.readAsDataURL(file);
+    // Reset the input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleRemoveProfilePic = () => {
+    if (user) {
+      const updatedUser = { ...user, profilePicture: undefined };
+      updateUser(updatedUser);
+      toast({
+        title: 'Profile Picture Removed',
+        description: 'Your profile picture has been removed.',
+      });
     }
   };
 
@@ -128,18 +191,71 @@ export default function ProfilePage() {
               <CardDescription className="text-sm">Your primary account identity.</CardDescription>
             </CardHeader>
             <CardContent className="py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
-                  <span className="text-sm font-bold">
-                    {user.firstName?.[0]}
-                    {user.lastName?.[0]}
-                  </span>
+              <div className="flex items-center gap-4">
+                {/* Profile Picture with Upload */}
+                <div className="relative group">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                    {user.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg font-bold">
+                        {user.firstName?.[0]}
+                        {user.lastName?.[0]}
+                      </span>
+                    )}
+                  </div>
+                  {/* Camera overlay on hover */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingPic}
+                    className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+                    title="Change profile picture"
+                  >
+                    {isUploadingPic ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    ) : (
+                      <Camera className="h-5 w-5 text-white" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProfilePicChange}
+                  />
                 </div>
-                <div className="min-w-0">
+
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-base font-semibold text-foreground">
                     {user.firstName} {user.lastName}
                   </p>
                   <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingPic}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                    >
+                      <Upload className="h-3 w-3" />
+                      {user.profilePicture ? 'Change Photo' : 'Upload Photo'}
+                    </button>
+                    {user.profilePicture && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveProfilePic}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -159,7 +275,7 @@ export default function ProfilePage() {
                   </p>
                   {!user.createdAt ? (
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      This account doesn’t include a creation date.
+                      This account doesn't include a creation date.
                     </p>
                   ) : null}
                 </div>
@@ -234,7 +350,7 @@ export default function ProfilePage() {
                 <CardTitle className="text-base font-semibold tracking-tight">Security</CardTitle>
               </div>
               <CardDescription className="text-sm">
-                Change your password. You’ll be logged out on other sessions.
+                Change your password. You'll be logged out on other sessions.
               </CardDescription>
             </CardHeader>
             <CardContent className="py-4">

@@ -41,6 +41,7 @@ export function AttendanceRegularizationPanel() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [date, setDate] = useState('');
+  const [requestType, setRequestType] = useState('attendance_correction');
   const [requestedCheckIn, setRequestedCheckIn] = useState('09:00');
   const [requestedCheckOut, setRequestedCheckOut] = useState('18:00');
   const [requestedStatus, setRequestedStatus] = useState<AttendanceStatus>(
@@ -82,6 +83,7 @@ export function AttendanceRegularizationPanel() {
       setIsSubmitting(true);
       await attendanceApi.createRegularization({
         date,
+        requestType,
         requestedCheckIn,
         requestedCheckOut,
         requestedStatus,
@@ -91,6 +93,7 @@ export function AttendanceRegularizationPanel() {
       setOpen(false);
       setReason('');
       setDate('');
+      setRequestType('attendance_correction');
       await loadRequests();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: string } }; message?: string };
@@ -138,6 +141,23 @@ export function AttendanceRegularizationPanel() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
+                <Label>Request Type</Label>
+                <Select
+                  value={requestType}
+                  onValueChange={setRequestType}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="attendance_correction">Attendance Correction</SelectItem>
+                    <SelectItem value="missed_check_in">Missed Check-In</SelectItem>
+                    <SelectItem value="missed_check_out">Missed Check-Out</SelectItem>
+                    <SelectItem value="incorrect_timing">Incorrect Timing</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="reg-date">Date</Label>
                 <Input

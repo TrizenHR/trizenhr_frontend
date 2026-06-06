@@ -2,55 +2,65 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import {
   ApiResponse,
   LoginResponse,
-  User,
   CreateUserPayload,
   UpdateUserPayload,
   ChangePasswordPayload,
+  User,
   Attendance,
   AttendanceStatus,
-  AttendanceStats,
   AttendancePagination,
+  AttendanceStats,
   AttendanceRegularization,
-  Leave,
-  LeaveBalance,
+  AttendancePolicy,
+  AttendancePolicySummary,
   LeaveRequestPayload,
+  Leave,
   LeaveFilters,
   LeavePagination,
-  Holiday,
-  HolidayFormData,
-  HolidayType,
+  LeaveBalance,
   Department,
   DepartmentFormData,
   Organization,
   CreateOrganizationPayload,
   OrganizationStats,
+  Holiday,
+  HolidayFormData,
+  HolidayType,
+  PlatformNotificationPreferences,
+  NotificationListPayload,
   DashboardStats,
   SalaryStructure,
+  CreateSalaryStructurePayload,
+  UpdateSalaryStructurePayload,
   PayrollRun,
   PayrollRunStatus,
   PayrollRecord,
-  CreateSalaryStructurePayload,
-  UpdateSalaryStructurePayload,
   BillingOverview,
   BillingInvoice,
-  NotificationListPayload,
-  PlatformNotificationPreferences,
 } from './types';
-import { isPlatformHost } from './is-platform-host';
-
-// API base URL comes only from NEXT_PUBLIC_API_URL (see client/.env.example). No baked-in hostnames.
-
-export function normalizeApiUrl(value?: string): string {
-  const raw = (value || '').trim().replace(/^['"]|['"]$/g, '');
-  if (!raw) return '';
-  return raw.endsWith('/') ? raw.slice(0, -1) : raw;
-}
 
 function resolveApiBaseUrl(): string {
-  return normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
+  // In the browser we read the runtime env var injected by Next.js.
+  // Falls back to localhost for local development.
+  return (
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://localhost:5000/api'
+  );
 }
 
-/** Resolved at module load; must match axios `baseURL`. */
+/** Returns true when running on the platform's own domain (not a tenant sub-domain). */
+function isPlatformHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  // Treat localhost / 127.0.0.1 / the bare domain (no subdomain) as the platform host.
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || '';
+  if (!platformDomain) {
+    // Fallback: no subdomain means platform host
+    return !hostname.includes('.') || hostname === 'localhost';
+  }
+  return hostname === platformDomain;
+}
+
 export const API_BASE_URL = resolveApiBaseUrl();
 
 // Create axios instance
@@ -291,8 +301,18 @@ export const attendanceApi = {
    * Get today's attendance status
    */
   getTodayStatus: async (): Promise<Attendance | null> => {
-    const response = await api.get<ApiResponse<Attendance>>('/attendance/today');
-    return response.data.data || null;
+    const response = await api.get<ApiResponse<any>>('/attendance/today');
+    const payload = response.data.data;
+    if (!payload) return null;
+    if (payload.record !== undefined) {
+      return payload.record || null;
+    }
+    return payload as Attendance;
+  },
+
+  getMyPolicy: async (): Promise<AttendancePolicySummary> => {
+    const response = await api.get<ApiResponse<AttendancePolicySummary>>('/attendance/my-policy');
+    return response.data.data!;
   },
 
   /**
@@ -339,6 +359,7 @@ export const attendanceApi = {
     endDate?: Date;
     status?: AttendanceStatus;
     department?: string;
+    userId?: string;
     page?: number;
     limit?: number;
   }): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
@@ -387,6 +408,7 @@ export const attendanceApi = {
 
   createRegularization: async (data: {
     date: string;
+    requestType: string;
     requestedCheckIn?: string;
     requestedCheckOut?: string;
     requestedStatus: AttendanceStatus;
@@ -445,6 +467,54 @@ export const attendanceApi = {
     const response = await api.post<ApiResponse<{ marked: number; skipped: number }>>(
       '/attendance/mark-absent',
       { date }
+    );
+    return response.data.data!;
+  },
+};
+
+// Attendance Policies API
+export const attendancePolicyApi = {
+  getAll: async (status?: string): Promise<AttendancePolicy[]> => {
+    const response = await api.get<ApiResponse<AttendancePolicy[]>>('/attendance-policies', {
+      params: status ? { status } : undefined,
+    });
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<AttendancePolicy> => {
+    const response = await api.get<ApiResponse<AttendancePolicy>>(
+      `/attendance-policies/${id}`
+    );
+    return response.data.data!;
+  },
+
+  create: async (data: Partial<AttendancePolicy>): Promise<AttendancePolicy> => {
+    const response = await api.post<ApiResponse<AttendancePolicy>>(
+      '/attendance-policies',
+      data
+    );
+    return response.data.data!;
+  },
+
+  update: async (id: string, data: Partial<AttendancePolicy>): Promise<AttendancePolicy> => {
+    const response = await api.put<ApiResponse<AttendancePolicy>>(
+      `/attendance-policies/${id}`,
+      data
+    );
+    return response.data.data!;
+  },
+
+  updateStatus: async (id: string, status: string): Promise<AttendancePolicy> => {
+    const response = await api.patch<ApiResponse<AttendancePolicy>>(
+      `/attendance-policies/${id}/status`,
+      { status }
+    );
+    return response.data.data!;
+  },
+
+  setDefault: async (id: string): Promise<AttendancePolicy> => {
+    const response = await api.patch<ApiResponse<AttendancePolicy>>(
+      `/attendance-policies/${id}/default`
     );
     return response.data.data!;
   },

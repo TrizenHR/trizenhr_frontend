@@ -2,7 +2,7 @@
 
 import { startTransition, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +80,9 @@ export function Header({ title, onMenuClick }: HeaderProps) {
               className="flex cursor-pointer items-center gap-2 rounded-xl px-2 hover:bg-muted/80"
             >
               <Avatar className="h-9 w-9 ring-1 ring-border/60">
+                {user?.profilePicture && (
+                  <AvatarImage src={user.profilePicture} alt={user.fullName} className="object-cover" />
+                )}
                 <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
                   {initials}
                 </AvatarFallback>

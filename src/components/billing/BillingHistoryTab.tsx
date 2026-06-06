@@ -45,7 +45,7 @@ export function BillingHistoryTab({ invoices, loading }: BillingHistoryTabProps)
                   </td>
                   <td className="px-2 py-2">{inv.plan.toUpperCase()}</td>
                   <td className="px-2 py-2 text-right">
-                    {inv.amount.toLocaleString('en-IN')}
+                    ₹{inv.amount.toLocaleString('en-IN')}
                   </td>
                   <td className="px-2 py-2">
                     <span

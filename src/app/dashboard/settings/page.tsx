@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Settings, Save, Loader2, DollarSign } from 'lucide-react';
+import { Building2, Settings, Save, Loader2, IndianRupee } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -291,7 +291,7 @@ export default function SettingsPage() {
                 <CardHeader className="flex flex-col gap-3 border-b border-border/60 pb-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <DollarSign className="h-4 w-4 text-primary" />
+                      <IndianRupee className="h-4 w-4 text-primary" />
                       Billing &amp; subscription
                     </CardTitle>
                     <p className="mt-1 text-xs text-muted-foreground">

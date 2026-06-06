@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, DollarSign, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, IndianRupee, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { payrollApi } from '@/lib/api';
 import { PayrollRecord, Allowance, Deduction } from '@/lib/types';
@@ -96,7 +96,7 @@ export default function MySalaryPage() {
             </div>
           ) : payslips.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
-              <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+              <IndianRupee className="mx-auto h-12 w-12 text-gray-400" />
               <p className="mt-2">No payslips found for {selectedYear}</p>
             </div>
           ) : (

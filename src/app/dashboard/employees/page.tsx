@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
+import { getRoleDisplayName } from '@/lib/permissions';
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -357,7 +358,7 @@ export default function EmployeesPage() {
                         </TableCell>
                         <TableCell>
                           <Badge className={getRoleBadgeColor(employee.role)} variant="outline">
-                            {employee.role}
+                            {getRoleDisplayName(employee.role) || employee.role}
                           </Badge>
                         </TableCell>
                         <TableCell>{employee.department || '-'}</TableCell>
@@ -436,7 +437,7 @@ export default function EmployeesPage() {
                       <div className="flex items-center gap-2 text-sm">
                         <Briefcase className="h-4 w-4 text-muted-foreground" />
                         <Badge className={getRoleBadgeColor(employee.role)} variant="outline">
-                          {employee.role}
+                          {getRoleDisplayName(employee.role) || employee.role}
                         </Badge>
                       </div>
                       {employee.department && (

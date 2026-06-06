@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Loader2, DollarSign, Play, Eye } from 'lucide-react';
+import { Plus, Loader2, IndianRupee, Play, Eye } from 'lucide-react';
 import { payrollApi } from '@/lib/api';
 import { PayrollRun, PayrollRunStatus, PayrollRecord } from '@/lib/types';
 import { canProcessPayroll } from '@/lib/permissions';
@@ -154,7 +154,7 @@ export default function PayrollPage() {
             </div>
           ) : runs.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
-              <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+              <IndianRupee className="mx-auto h-12 w-12 text-gray-400" />
               <p className="mt-2">No payroll runs found</p>
             </div>
           ) : (

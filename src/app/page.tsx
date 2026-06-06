@@ -17,7 +17,7 @@ import {
   Download,
   TrendingUp,
   CheckCircle2,
-  DollarSign,
+  IndianRupee,
 } from 'lucide-react';
 import { DemoRequestModal } from '@/components/landing/DemoRequestModal';
 import { EnhancedHero } from '@/components/landing/EnhancedHero';
@@ -208,7 +208,7 @@ function FeaturesSection() {
       iconBg: 'bg-blue-500',
     },
     {
-      icon: DollarSign,
+      icon: IndianRupee,
       title: 'Automated Payroll',
       description: 'Salary processing, statutory components, and payslips in a few clicks.',
       gradient: 'from-emerald-500/10 to-teal-500/5',

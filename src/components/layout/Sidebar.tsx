@@ -12,11 +12,23 @@ import {
   Settings,
   HelpCircle,
   Calendar,
+  CalendarDays,
+  CalendarRange,
+  CalendarCheck,
   ClipboardList,
   Building2,
   UserCog,
-  DollarSign,
+  IndianRupee,
   Wallet,
+  AlertTriangle,
+  FilePen,
+  Timer,
+  BarChart3,
+  Shield,
+  LayoutGrid,
+  Settings2,
+  CreditCard,
+  FileCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -38,11 +50,14 @@ interface NavSection {
 }
 
 const navigationSections: NavSection[] = [
+  // ── Dashboard (all roles) ──────────────────────────────────────
   {
     items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
   },
+
+  // ── EMPLOYEE / SUPERVISOR : Attendance ────────────────────────
   {
-    title: 'Personal',
+    title: 'Attendance',
     items: [
       {
         label: 'My Attendance',
@@ -51,17 +66,43 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
       {
+        label: 'Calendar',
+        href: '/dashboard/my-calendar',
+        icon: Calendar,
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+      },
+      {
+        label: 'Regularizations',
+        href: '/dashboard/my-regularizations',
+        icon: ClipboardList,
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+      },
+    ],
+  },
+
+  // ── EMPLOYEE / SUPERVISOR : Leave ─────────────────────────────
+  {
+    title: 'Leave',
+    items: [
+      {
         label: 'My Leave',
         href: '/dashboard/my-leave',
         icon: FileText,
         roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
       {
-        label: 'My Calendar',
-        href: '/dashboard/my-calendar',
-        icon: Calendar,
+        label: 'Leave Calendar',
+        href: '/dashboard/leave-calendar',
+        icon: CalendarDays,
         roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
       },
+    ],
+  },
+
+  // ── EMPLOYEE / SUPERVISOR : Payroll ───────────────────────────
+  {
+    title: 'Payroll',
+    items: [
       {
         label: 'My Salary',
         href: '/dashboard/my-salary',
@@ -70,8 +111,10 @@ const navigationSections: NavSection[] = [
       },
     ],
   },
+
+  // ── SUPERVISOR / HR : Team ────────────────────────────────────
   {
-    title: 'Team Management',
+    title: 'Team',
     items: [
       {
         label: 'Team Attendance',
@@ -80,33 +123,165 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
       {
-        label: 'Team Leaves',
-        href: '/dashboard/team-leaves',
-        icon: Calendar,
-        roles: [UserRole.HR, UserRole.SUPERVISOR],
+        label: 'Team Calendar',
+        href: '/dashboard/team-calendar',
+        icon: CalendarRange,
+        roles: [UserRole.SUPERVISOR],
       },
       {
-        label: 'Leave Approvals',
+        label: 'Team Leaves',
+        href: '/dashboard/team-leaves',
+        icon: CalendarDays,
+        roles: [UserRole.HR, UserRole.SUPERVISOR],
+      },
+    ],
+  },
+
+  // ── SUPERVISOR / HR : Approvals ───────────────────────────────
+  {
+    title: 'Approvals',
+    items: [
+      {
+        label: 'Leave Requests',
         href: '/dashboard/leave-approvals',
         icon: ClipboardList,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
       {
-        label: 'Attendance corrections',
+        label: 'Regularizations',
         href: '/dashboard/attendance-regularizations',
-        icon: FileText,
+        icon: FilePen,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
       },
+    ],
+  },
+
+  // ── HR : Operations ───────────────────────────────────────────
+  {
+    title: 'HR Operations',
+    items: [
       {
         label: 'Employees',
         href: '/dashboard/employees',
         icon: Users,
         roles: [UserRole.HR],
       },
+      {
+        label: 'Att. Exceptions',
+        href: '/dashboard/attendance-exceptions',
+        icon: AlertTriangle,
+        roles: [UserRole.HR],
+      },
+      {
+        label: 'Holidays',
+        href: '/dashboard/manage-holidays',
+        icon: CalendarCheck,
+        roles: [UserRole.HR],
+      },
+      {
+        label: 'Leave Management',
+        href: '/dashboard/leave-management',
+        icon: FileCheck,
+        roles: [UserRole.HR],
+      },
+      {
+        label: 'Payroll',
+        href: '/dashboard/payroll',
+        icon: Wallet,
+        roles: [UserRole.HR],
+      },
+      {
+        label: 'Reports',
+        href: '/dashboard/reports',
+        icon: BarChart3,
+        roles: [UserRole.HR],
+      },
     ],
   },
+
+  // ── ADMIN : Policies ──────────────────────────────────────────
+  {
+    title: 'Policies',
+    items: [
+      {
+        label: 'Attendance Policy',
+        href: '/dashboard/attendance-policies',
+        icon: Shield,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Leave Policy',
+        href: '/dashboard/leave-policies',
+        icon: FileText,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Payroll Policy',
+        href: '/dashboard/payroll-policies',
+        icon: IndianRupee,
+        roles: [UserRole.ADMIN],
+      },
+    ],
+  },
+
+  // ── ADMIN : Organization ──────────────────────────────────────
   {
     title: 'Organization',
+    items: [
+      {
+        label: 'Departments',
+        href: '/dashboard/departments',
+        icon: Building2,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Salary Structures',
+        href: '/dashboard/salary-structures',
+        icon: IndianRupee,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Holidays',
+        href: '/dashboard/manage-holidays',
+        icon: Calendar,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Users',
+        href: '/dashboard/users',
+        icon: UserCog,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Payroll',
+        href: '/dashboard/payroll',
+        icon: Wallet,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Reports',
+        href: '/dashboard/reports',
+        icon: BarChart3,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Org Settings',
+        href: '/dashboard/org-settings',
+        icon: Settings2,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Modules',
+        href: '/dashboard/modules',
+        icon: LayoutGrid,
+        roles: [UserRole.ADMIN],
+      },
+    ],
+  },
+
+  // ── SUPER ADMIN : Platform ────────────────────────────────────
+  {
+    title: 'Platform',
     items: [
       {
         label: 'Organizations',
@@ -115,45 +290,21 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.SUPER_ADMIN],
       },
       {
-        label: 'Departments',
-        href: '/dashboard/departments',
-        icon: Building2,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Manage Holidays',
-        href: '/dashboard/manage-holidays',
-        icon: Calendar,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Reports',
-        href: '/dashboard/reports',
-        icon: FileText,
-        roles: [UserRole.ADMIN, UserRole.HR],
-      },
-      {
-        label: 'Salary Structures',
-        href: '/dashboard/salary-structures',
-        icon: DollarSign,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Manage Users',
-        href: '/dashboard/users',
-        icon: UserCog,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Payroll Processing',
-        href: '/dashboard/payroll',
-        icon: Wallet,
-        roles: [UserRole.ADMIN],
-      },
-      {
         label: 'System Users',
         href: '/dashboard/system-users',
         icon: UserCog,
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        label: 'Subscriptions',
+        href: '/dashboard/subscriptions',
+        icon: CreditCard,
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        label: 'Analytics',
+        href: '/dashboard/analytics',
+        icon: BarChart3,
         roles: [UserRole.SUPER_ADMIN],
       },
     ],
@@ -193,14 +344,6 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
 
   const visibleSections = useMemo(() => {
     return navigationSections
-      .filter((section) => {
-        if (user?.role === UserRole.SUPER_ADMIN) {
-          if (section.title === 'Personal' || section.title === 'Team Management') {
-            return false;
-          }
-        }
-        return true;
-      })
       .map((section) => ({
         ...section,
         items: filterItemsByRole(section.items, user),
@@ -281,9 +424,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
     </header>
   );
 
-  const mobileShellClass = cn(
-    'flex h-full min-h-0 w-full flex-col bg-background pt-14'
-  );
+  const mobileShellClass = cn('flex h-full min-h-0 w-full flex-col bg-background pt-14');
 
   const column = (
     <>

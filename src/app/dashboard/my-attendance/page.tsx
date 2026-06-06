@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { attendanceApi } from '@/lib/api';
-import { Attendance, AttendanceStatus, AttendanceStats } from '@/lib/types';
+import { Attendance, AttendancePolicySummary, AttendanceStatus, AttendanceStats, PolicyDayType } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,10 +13,55 @@ import {
   AttendanceRegularizationPanel,
 } from '@/components/attendance';
 import { useCamera } from '@/hooks/useCamera';
-import { Camera, X, Check, Clock } from 'lucide-react';
+import { Camera, X, Check, Clock, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { formatWorkingHours } from '@/lib/format';
+
+/** Returns a live "Xh Ym" string counting up from checkInTime, or null when not active. */
+function useLiveElapsed(checkInTime: string | null | undefined, active: boolean): string | null {
+  const [display, setDisplay] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!active || !checkInTime) {
+      setDisplay(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    const update = () => {
+      const diffMs = Date.now() - new Date(checkInTime).getTime();
+      const totalMins = Math.floor(diffMs / 60000);
+      const hrs = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      setDisplay(hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`);
+    };
+
+    update();
+    timerRef.current = setInterval(update, 60000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [active, checkInTime]);
+
+  return display;
+}
+
+function formatTimeLabel(time?: string): string {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return format(date, 'hh:mm a');
+}
+
+function formatExpectedHours(hours?: number): string {
+  if (hours == null || Number.isNaN(hours)) return '0h';
+  const rounded = Math.round(hours * 10) / 10;
+  return `${rounded}h`;
+}
 
 export default function MyAttendancePage() {
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
@@ -24,6 +69,9 @@ export default function MyAttendancePage() {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [policySummary, setPolicySummary] = useState<AttendancePolicySummary | null>(null);
+  const [isLoadingPolicy, setIsLoadingPolicy] = useState(false);
 
   // History & Stats state
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
@@ -64,6 +112,7 @@ export default function MyAttendancePage() {
   // Fetch today's status on mount
   useEffect(() => {
     loadTodayStatus();
+    loadPolicySummary();
   }, []);
 
   // Load attendance history when filters or pagination changes
@@ -122,6 +171,18 @@ export default function MyAttendancePage() {
       console.error('Failed to load today status:', error);
     } finally {
       setIsLoadingStatus(false);
+    }
+  };
+
+  const loadPolicySummary = async () => {
+    try {
+      setIsLoadingPolicy(true);
+      const summary = await attendanceApi.getMyPolicy();
+      setPolicySummary(summary);
+    } catch (error: any) {
+      console.error('Failed to load policy summary:', error);
+    } finally {
+      setIsLoadingPolicy(false);
     }
   };
 
@@ -252,6 +313,7 @@ export default function MyAttendancePage() {
       setIsCheckingOut(true);
       const attendance = await attendanceApi.checkOut();
       setTodayAttendance(attendance);
+      setShowCheckoutModal(false);
       await Promise.all([loadMonthlyStats(), loadAttendanceHistory()]);
       
       toast({
@@ -286,6 +348,12 @@ export default function MyAttendancePage() {
 
   const hasCheckedIn = todayAttendance?.checkIn != null;
   const hasCheckedOut = todayAttendance?.checkOut != null;
+
+  // Live elapsed timer — only ticks while checked in and NOT yet checked out
+  const liveElapsed = useLiveElapsed(
+    todayAttendance?.checkIn,
+    hasCheckedIn && !hasCheckedOut
+  );
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -328,10 +396,40 @@ export default function MyAttendancePage() {
 
                 {todayAttendance && (
                   <Badge variant={todayAttendance.status === 'present' ? 'default' : 'secondary'}>
-                    {todayAttendance.status.replace('_', ' ').toUpperCase()}
+                    {todayAttendance.status?.replace('_', ' ').toUpperCase() ?? ''}
                   </Badge>
                 )}
               </div>
+
+              {/* Policy Summary */}
+              {!isLoadingPolicy && policySummary && (
+                <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="font-semibold">
+                      {policySummary.dayType === PolicyDayType.WEEKLY_OFF
+                        ? 'Weekly Off'
+                        : policySummary.dayType === PolicyDayType.HALF_DAY
+                        ? 'Half Day'
+                        : 'Full Day'}
+                    </div>
+                    {policySummary.policyName && (
+                      <Badge variant="outline">{policySummary.policyName}</Badge>
+                    )}
+                  </div>
+                  {policySummary.dayType !== PolicyDayType.WEEKLY_OFF && (
+                    <div className="mt-2 flex flex-wrap gap-3 text-muted-foreground">
+                      <span>
+                        {formatTimeLabel(policySummary.startTime)} -{' '}
+                        {formatTimeLabel(policySummary.endTime)}
+                      </span>
+                      <span>Expected {formatExpectedHours(policySummary.expectedHours)}</span>
+                      {policySummary.graceMinutes != null && (
+                        <span>Grace {policySummary.graceMinutes}m</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Time Information */}
               {todayAttendance && (
@@ -361,9 +459,11 @@ export default function MyAttendancePage() {
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Working Hours</p>
                     <p className="text-sm font-medium">
-                      {todayAttendance.workingHours != null
-                        ? formatWorkingHours(todayAttendance.workingHours || 0)
-                        : 'In progress...'}
+                      {hasCheckedOut && todayAttendance.workingHours != null
+                        ? formatWorkingHours(todayAttendance.workingHours)
+                        : hasCheckedIn
+                        ? (liveElapsed ?? '0m')
+                        : 'Not started'}
                     </p>
                   </div>
                 </div>
@@ -377,7 +477,7 @@ export default function MyAttendancePage() {
                     Check In
                   </Button>
                 ) : !hasCheckedOut ? (
-                  <Button onClick={handleCheckOut} disabled={isCheckingOut} className="flex-1">
+                  <Button onClick={() => setShowCheckoutModal(true)} disabled={isCheckingOut} className="flex-1">
                     <Check className="mr-2 h-4 w-4" />
                     Check Out
                   </Button>
@@ -494,6 +594,101 @@ export default function MyAttendancePage() {
           />
         </CardContent>
       </Card>
+
+      {/* Checkout Confirmation Modal */}
+      {showCheckoutModal && (() => {
+        const checkInTime = todayAttendance?.checkIn
+          ? format(new Date(todayAttendance.checkIn), 'hh:mm a')
+          : null;
+        const currentTime = format(new Date(), 'hh:mm a');
+        const totalMinutes = todayAttendance?.checkIn
+          ? Math.floor((Date.now() - new Date(todayAttendance.checkIn).getTime()) / 60000)
+          : 0;
+        const totalHours = Math.floor(totalMinutes / 60);
+        const remainingMins = totalMinutes % 60;
+        const totalHoursDisplay =
+          totalHours > 0 ? `${totalHours}h ${remainingMins}m` : `${remainingMins}m`;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-card">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-border/60 px-6 py-4">
+                <h2 className="text-lg font-bold text-foreground">Confirm Check Out</h2>
+                <button
+                  onClick={() => setShowCheckoutModal(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-colors hover:bg-muted"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Time Summary */}
+              <div className="grid grid-cols-3 gap-3 px-6 pt-5">
+                <div className="rounded-xl bg-muted/40 p-3 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Checked In
+                  </p>
+                  <p className="mt-1.5 text-base font-bold text-foreground">{checkInTime || '—'}</p>
+                </div>
+                <div className="rounded-xl bg-muted/40 p-3 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Check Out
+                  </p>
+                  <p className="mt-1.5 text-base font-bold text-primary">{currentTime}</p>
+                </div>
+                <div className="rounded-xl bg-muted/40 p-3 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Total Hours
+                  </p>
+                  <p className="mt-1.5 text-base font-bold text-green-600">{totalHoursDisplay}</p>
+                </div>
+              </div>
+
+              {/* Warning */}
+              <div className="mx-6 mt-4 flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <p className="text-sm text-amber-700">
+                  Once you check out, you cannot check in again today.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="grid grid-cols-2 gap-3 px-6 py-5">
+                <button
+                  onClick={() => setShowCheckoutModal(false)}
+                  className="rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
+                  disabled={isCheckingOut}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCheckOut}
+                  disabled={isCheckingOut}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {isCheckingOut ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Processing…
+                    </span>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      Check Out
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

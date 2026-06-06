@@ -33,7 +33,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -268,47 +267,54 @@ export default function MyLeavePage() {
             <p className="text-muted-foreground">Loading...</p>
           ) : balance ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Sick Leave */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Sick Leave</span>
-                  <span className="text-muted-foreground">
-                    {balance.sickLeave.remaining} / {balance.sickLeave.total}
-                  </span>
-                </div>
-                <Progress value={(balance.sickLeave.remaining / balance.sickLeave.total) * 100} />
-                <p className="text-xs text-muted-foreground">
-                  {balance.sickLeave.used} days used
-                </p>
-              </div>
+              {[
+                { label: 'Sick Leave', data: balance.sickLeave },
+                { label: 'Casual Leave', data: balance.casualLeave },
+                { label: 'Vacation Leave', data: balance.vacationLeave },
+              ].map(({ label, data }) => {
+                const pct = data.total > 0 ? (data.remaining / data.total) * 100 : 0;
+                // Color logic
+                const isExhausted = data.remaining === 0;
+                const isUrgent = !isExhausted && pct < 20;
+                const isWarning = !isExhausted && !isUrgent && pct < 50;
+                // Blue: >=50%, Amber: <50%, Red: <20%, Grey: 0
 
-              {/* Casual Leave */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Casual Leave</span>
-                  <span className="text-muted-foreground">
-                    {balance.casualLeave.remaining} / {balance.casualLeave.total}
-                  </span>
-                </div>
-                <Progress value={(balance.casualLeave.remaining / balance.casualLeave.total) * 100} />
-                <p className="text-xs text-muted-foreground">
-                  {balance.casualLeave.used} days used
-                </p>
-              </div>
+                const numberColor = isExhausted
+                  ? 'text-gray-400'
+                  : isUrgent
+                    ? 'text-red-500'
+                    : isWarning
+                      ? 'text-amber-500'
+                      : 'text-primary';
 
-              {/* Vacation Leave */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Vacation Leave</span>
-                  <span className="text-muted-foreground">
-                    {balance.vacationLeave.remaining} / {balance.vacationLeave.total}
-                  </span>
-                </div>
-                <Progress value={(balance.vacationLeave.remaining / balance.vacationLeave.total) * 100} />
-                <p className="text-xs text-muted-foreground">
-                  {balance.vacationLeave.used} days used
-                </p>
-              </div>
+                const barColor = isExhausted
+                  ? 'bg-gray-300'
+                  : isUrgent
+                    ? 'bg-red-500'
+                    : isWarning
+                      ? 'bg-amber-500'
+                      : 'bg-primary';
+
+                const barBg = isExhausted ? 'bg-gray-100' : 'bg-muted/50';
+
+                return (
+                  <div key={label} className="space-y-2">
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className={`text-2xl font-bold ${numberColor}`}>{data.remaining}</span>
+                      <span className="text-xs text-muted-foreground">/ {data.total} days left</span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className={`h-1.5 w-full rounded-full ${barBg}`}>
+                      <div
+                        className={`h-1.5 rounded-full transition-all ${barColor}`}
+                        style={{ width: `${Math.max(pct, 0)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{data.used} used</p>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-muted-foreground">No balance data available</p>

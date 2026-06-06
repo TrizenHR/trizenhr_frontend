@@ -63,18 +63,21 @@ export function HRDashboard() {
           title="Total employees"
           value={isLoading ? '…' : stats?.totalUsers ?? 0}
           icon={Users}
+          color="blue"
         />
         <StatCard
           title="Present today"
           value={isLoading ? '…' : stats?.todayAttendance?.present ?? 0}
           icon={UserPlus}
           description={`${attendancePercentage}% attendance`}
+          color="green"
         />
         <StatCard
           title="Pending leaves"
           value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
           icon={Calendar}
           description="Awaiting approval"
+          color="orange"
         />
         <StatCard title="Reports" value="View" icon={FileText} description="Analytics & exports" />
       </div>

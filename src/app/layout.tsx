@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/features/auth-context';
 import { ToastProvider } from '@/components/providers/toast-provider';
 
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-});
+const inter = {
+  variable: 'font-sans',
+};
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trizenhr.com';
 

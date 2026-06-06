@@ -54,7 +54,7 @@ export default function TeamAttendancePage() {
   });
 
   const { toast } = useToast();
-  const canMarkAutoAbsent = hasAnyRole(user?.role, [
+  const canMarkAutoAbsent = hasAnyRole((user?.role ?? '') as UserRole, [
     UserRole.HR,
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
@@ -97,9 +97,10 @@ export default function TeamAttendancePage() {
       }
 
       const isSupervisor = user?.role === UserRole.SUPERVISOR;
-      const users = isSupervisor
-        ? await userApi.getTeamMembers(currentUserId)
-        : await userApi.getAllUsers({ isActive: true });
+      // For all roles (including SUPERVISOR/Manager), use getAllUsers which
+      // already filters by role on the backend (SUPERVISOR sees only employees
+      // & other supervisors; HR/Admin see everyone).
+      const users = await userApi.getAllUsers({ isActive: true });
 
       // Get attendance for selected date
       const startDate = startOfDay(new Date(selectedDate));
