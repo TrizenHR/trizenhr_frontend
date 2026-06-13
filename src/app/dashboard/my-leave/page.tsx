@@ -1,13 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { leaveApi } from '@/lib/api';
-import { Leave, LeaveBalance, LeaveType, LeaveStatus } from '@/lib/types';
+import { leaveApi, leaveTypeApi } from '@/lib/api';
+import { Leave, LeaveBalance, LeaveTypeRecord } from '@/lib/types';
+import {
+  getLeaveStatusLabel,
+  getLeaveStatusVariant,
+  isLeaveAwaitingApproval,
+  isLeaveTypeRecord,
+  resolveLeaveTypeName,
+} from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -39,39 +47,48 @@ import { format } from 'date-fns';
 
 export default function MyLeavePage() {
   const [balance, setBalance] = useState<LeaveBalance | null>(null);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveTypeRecord[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isLoadingLeaves, setIsLoadingLeaves] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
-  
-  // Form state
+
   const [formData, setFormData] = useState({
-    leaveType: '' as LeaveType,
+    leaveTypeId: '',
     startDate: '',
     endDate: '',
     reason: '',
+    isHalfDay: false,
+    otherLeaveTypeName: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const { toast } = useToast();
 
+  const selectedType = leaveTypes.find((t) => t._id === formData.leaveTypeId);
+
   useEffect(() => {
-    loadBalance();
-    loadLeaves();
+    void loadBalance();
+    void loadLeaves();
+    void loadLeaveTypes();
   }, []);
+
+  const loadLeaveTypes = async () => {
+    try {
+      const data = await leaveTypeApi.getAll(true);
+      setLeaveTypes(data);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load leave types', variant: 'destructive' });
+    }
+  };
 
   const loadBalance = async () => {
     try {
       setIsLoadingBalance(true);
       const data = await leaveApi.getMyBalance();
       setBalance(data);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load leave balance',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load leave balance', variant: 'destructive' });
     } finally {
       setIsLoadingBalance(false);
     }
@@ -83,12 +100,8 @@ export default function MyLeavePage() {
       const response = await leaveApi.getMyLeaves({ page: pagination.page, limit: pagination.limit });
       setLeaves(response.records);
       setPagination(response.pagination);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load leave history',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load leave history', variant: 'destructive' });
     } finally {
       setIsLoadingLeaves(false);
     }
@@ -97,32 +110,44 @@ export default function MyLeavePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.leaveType || !formData.startDate || !formData.endDate || !formData.reason) {
-      toast({
-        title: 'Validation Error',
-        description: 'All fields are required',
-        variant: 'destructive',
-      });
+    if (!formData.leaveTypeId || !formData.startDate || !formData.endDate || !formData.reason) {
+      toast({ title: 'Validation Error', description: 'All fields are required', variant: 'destructive' });
+      return;
+    }
+
+    if (selectedType?.isOther && !formData.otherLeaveTypeName.trim()) {
+      toast({ title: 'Validation Error', description: 'Please specify the leave type', variant: 'destructive' });
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await leaveApi.requestLeave(formData);
-      
-      toast({
-        title: 'Success',
-        description: 'Leave request submitted successfully',
+      await leaveApi.requestLeave({
+        leaveTypeId: formData.leaveTypeId,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        reason: formData.reason,
+        isHalfDay: formData.isHalfDay,
+        otherLeaveTypeName: selectedType?.isOther ? formData.otherLeaveTypeName : undefined,
       });
 
+      toast({ title: 'Success', description: 'Leave request submitted successfully' });
       setIsDialogOpen(false);
-      setFormData({ leaveType: '' as LeaveType, startDate: '', endDate: '', reason: '' });
-      loadBalance();
-      loadLeaves();
-    } catch (error: any) {
+      setFormData({
+        leaveTypeId: '',
+        startDate: '',
+        endDate: '',
+        reason: '',
+        isHalfDay: false,
+        otherLeaveTypeName: '',
+      });
+      await loadBalance();
+      await loadLeaves();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to request leave',
+        description: err.response?.data?.error || 'Failed to request leave',
         variant: 'destructive',
       });
     } finally {
@@ -133,41 +158,17 @@ export default function MyLeavePage() {
   const handleCancel = async (leaveId: string) => {
     try {
       await leaveApi.cancelLeave(leaveId);
-      toast({
-        title: 'Success',
-        description: 'Leave request cancelled',
-      });
-      loadBalance();
-      loadLeaves();
-    } catch (error: any) {
+      toast({ title: 'Success', description: 'Leave request cancelled' });
+      await loadBalance();
+      await loadLeaves();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to cancel leave',
+        description: err.response?.data?.error || 'Failed to cancel leave',
         variant: 'destructive',
       });
     }
-  };
-
-  const getStatusBadge = (status: LeaveStatus) => {
-    const variants: Record<LeaveStatus, { variant: any; label: string }> = {
-      [LeaveStatus.PENDING]: { variant: 'secondary', label: 'Pending' },
-      [LeaveStatus.APPROVED]: { variant: 'default', label: 'Approved' },
-      [LeaveStatus.REJECTED]: { variant: 'destructive', label: 'Rejected' },
-      [LeaveStatus.CANCELLED]: { variant: 'outline', label: 'Cancelled' },
-    };
-    
-    const config = variants[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  const getLeaveTypeLabel = (type: LeaveType) => {
-    const labels: Record<LeaveType, string> = {
-      [LeaveType.SICK]: 'Sick Leave',
-      [LeaveType.CASUAL]: 'Casual Leave',
-      [LeaveType.VACATION]: 'Vacation Leave',
-      [LeaveType.UNPAID]: 'Unpaid Leave',
-    };
-    return labels[type];
   };
 
   return (
@@ -179,7 +180,7 @@ export default function MyLeavePage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="cursor-pointer">
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Request Leave
             </Button>
@@ -189,24 +190,48 @@ export default function MyLeavePage() {
               <DialogTitle>Request Leave</DialogTitle>
               <DialogDescription>Fill in the details to submit your leave request</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="leaveType">Leave Type</Label>
+                <Label>Leave Type</Label>
                 <Select
-                  value={formData.leaveType}
-                  onValueChange={(value) => setFormData({ ...formData, leaveType: value as LeaveType })}
+                  value={formData.leaveTypeId}
+                  onValueChange={(value) => setFormData({ ...formData, leaveTypeId: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select leave type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={LeaveType.SICK}>Sick Leave</SelectItem>
-                    <SelectItem value={LeaveType.CASUAL}>Casual Leave</SelectItem>
-                    <SelectItem value={LeaveType.VACATION}>Vacation Leave</SelectItem>
-                    <SelectItem value={LeaveType.UNPAID}>Unpaid Leave</SelectItem>
+                    {leaveTypes.map((type) => (
+                      <SelectItem key={type._id} value={type._id}>
+                        {type.name} ({type.code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              {selectedType?.isOther && (
+                <div className="space-y-2">
+                  <Label>Specify leave type</Label>
+                  <Input
+                    value={formData.otherLeaveTypeName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, otherLeaveTypeName: e.target.value })
+                    }
+                    placeholder="e.g. Study leave"
+                  />
+                </div>
+              )}
+
+              {selectedType?.allowHalfDay && (
+                <div className="flex items-center justify-between">
+                  <Label>Half day</Label>
+                  <Switch
+                    checked={formData.isHalfDay}
+                    onCheckedChange={(v) => setFormData({ ...formData, isHalfDay: v })}
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -236,7 +261,7 @@ export default function MyLeavePage() {
                 <Textarea
                   id="reason"
                   value={formData.reason}
-                  onChange={(e) =>setFormData({ ...formData, reason: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                   placeholder="Please provide a reason for your leave request"
                   rows={3}
                 />
@@ -256,7 +281,6 @@ export default function MyLeavePage() {
         </Dialog>
       </div>
 
-      {/* Leave Balance Card */}
       <Card>
         <CardHeader>
           <CardTitle>Leave Balance ({balance?.year || new Date().getFullYear()})</CardTitle>
@@ -265,20 +289,17 @@ export default function MyLeavePage() {
         <CardContent>
           {isLoadingBalance ? (
             <p className="text-muted-foreground">Loading...</p>
-          ) : balance ? (
+          ) : balance?.balances?.length ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { label: 'Sick Leave', data: balance.sickLeave },
-                { label: 'Casual Leave', data: balance.casualLeave },
-                { label: 'Vacation Leave', data: balance.vacationLeave },
-              ].map(({ label, data }) => {
-                const pct = data.total > 0 ? (data.remaining / data.total) * 100 : 0;
-                // Color logic
-                const isExhausted = data.remaining === 0;
+              {balance.balances.map((entry) => {
+                const typeName = isLeaveTypeRecord(entry.leaveTypeId)
+                  ? entry.leaveTypeId.name
+                  : 'Leave';
+                const pct =
+                  entry.allocated > 0 ? (entry.remaining / entry.allocated) * 100 : 0;
+                const isExhausted = entry.remaining === 0 && entry.allocated > 0;
                 const isUrgent = !isExhausted && pct < 20;
                 const isWarning = !isExhausted && !isUrgent && pct < 50;
-                // Blue: >=50%, Amber: <50%, Red: <20%, Grey: 0
-
                 const numberColor = isExhausted
                   ? 'text-gray-400'
                   : isUrgent
@@ -286,7 +307,6 @@ export default function MyLeavePage() {
                     : isWarning
                       ? 'text-amber-500'
                       : 'text-primary';
-
                 const barColor = isExhausted
                   ? 'bg-gray-300'
                   : isUrgent
@@ -295,23 +315,22 @@ export default function MyLeavePage() {
                       ? 'bg-amber-500'
                       : 'bg-primary';
 
-                const barBg = isExhausted ? 'bg-gray-100' : 'bg-muted/50';
-
                 return (
-                  <div key={label} className="space-y-2">
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                  <div key={typeName} className="space-y-2">
+                    <p className="text-sm font-semibold">{typeName}</p>
                     <div className="flex items-baseline gap-1.5">
-                      <span className={`text-2xl font-bold ${numberColor}`}>{data.remaining}</span>
-                      <span className="text-xs text-muted-foreground">/ {data.total} days left</span>
+                      <span className={`text-2xl font-bold ${numberColor}`}>{entry.remaining}</span>
+                      <span className="text-xs text-muted-foreground">
+                        / {entry.allocated} days left
+                      </span>
                     </div>
-                    {/* Progress bar */}
-                    <div className={`h-1.5 w-full rounded-full ${barBg}`}>
+                    <div className="h-1.5 w-full rounded-full bg-muted/50">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${barColor}`}
+                        className={`h-1.5 rounded-full ${barColor}`}
                         style={{ width: `${Math.max(pct, 0)}%` }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">{data.used} used</p>
+                    <p className="text-xs text-muted-foreground">{entry.used} used</p>
                   </div>
                 );
               })}
@@ -322,7 +341,6 @@ export default function MyLeavePage() {
         </CardContent>
       </Card>
 
-      {/* Leave History */}
       <Card>
         <CardHeader>
           <CardTitle>Leave History</CardTitle>
@@ -332,7 +350,7 @@ export default function MyLeavePage() {
           {isLoadingLeaves ? (
             <p className="text-muted-foreground">Loading...</p>
           ) : leaves.length > 0 ? (
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -347,21 +365,21 @@ export default function MyLeavePage() {
                 <TableBody>
                   {leaves.map((leave) => (
                     <TableRow key={leave._id}>
-                      <TableCell>{getLeaveTypeLabel(leave.leaveType)}</TableCell>
+                      <TableCell>{resolveLeaveTypeName(leave)}</TableCell>
                       <TableCell>
-                        {format(new Date(leave.startDate), 'MMM dd, yyyy')} -{' '}
+                        {format(new Date(leave.startDate), 'MMM dd, yyyy')} –{' '}
                         {format(new Date(leave.endDate), 'MMM dd, yyyy')}
                       </TableCell>
                       <TableCell>{leave.totalDays}</TableCell>
                       <TableCell className="max-w-xs truncate">{leave.reason}</TableCell>
-                      <TableCell>{getStatusBadge(leave.status)}</TableCell>
                       <TableCell>
-                        {leave.status === LeaveStatus.PENDING && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCancel(leave._id)}
-                          >
+                        <Badge variant={getLeaveStatusVariant(leave.status)}>
+                          {getLeaveStatusLabel(leave.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {isLeaveAwaitingApproval(leave.status) && (
+                          <Button variant="ghost" size="sm" onClick={() => void handleCancel(leave._id)}>
                             Cancel
                           </Button>
                         )}
@@ -372,9 +390,7 @@ export default function MyLeavePage() {
               </Table>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">
-              No leave requests yet
-            </p>
+            <p className="text-center text-muted-foreground py-8">No leave requests yet</p>
           )}
         </CardContent>
       </Card>

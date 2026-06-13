@@ -18,6 +18,12 @@ import {
   LeaveFilters,
   LeavePagination,
   LeaveBalance,
+  LeaveTypeRecord,
+  LeavePolicyRecord,
+  ApprovalWorkflow,
+  Shift,
+  LeaveApprovalRecord,
+  AdjustLeaveBalancePayload,
   Department,
   DepartmentFormData,
   Organization,
@@ -702,6 +708,192 @@ export const leaveApi = {
     const response = await api.patch<ApiResponse<Leave>>(
       `/leaves/${id}/cancel`
     );
+    return response.data.data!;
+  },
+
+  getLeaveApprovals: async (leaveId: string): Promise<LeaveApprovalRecord[]> => {
+    const response = await api.get<ApiResponse<LeaveApprovalRecord[]>>(
+      `/leaves/${leaveId}/approvals`
+    );
+    return response.data.data!;
+  },
+
+  adjustBalance: async (data: AdjustLeaveBalancePayload): Promise<LeaveBalance> => {
+    const response = await api.patch<ApiResponse<LeaveBalance>>(
+      '/leaves/balances/adjust',
+      data
+    );
+    return response.data.data!;
+  },
+};
+
+export const leaveTypeApi = {
+  getAll: async (activeOnly = false): Promise<LeaveTypeRecord[]> => {
+    const response = await api.get<ApiResponse<LeaveTypeRecord[]>>('/leave-types', {
+      params: activeOnly ? { activeOnly: 'true' } : undefined,
+    });
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<LeaveTypeRecord> => {
+    const response = await api.get<ApiResponse<LeaveTypeRecord>>(`/leave-types/${id}`);
+    return response.data.data!;
+  },
+
+  create: async (data: Partial<LeaveTypeRecord>): Promise<LeaveTypeRecord> => {
+    const response = await api.post<ApiResponse<LeaveTypeRecord>>('/leave-types', data);
+    return response.data.data!;
+  },
+
+  update: async (id: string, data: Partial<LeaveTypeRecord>): Promise<LeaveTypeRecord> => {
+    const response = await api.put<ApiResponse<LeaveTypeRecord>>(`/leave-types/${id}`, data);
+    return response.data.data!;
+  },
+
+  updateStatus: async (id: string, status: string): Promise<LeaveTypeRecord> => {
+    const response = await api.patch<ApiResponse<LeaveTypeRecord>>(
+      `/leave-types/${id}/status`,
+      { status }
+    );
+    return response.data.data!;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/leave-types/${id}`);
+  },
+};
+
+export const leavePolicyApi = {
+  getAll: async (): Promise<LeavePolicyRecord[]> => {
+    const response = await api.get<ApiResponse<LeavePolicyRecord[]>>('/leave-policies');
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<LeavePolicyRecord> => {
+    const response = await api.get<ApiResponse<LeavePolicyRecord>>(`/leave-policies/${id}`);
+    return response.data.data!;
+  },
+
+  create: async (data: {
+    policyName: string;
+    workflowId: string;
+    leaveRules: Array<{
+      leaveTypeId: string;
+      annualAllocation: number;
+      allowNegativeBalance?: boolean;
+      allowCarryForward?: boolean;
+      maxCarryForward?: number;
+    }>;
+    isDefault?: boolean;
+    status?: string;
+  }): Promise<LeavePolicyRecord> => {
+    const response = await api.post<ApiResponse<LeavePolicyRecord>>('/leave-policies', data);
+    return response.data.data!;
+  },
+
+  update: async (
+    id: string,
+    data: Partial<{
+      policyName: string;
+      workflowId: string;
+      leaveRules: Array<{
+        leaveTypeId: string;
+        annualAllocation: number;
+        allowNegativeBalance?: boolean;
+        allowCarryForward?: boolean;
+        maxCarryForward?: number;
+      }>;
+      isDefault?: boolean;
+      status?: string;
+    }>
+  ): Promise<LeavePolicyRecord> => {
+    const response = await api.put<ApiResponse<LeavePolicyRecord>>(`/leave-policies/${id}`, data);
+    return response.data.data!;
+  },
+
+  setDefault: async (id: string): Promise<LeavePolicyRecord> => {
+    const response = await api.patch<ApiResponse<LeavePolicyRecord>>(
+      `/leave-policies/${id}/default`
+    );
+    return response.data.data!;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/leave-policies/${id}`);
+  },
+};
+
+export const approvalWorkflowApi = {
+  getAll: async (): Promise<ApprovalWorkflow[]> => {
+    const response = await api.get<ApiResponse<ApprovalWorkflow[]>>('/approval-workflows');
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<ApprovalWorkflow> => {
+    const response = await api.get<ApiResponse<ApprovalWorkflow>>(`/approval-workflows/${id}`);
+    return response.data.data!;
+  },
+
+  create: async (data: {
+    workflowName: string;
+    steps: Array<{ order: number; approverType: string }>;
+    isDefault?: boolean;
+    status?: string;
+  }): Promise<ApprovalWorkflow> => {
+    const response = await api.post<ApiResponse<ApprovalWorkflow>>('/approval-workflows', data);
+    return response.data.data!;
+  },
+
+  update: async (
+    id: string,
+    data: Partial<{
+      workflowName: string;
+      steps: Array<{ order: number; approverType: string }>;
+      isDefault?: boolean;
+      status?: string;
+    }>
+  ): Promise<ApprovalWorkflow> => {
+    const response = await api.put<ApiResponse<ApprovalWorkflow>>(`/approval-workflows/${id}`, data);
+    return response.data.data!;
+  },
+
+  setDefault: async (id: string): Promise<ApprovalWorkflow> => {
+    const response = await api.patch<ApiResponse<ApprovalWorkflow>>(
+      `/approval-workflows/${id}/default`
+    );
+    return response.data.data!;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/approval-workflows/${id}`);
+  },
+};
+
+export const shiftApi = {
+  getAll: async (status?: string): Promise<Shift[]> => {
+    const response = await api.get<ApiResponse<Shift[]>>('/shifts', {
+      params: status ? { status } : undefined,
+    });
+    return response.data.data!;
+  },
+
+  getById: async (id: string): Promise<Shift> => {
+    const response = await api.get<ApiResponse<Shift>>(`/shifts/${id}`);
+    return response.data.data!;
+  },
+
+  create: async (data: Partial<Shift>): Promise<Shift> => {
+    const response = await api.post<ApiResponse<Shift>>('/shifts', data);
+    return response.data.data!;
+  },
+
+  update: async (id: string, data: Partial<Shift>): Promise<Shift> => {
+    const response = await api.put<ApiResponse<Shift>>(`/shifts/${id}`, data);
+    return response.data.data!;
+  },
+
+  updateStatus: async (id: string, status: string): Promise<Shift> => {
+    const response = await api.patch<ApiResponse<Shift>>(`/shifts/${id}/status`, { status });
     return response.data.data!;
   },
 };

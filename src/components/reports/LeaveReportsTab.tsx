@@ -1,8 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { leaveApi, departmentApi, userApi } from '@/lib/api';
-import { Leave, LeaveStatus, LeaveType, Department, User } from '@/lib/types';
+import { leaveApi, departmentApi, userApi, leaveTypeApi } from '@/lib/api';
+import { Leave, LeaveStatus, LeaveTypeRecord, Department, User } from '@/lib/types';
+import {
+  getLeaveStatusLabel,
+  isLeaveAwaitingApproval,
+  normalizeLeaveStatus,
+  resolveLeaveTypeName,
+} from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,25 +23,12 @@ import { cn } from '@/lib/utils';
 import { formatAttendanceDate } from '@/lib/date-utils';
 import { useToast } from '@/hooks/use-toast';
 
-const statusColors: Record<LeaveStatus, string> = {
+const statusColors: Partial<Record<LeaveStatus, string>> = {
   [LeaveStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+  [LeaveStatus.PARTIALLY_APPROVED]: 'bg-blue-100 text-blue-800',
   [LeaveStatus.APPROVED]: 'bg-green-100 text-green-800',
   [LeaveStatus.REJECTED]: 'bg-red-100 text-red-800',
   [LeaveStatus.CANCELLED]: 'bg-gray-100 text-gray-800',
-};
-
-const statusLabels: Record<LeaveStatus, string> = {
-  [LeaveStatus.PENDING]: 'Pending',
-  [LeaveStatus.APPROVED]: 'Approved',
-  [LeaveStatus.REJECTED]: 'Rejected',
-  [LeaveStatus.CANCELLED]: 'Cancelled',
-};
-
-const leaveTypeLabels: Record<LeaveType, string> = {
-  [LeaveType.SICK]: 'Sick Leave',
-  [LeaveType.CASUAL]: 'Casual Leave',
-  [LeaveType.VACATION]: 'Vacation Leave',
-  [LeaveType.UNPAID]: 'Unpaid Leave',
 };
 
 export default function LeaveReportsTab() {
@@ -55,7 +48,8 @@ export default function LeaveReportsTab() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<LeaveStatus | 'all'>('all');
-  const [selectedLeaveType, setSelectedLeaveType] = useState<LeaveType | 'all'>('all');
+  const [leaveTypes, setLeaveTypes] = useState<LeaveTypeRecord[]>([]);
+  const [selectedLeaveTypeId, setSelectedLeaveTypeId] = useState<string>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,12 +68,13 @@ export default function LeaveReportsTab() {
   useEffect(() => {
     loadDepartments();
     loadUsers();
+    void leaveTypeApi.getAll(true).then(setLeaveTypes).catch(() => undefined);
   }, []);
 
   // Load leaves when filters or pagination changes
   useEffect(() => {
     loadLeaves();
-  }, [pagination.page, startDate, endDate, selectedStatus, selectedLeaveType, selectedDepartment, selectedUser]);
+  }, [pagination.page, startDate, endDate, selectedStatus, selectedLeaveTypeId, selectedDepartment, selectedUser]);
 
   const loadDepartments = async () => {
     try {
@@ -114,7 +109,7 @@ export default function LeaveReportsTab() {
       if (startDate) filters.startDate = startDate;
       if (endDate) filters.endDate = endDate;
       if (selectedStatus !== 'all') filters.status = selectedStatus;
-      if (selectedLeaveType !== 'all') filters.leaveType = selectedLeaveType;
+      if (selectedLeaveTypeId !== 'all') filters.leaveTypeId = selectedLeaveTypeId;
       if (selectedUser !== 'all') filters.userId = selectedUser;
 
       const result = await leaveApi.getAllLeaves(filters);
@@ -124,7 +119,7 @@ export default function LeaveReportsTab() {
       // Calculate summary
       const stats = {
         total: result.records.length,
-        pending: result.records.filter((r) => r.status === LeaveStatus.PENDING).length,
+        pending: result.records.filter((r) => isLeaveAwaitingApproval(r.status)).length,
         approved: result.records.filter((r) => r.status === LeaveStatus.APPROVED).length,
         rejected: result.records.filter((r) => r.status === LeaveStatus.REJECTED).length,
         cancelled: result.records.filter((r) => r.status === LeaveStatus.CANCELLED).length,
@@ -149,7 +144,7 @@ export default function LeaveReportsTab() {
       if (startDate) filters.startDate = startDate;
       if (endDate) filters.endDate = endDate;
       if (selectedStatus !== 'all') filters.status = selectedStatus;
-      if (selectedLeaveType !== 'all') filters.leaveType = selectedLeaveType;
+      if (selectedLeaveTypeId !== 'all') filters.leaveTypeId = selectedLeaveTypeId;
       if (selectedDepartment !== 'all') {
         // Note: Department filtering is done client-side in departmentFilteredRecords
       }
@@ -190,25 +185,20 @@ export default function LeaveReportsTab() {
       'Status',
       'Reason',
       'Applied On',
-      'Reviewed By',
-      'Reviewed On',
     ];
     const rows = records.map((record) => {
       const user = typeof record.userId === 'object' ? record.userId : null;
-      const reviewer = typeof record.reviewedBy === 'object' ? record.reviewedBy : null;
       return [
         user ? `${user.firstName} ${user.lastName}` : 'N/A',
         user?.employeeId || 'N/A',
         user?.department || 'N/A',
-        leaveTypeLabels[record.leaveType],
+        resolveLeaveTypeName(record),
         formatAttendanceDate(record.startDate),
         formatAttendanceDate(record.endDate),
         record.totalDays.toString(),
-        statusLabels[record.status],
+        getLeaveStatusLabel(record.status),
         record.reason || 'N/A',
         formatAttendanceDate(record.createdAt),
-        reviewer ? `${reviewer.firstName} ${reviewer.lastName}` : 'N/A',
-        record.reviewedAt ? formatAttendanceDate(record.reviewedAt) : 'N/A',
       ];
     });
 
@@ -232,7 +222,7 @@ export default function LeaveReportsTab() {
     setStartDate(null);
     setEndDate(null);
     setSelectedStatus('all');
-    setSelectedLeaveType('all');
+    setSelectedLeaveTypeId('all');
     setSelectedDepartment('all');
     setSelectedUser('all');
     setSearchQuery('');
@@ -240,7 +230,7 @@ export default function LeaveReportsTab() {
   };
 
   const hasActiveFilters =
-    startDate || endDate || selectedStatus !== 'all' || selectedLeaveType !== 'all' || selectedDepartment !== 'all' || selectedUser !== 'all';
+    startDate || endDate || selectedStatus !== 'all' || selectedLeaveTypeId !== 'all' || selectedDepartment !== 'all' || selectedUser !== 'all';
 
   // Filter records by search query (client-side)
   const filteredRecords = searchQuery
@@ -393,16 +383,17 @@ export default function LeaveReportsTab() {
             {/* Leave Type Filter */}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-muted-foreground">Leave Type</label>
-              <Select value={selectedLeaveType} onValueChange={(v) => setSelectedLeaveType(v as LeaveType | 'all')}>
+              <Select value={selectedLeaveTypeId} onValueChange={setSelectedLeaveTypeId}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value={LeaveType.SICK}>Sick Leave</SelectItem>
-                  <SelectItem value={LeaveType.CASUAL}>Casual Leave</SelectItem>
-                  <SelectItem value={LeaveType.VACATION}>Vacation Leave</SelectItem>
-                  <SelectItem value={LeaveType.UNPAID}>Unpaid Leave</SelectItem>
+                  {leaveTypes.map((type) => (
+                    <SelectItem key={type._id} value={type._id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -512,13 +503,18 @@ export default function LeaveReportsTab() {
                           </TableCell>
                           <TableCell className="whitespace-nowrap">{user?.employeeId || 'N/A'}</TableCell>
                           <TableCell className="whitespace-nowrap">{user?.department || 'N/A'}</TableCell>
-                          <TableCell className="whitespace-nowrap">{leaveTypeLabels[record.leaveType]}</TableCell>
+                          <TableCell className="whitespace-nowrap">{resolveLeaveTypeName(record)}</TableCell>
                           <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.startDate)}</TableCell>
                           <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.endDate)}</TableCell>
                           <TableCell className="whitespace-nowrap">{record.totalDays}</TableCell>
                           <TableCell className="whitespace-nowrap">
-                            <Badge className={statusColors[record.status]}>
-                              {statusLabels[record.status]}
+                            <Badge
+                              className={
+                                statusColors[normalizeLeaveStatus(record.status) ?? LeaveStatus.PENDING] ??
+                                'bg-gray-100 text-gray-800'
+                              }
+                            >
+                              {getLeaveStatusLabel(record.status)}
                             </Badge>
                           </TableCell>
                           <TableCell className="max-w-xs truncate">{record.reason || '-'}</TableCell>

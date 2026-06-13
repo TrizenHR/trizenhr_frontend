@@ -1,213 +1,286 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useMemo, useState } from 'react';
+import { shiftApi } from '@/lib/api';
+import { Shift, ShiftStatus } from '@/lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Clock, Users, Timer } from 'lucide-react';
+import { Moon, Plus, Clock, Loader2 } from 'lucide-react';
 
-type Shift = {
-  id: string;
-  name: string;
+type FormState = {
+  shiftName: string;
   startTime: string;
   endTime: string;
-  workingHours: number;
   graceMinutes: number;
-  weeklyOff: string[];
-  assignedCount: number;
-  color: string;
+  breakMinutes: number;
+  isNightShift: boolean;
 };
 
-const INITIAL_SHIFTS: Shift[] = [
-  { id: '1', name: 'General Shift', startTime: '09:00', endTime: '18:00', workingHours: 8, graceMinutes: 15, weeklyOff: ['Saturday', 'Sunday'], assignedCount: 0, color: 'bg-blue-500' },
-  { id: '2', name: 'Morning Shift', startTime: '06:00', endTime: '14:00', workingHours: 8, graceMinutes: 10, weeklyOff: ['Sunday'], assignedCount: 0, color: 'bg-amber-500' },
-  { id: '3', name: 'Night Shift', startTime: '22:00', endTime: '06:00', workingHours: 8, graceMinutes: 10, weeklyOff: ['Sunday'], assignedCount: 0, color: 'bg-indigo-500' },
-];
-
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const SHIFT_COLORS = [
-  { value: 'bg-blue-500', label: 'Blue' },
-  { value: 'bg-green-500', label: 'Green' },
-  { value: 'bg-amber-500', label: 'Amber' },
-  { value: 'bg-purple-500', label: 'Purple' },
-  { value: 'bg-indigo-500', label: 'Indigo' },
-  { value: 'bg-red-500', label: 'Red' },
-];
+const emptyForm: FormState = {
+  shiftName: '',
+  startTime: '09:00',
+  endTime: '18:00',
+  graceMinutes: 15,
+  breakMinutes: 0,
+  isNightShift: false,
+};
 
 export default function ShiftsPage() {
   const { toast } = useToast();
-  const [shifts, setShifts] = useState<Shift[]>(INITIAL_SHIFTS);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editShift, setEditShift] = useState<Shift | null>(null);
-  const [form, setForm] = useState({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: '15', weeklyOff: [] as string[], color: 'bg-blue-500' });
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Shift | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm);
 
-  const calcHours = (start: string, end: string) => {
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    let mins = (eh * 60 + em) - (sh * 60 + sm);
-    if (mins < 0) mins += 24 * 60;
-    return Math.round((mins / 60) * 10) / 10;
+  const stats = useMemo(
+    () => ({
+      total: shifts.length,
+      active: shifts.filter((s) => s.status === ShiftStatus.ACTIVE).length,
+    }),
+    [shifts]
+  );
+
+  useEffect(() => {
+    void loadShifts();
+  }, []);
+
+  const loadShifts = async () => {
+    try {
+      setIsLoading(true);
+      const data = await shiftApi.getAll();
+      setShifts(data);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load shifts', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const openCreate = () => {
-    setEditShift(null);
-    setForm({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: '15', weeklyOff: [], color: 'bg-blue-500' });
-    setIsDialogOpen(true);
+    setEditing(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
   };
 
-  const openEdit = (s: Shift) => {
-    setEditShift(s);
-    setForm({ name: s.name, startTime: s.startTime, endTime: s.endTime, graceMinutes: String(s.graceMinutes), weeklyOff: s.weeklyOff, color: s.color });
-    setIsDialogOpen(true);
+  const openEdit = (shift: Shift) => {
+    setEditing(shift);
+    setForm({
+      shiftName: shift.shiftName,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      graceMinutes: shift.graceMinutes,
+      breakMinutes: shift.breakMinutes ?? 0,
+      isNightShift: shift.isNightShift,
+    });
+    setDialogOpen(true);
   };
 
-  const toggleDay = (day: string) => {
-    setForm(p => ({ ...p, weeklyOff: p.weeklyOff.includes(day) ? p.weeklyOff.filter(d => d !== day) : [...p.weeklyOff, day] }));
-  };
-
-  const save = () => {
-    if (!form.name || !form.startTime || !form.endTime) {
-      toast({ title: 'Validation Error', description: 'Name, start and end times are required', variant: 'destructive' });
+  const save = async () => {
+    if (!form.shiftName.trim() || !form.startTime || !form.endTime) {
+      toast({ title: 'Validation', description: 'Name and times are required', variant: 'destructive' });
       return;
     }
-    const shift: Shift = {
-      id: editShift?.id || Date.now().toString(),
-      name: form.name,
-      startTime: form.startTime,
-      endTime: form.endTime,
-      workingHours: calcHours(form.startTime, form.endTime),
-      graceMinutes: parseInt(form.graceMinutes) || 15,
-      weeklyOff: form.weeklyOff,
-      assignedCount: editShift?.assignedCount || 0,
-      color: form.color,
-    };
-    if (editShift) {
-      setShifts(p => p.map(s => s.id === editShift.id ? shift : s));
-      toast({ title: 'Shift Updated', description: `${shift.name} has been updated.` });
-    } else {
-      setShifts(p => [...p, shift]);
-      toast({ title: 'Shift Created', description: `${shift.name} has been created.` });
+    try {
+      setIsSaving(true);
+      if (editing) {
+        await shiftApi.update(editing._id, form);
+        toast({ title: 'Updated', description: 'Shift updated' });
+      } else {
+        await shiftApi.create(form);
+        toast({ title: 'Created', description: 'Shift created' });
+      }
+      setDialogOpen(false);
+      await loadShifts();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
+      toast({
+        title: 'Error',
+        description: err.response?.data?.error || 'Failed to save shift',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
     }
-    setIsDialogOpen(false);
   };
 
-  const deleteShift = (id: string) => {
-    setShifts(p => p.filter(s => s.id !== id));
-    toast({ title: 'Shift Deleted' });
+  const toggleStatus = async (shift: Shift) => {
+    const next = shift.status === ShiftStatus.ACTIVE ? ShiftStatus.INACTIVE : ShiftStatus.ACTIVE;
+    try {
+      await shiftApi.updateStatus(shift._id, next);
+      toast({ title: next === ShiftStatus.ACTIVE ? 'Activated' : 'Deactivated' });
+      await loadShifts();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
+      toast({
+        title: 'Error',
+        description: err.response?.data?.error || 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold md:text-3xl">Shifts</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create and manage work shifts for your organization</p>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Policies</p>
+        <h1 className="text-2xl font-bold md:text-3xl">Shift Management</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Define base shift timings for attendance policies
+        </p>
+      </div>
+
+      <div className="grid gap-3 grid-cols-2 max-w-xs">
+        <Card>
+          <CardContent className="pt-4 pb-3 flex items-center gap-3">
+            <Moon className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xl font-bold">{stats.total}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 flex items-center gap-3">
+            <Clock className="h-4 w-4 text-green-600" />
+            <div>
+              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-xl font-bold">{stats.active}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Button onClick={openCreate} className="w-full sm:w-auto">
+        <Plus className="mr-2 h-4 w-4" />
+        Create Shift
+      </Button>
+
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Create Shift</Button>
-      </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {shifts.map((shift) => (
+            <Card key={shift._id}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">{shift.shiftName}</CardTitle>
+                    <CardDescription>
+                      {shift.startTime} – {shift.endTime} · {shift.expectedHours}h expected
+                    </CardDescription>
+                  </div>
+                  <Badge variant={shift.status === ShiftStatus.ACTIVE ? 'default' : 'secondary'}>
+                    {shift.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Grace {shift.graceMinutes} min
+                  {shift.isNightShift ? ' · Night shift' : ''}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(shift)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => void toggleStatus(shift)}
+                  >
+                    {shift.status === ShiftStatus.ACTIVE ? 'Deactivate' : 'Activate'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {shifts.map(shift => (
-          <Card key={shift.id} className="overflow-hidden">
-            <div className={`h-1.5 w-full ${shift.color}`} />
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-base">{shift.name}</CardTitle>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(shift)}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteShift(shift.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-muted/40 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Start Time</p>
-                  <p className="mt-1 font-bold text-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{shift.startTime}</p>
-                </div>
-                <div className="rounded-lg bg-muted/40 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">End Time</p>
-                  <p className="mt-1 font-bold text-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{shift.endTime}</p>
-                </div>
-                <div className="rounded-lg bg-muted/40 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Working Hrs</p>
-                  <p className="mt-1 font-bold text-foreground flex items-center gap-1"><Timer className="h-3.5 w-3.5" />{shift.workingHours}h</p>
-                </div>
-                <div className="rounded-lg bg-muted/40 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Grace</p>
-                  <p className="mt-1 font-bold text-foreground">{shift.graceMinutes} min</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">Weekly Off</p>
-                <div className="flex flex-wrap gap-1">
-                  {shift.weeklyOff.length > 0 ? shift.weeklyOff.map(d => (
-                    <Badge key={d} variant="secondary" className="text-[10px]">{d.slice(0, 3)}</Badge>
-                  )) : <span className="text-xs text-muted-foreground">None</span>}
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />{shift.assignedCount} employees assigned
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader><DialogTitle>{editShift ? 'Edit Shift' : 'Create Shift'}</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label>Shift Name <span className="text-destructive">*</span></Label>
-              <Input placeholder="e.g. General Shift" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Start Time <span className="text-destructive">*</span></Label>
-                <Input type="time" value={form.startTime} onChange={e => setForm(p => ({ ...p, startTime: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>End Time <span className="text-destructive">*</span></Label>
-                <Input type="time" value={form.endTime} onChange={e => setForm(p => ({ ...p, endTime: e.target.value }))} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Grace Period (minutes)</Label>
-              <Input type="number" min="0" max="60" value={form.graceMinutes} onChange={e => setForm(p => ({ ...p, graceMinutes: e.target.value }))} />
-            </div>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Edit Shift' : 'Create Shift'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Weekly Off Days</Label>
-              <div className="flex flex-wrap gap-2">
-                {DAYS.map(d => (
-                  <button key={d} onClick={() => toggleDay(d)}
-                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${form.weeklyOff.includes(d) ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:bg-muted'}`}>
-                    {d.slice(0, 3)}
-                  </button>
-                ))}
+              <Label>Shift name</Label>
+              <Input
+                value={form.shiftName}
+                onChange={(e) => setForm({ ...form, shiftName: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start time</Label>
+                <Input
+                  type="time"
+                  value={form.startTime}
+                  onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End time</Label>
+                <Input
+                  type="time"
+                  value={form.endTime}
+                  onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Color</Label>
-              <div className="flex gap-2">
-                {SHIFT_COLORS.map(c => (
-                  <button key={c.value} onClick={() => setForm(p => ({ ...p, color: c.value }))}
-                    className={`h-7 w-7 rounded-full ${c.value} transition-all ${form.color === c.value ? 'ring-2 ring-offset-2 ring-primary scale-110' : ''}`} title={c.label} />
-                ))}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Grace (min)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.graceMinutes}
+                  onChange={(e) => setForm({ ...form, graceMinutes: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Break (min)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.breakMinutes}
+                  onChange={(e) => setForm({ ...form, breakMinutes: Number(e.target.value) })}
+                />
               </div>
             </div>
-            <div className="rounded-lg bg-muted/40 p-3 text-sm">
-              Working hours: <strong>{calcHours(form.startTime, form.endTime)}h</strong>
+            <div className="flex items-center justify-between">
+              <Label>Night shift</Label>
+              <Switch
+                checked={form.isNightShift}
+                onCheckedChange={(v) => setForm({ ...form, isNightShift: v })}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button onClick={save}>{editShift ? 'Update' : 'Create'} Shift</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void save()} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

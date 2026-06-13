@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { leaveApi } from '@/lib/api';
-import { Leave, LeaveStatus, LeaveType } from '@/lib/types';
+import { Leave, LeaveStatus } from '@/lib/types';
+import {
+  getLeaveStatusLabel,
+  getLeaveStatusVariant,
+  resolveLeaveTypeName,
+} from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -134,10 +139,13 @@ export default function LeaveApprovalsPage() {
       setIsSubmitting(true);
       
       if (actionType === 'approve') {
-        await leaveApi.approveLeave(selectedLeave._id, reviewNotes || undefined);
+        const result = await leaveApi.approveLeave(selectedLeave._id, reviewNotes || undefined);
         toast({
           title: 'Success',
-          description: 'Leave request approved',
+          description:
+            result.status === LeaveStatus.APPROVED
+              ? 'Leave request fully approved'
+              : 'Leave advanced to the next approval step',
         });
       } else {
         await leaveApi.rejectLeave(selectedLeave._id, reviewNotes);
@@ -154,34 +162,12 @@ export default function LeaveApprovalsPage() {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to process leave request',
+        description: error.response?.data?.message || error.response?.data?.error || 'Failed to process leave request',
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const getLeaveTypeLabel = (type: LeaveType) => {
-    const labels: Record<LeaveType, string> = {
-      [LeaveType.SICK]: 'Sick Leave',
-      [LeaveType.CASUAL]: 'Casual Leave',
-      [LeaveType.VACATION]: 'Vacation Leave',
-      [LeaveType.UNPAID]: 'Unpaid Leave',
-    };
-    return labels[type];
-  };
-
-  const getStatusBadge = (status: LeaveStatus) => {
-    const variants: Record<LeaveStatus, { variant: any; label: string }> = {
-      [LeaveStatus.PENDING]: { variant: 'secondary', label: 'Pending' },
-      [LeaveStatus.APPROVED]: { variant: 'default', label: 'Approved' },
-      [LeaveStatus.REJECTED]: { variant: 'destructive', label: 'Rejected' },
-      [LeaveStatus.CANCELLED]: { variant: 'outline', label: 'Cancelled' },
-    };
-    
-    const config = variants[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const renderLeaveTable = (leaves: Leave[], showActions: boolean = false) => (
@@ -202,7 +188,9 @@ export default function LeaveApprovalsPage() {
           {leaves.length === 0 ? (
             <TableRow>
               <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-8">
-                No leave requests found
+                {showActions
+                  ? 'No leave requests awaiting your approval. Requests still with a manager will appear here once they reach your step.'
+                  : 'No leave requests found'}
               </TableCell>
             </TableRow>
           ) : (
@@ -223,7 +211,7 @@ export default function LeaveApprovalsPage() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{getLeaveTypeLabel(leave.leaveType)}</TableCell>
+                <TableCell>{resolveLeaveTypeName(leave)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
@@ -237,7 +225,11 @@ export default function LeaveApprovalsPage() {
                   </div>
                 </TableCell>
                 <TableCell className="max-w-xs truncate">{leave.reason}</TableCell>
-                <TableCell>{getStatusBadge(leave.status)}</TableCell>
+                <TableCell>
+                  <Badge variant={getLeaveStatusVariant(leave.status)}>
+                    {getLeaveStatusLabel(leave.status)}
+                  </Badge>
+                </TableCell>
                 {showActions && (
                   <TableCell>
                     <div className="flex gap-2">
@@ -274,7 +266,9 @@ export default function LeaveApprovalsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Leave Approvals</h1>
-        <p className="text-muted-foreground">Review and manage leave requests</p>
+        <p className="text-muted-foreground">
+          Review pending requests and browse approved or rejected history
+        </p>
       </div>
 
       <Tabs defaultValue="pending" className="space-y-4">
@@ -358,7 +352,7 @@ export default function LeaveApprovalsPage() {
                   <p><strong>Employee:</strong> {typeof selectedLeave.userId === 'object' && 'firstName' in selectedLeave.userId
                     ? `${selectedLeave.userId.firstName} ${selectedLeave.userId.lastName}`
                     : 'Unknown'}</p>
-                  <p><strong>Type:</strong> {getLeaveTypeLabel(selectedLeave.leaveType)}</p>
+                  <p><strong>Type:</strong> {resolveLeaveTypeName(selectedLeave)}</p>
                   <p><strong>Duration:</strong> {format(new Date(selectedLeave.startDate), 'MMM dd, yyyy')} - {format(new Date(selectedLeave.endDate), 'MMM dd, yyyy')} ({selectedLeave.totalDays} days)</p>
                   <p><strong>Reason:</strong> {selectedLeave.reason}</p>
                 </div>

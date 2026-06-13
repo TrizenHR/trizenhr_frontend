@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { leaveApi, holidayApi } from '@/lib/api';
 import { attendanceApi } from '@/lib/api';
-import { Leave, LeaveType, Attendance, AttendanceStatus, Holiday } from '@/lib/types';
+import { Leave, LeaveStatus, Attendance, AttendanceStatus, Holiday } from '@/lib/types';
+import { getLeaveTypeColor, resolveLeaveTypeCode, resolveLeaveTypeName } from '@/lib/leave-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +47,7 @@ export default function MyCalendarPage() {
       // Load MY leaves only
       const leavesResponse = await leaveApi.getMyLeaves({});
       const approvedMyLeaves = leavesResponse.records.filter(
-        (leave) => leave.status === 'approved'
+        (leave) => leave.status === LeaveStatus.APPROVED
       );
       setMyLeaves(approvedMyLeaves);
 
@@ -127,16 +128,6 @@ export default function MyCalendarPage() {
 
   const today = () => {
     setCurrentDate(new Date());
-  };
-
-  const getLeaveTypeColor = (type: LeaveType) => {
-    const colors: Record<LeaveType, string> = {
-      [LeaveType.SICK]: 'bg-red-100 text-red-800 border-red-200',
-      [LeaveType.CASUAL]: 'bg-blue-100 text-blue-800 border-blue-200',
-      [LeaveType.VACATION]: 'bg-purple-100 text-purple-800 border-purple-200',
-      [LeaveType.UNPAID]: 'bg-gray-100 text-gray-800 border-gray-200',
-    };
-    return colors[type];
   };
 
   const getAttendanceColor = (status: AttendanceStatus) => {
@@ -279,10 +270,10 @@ export default function MyCalendarPage() {
                         {day.myLeaves.map((leave) => (
                           <div
                             key={leave._id}
-                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(leave.leaveType)}`}
-                            title={leave.leaveType}
+                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(resolveLeaveTypeCode(leave))}`}
+                            title={resolveLeaveTypeName(leave)}
                           >
-                            {leave.leaveType.charAt(0).toUpperCase()}
+                            {resolveLeaveTypeCode(leave).charAt(0) || 'L'}
                           </div>
                         ))}
                       </div>

@@ -73,8 +73,8 @@ const roleActions: Record<UserRole, ActionItem[]> = {
   ],
   [UserRole.HR]: [
     { label: 'Add Employee', href: '/dashboard/users/create', icon: UserPlus, color: 'green' },
+    { label: 'Leave Approvals', href: '/dashboard/leave-approvals', icon: Calendar, color: 'orange' },
     { label: 'View Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck, color: 'blue' },
-    { label: 'Leave Requests', href: '/dashboard/team-leaves', icon: Calendar, color: 'orange' },
   ],
   [UserRole.ADMIN]: [
     { label: 'Manage Users', href: '/dashboard/users', icon: Users, color: 'blue' },

@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { leaveApi } from '@/lib/api';
-import { Leave, LeaveStatus, LeaveType } from '@/lib/types';
+import { Leave, LeaveStatus } from '@/lib/types';
+import {
+  getLeaveTypeColor,
+  isLeaveAwaitingApproval,
+  resolveLeaveTypeCode,
+  resolveLeaveTypeName,
+} from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,8 +76,8 @@ export default function TeamLeavesPage() {
       setUpcomingLeaves(upcoming);
 
       // Get pending approvals count
-      const pending = allLeaves.records.filter(
-        (leave) => leave.status === LeaveStatus.PENDING
+      const pending = allLeaves.records.filter((leave) =>
+        isLeaveAwaitingApproval(leave.status)
       ).length;
 
       setStats({
@@ -89,26 +95,6 @@ export default function TeamLeavesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getLeaveTypeColor = (type: LeaveType) => {
-    const colors: Record<LeaveType, string> = {
-      [LeaveType.SICK]: 'bg-red-100 text-red-800 border-red-200',
-      [LeaveType.CASUAL]: 'bg-blue-100 text-blue-800 border-blue-200',
-      [LeaveType.VACATION]: 'bg-purple-100 text-purple-800 border-purple-200',
-      [LeaveType.UNPAID]: 'bg-gray-100 text-gray-800 border-gray-200',
-    };
-    return colors[type];
-  };
-
-  const getLeaveTypeLabel = (type: LeaveType) => {
-    const labels: Record<LeaveType, string> = {
-      [LeaveType.SICK]: 'Sick Leave',
-      [LeaveType.CASUAL]: 'Casual Leave',
-      [LeaveType.VACATION]: 'Vacation Leave',
-      [LeaveType.UNPAID]: 'Unpaid Leave',
-    };
-    return labels[type];
   };
 
   return (
@@ -227,8 +213,8 @@ export default function TeamLeavesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <Badge className={getLeaveTypeColor(leave.leaveType)} variant="outline">
-                          {getLeaveTypeLabel(leave.leaveType)}
+                        <Badge className={getLeaveTypeColor(resolveLeaveTypeCode(leave))} variant="outline">
+                          {resolveLeaveTypeName(leave)}
                         </Badge>
                         <div className="text-right">
                           <div className="flex items-center gap-1 text-sm">
@@ -286,8 +272,8 @@ export default function TeamLeavesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <Badge className={getLeaveTypeColor(leave.leaveType)} variant="outline">
-                          {getLeaveTypeLabel(leave.leaveType)}
+                        <Badge className={getLeaveTypeColor(resolveLeaveTypeCode(leave))} variant="outline">
+                          {resolveLeaveTypeName(leave)}
                         </Badge>
                         <div className="text-right">
                           <div className="flex items-center gap-1 text-sm">

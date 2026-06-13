@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { leaveApi, userApi } from '@/lib/api';
-import { Leave, LeaveStatus, LeaveType, User } from '@/lib/types';
+import { Leave, LeaveStatus, User } from '@/lib/types';
+import {
+  getLeaveStatusLabel,
+  getLeaveStatusVariant,
+  isLeaveAwaitingApproval,
+  resolveLeaveTypeName,
+} from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -40,6 +46,7 @@ import {
 import { format } from 'date-fns';
 
 type ActionType = 'approve' | 'reject' | null;
+type RequestFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
 interface MockBalance {
   userId: string;
@@ -51,13 +58,14 @@ interface MockBalance {
 
 export default function LeaveManagementPage() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [actionableLeaveIds, setActionableLeaveIds] = useState<Set<string>>(new Set());
   const [mockBalances, setMockBalances] = useState<MockBalance[]>([]);
   const [isLoadingLeaves, setIsLoadingLeaves] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   
   // Filters & Tabs
   const [activeTab, setActiveTab] = useState('requests');
-  const [requestFilter, setRequestFilter] = useState<string>('all');
+  const [requestFilter, setRequestFilter] = useState<RequestFilter>('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [balanceSearch, setBalanceSearch] = useState('');
 
@@ -80,7 +88,18 @@ export default function LeaveManagementPage() {
   useEffect(() => {
     loadAllLeaves();
     loadAllUsers();
+    loadActionableLeaves();
   }, []);
+
+  const loadActionableLeaves = async () => {
+    try {
+      const response = await leaveApi.getPendingLeaves();
+      setActionableLeaveIds(new Set(response.records.map((leave) => leave._id)));
+    } catch {
+      // Non-approvers may not have access; leave set empty
+      setActionableLeaveIds(new Set());
+    }
+  };
 
   const loadAllLeaves = async () => {
     try {
@@ -168,10 +187,11 @@ export default function LeaveManagementPage() {
       setActionType(null);
       setReviewNotes('');
       loadAllLeaves();
+      loadActionableLeaves();
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to process leave request',
+        description: error.response?.data?.message || error.response?.data?.error || 'Failed to process leave request',
         variant: 'destructive',
       });
     } finally {
@@ -225,37 +245,24 @@ export default function LeaveManagementPage() {
     setSelectedBalanceUser(null);
   };
 
-  const getLeaveTypeLabel = (type: LeaveType) => {
-    const labels: Record<LeaveType, string> = {
-      [LeaveType.SICK]: 'Sick Leave',
-      [LeaveType.CASUAL]: 'Casual Leave',
-      [LeaveType.VACATION]: 'Vacation Leave',
-      [LeaveType.UNPAID]: 'Unpaid Leave',
-    };
-    return labels[type];
-  };
-
-  const getStatusBadge = (status: LeaveStatus) => {
-    const variants: Record<LeaveStatus, { variant: any; label: string }> = {
-      [LeaveStatus.PENDING]: { variant: 'secondary', label: 'Pending' },
-      [LeaveStatus.APPROVED]: { variant: 'default', label: 'Approved' },
-      [LeaveStatus.REJECTED]: { variant: 'destructive', label: 'Rejected' },
-      [LeaveStatus.CANCELLED]: { variant: 'outline', label: 'Cancelled' },
-    };
-    
-    const config = variants[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
   // Filter requests
-  const filteredLeaves = leaves.filter(leave => {
-    const matchesStatus = requestFilter === 'all' || leave.status === requestFilter;
-    
+  const filteredLeaves = leaves.filter((leave) => {
+    let matchesStatus = true;
+    if (requestFilter === 'pending') {
+      matchesStatus = isLeaveAwaitingApproval(leave.status);
+    } else if (requestFilter === 'approved') {
+      matchesStatus = leave.status === LeaveStatus.APPROVED;
+    } else if (requestFilter === 'rejected') {
+      matchesStatus = leave.status === LeaveStatus.REJECTED;
+    }
+
     let empName = 'Unknown';
     if (typeof leave.userId === 'object' && leave.userId) {
       empName = `${leave.userId.firstName || ''} ${leave.userId.lastName || ''}`.toLowerCase();
     }
-    const matchesSearch = empName.includes(searchTerm.toLowerCase()) || leave.reason.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      empName.includes(searchTerm.toLowerCase()) ||
+      leave.reason.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesStatus && matchesSearch;
   });
@@ -270,9 +277,9 @@ export default function LeaveManagementPage() {
   });
 
   // Quick stats
-  const totalPending = leaves.filter(l => l.status === LeaveStatus.PENDING).length;
-  const totalApproved = leaves.filter(l => l.status === LeaveStatus.APPROVED).length;
-  const totalRejected = leaves.filter(l => l.status === LeaveStatus.REJECTED).length;
+  const totalPending = leaves.filter((l) => isLeaveAwaitingApproval(l.status)).length;
+  const totalApproved = leaves.filter((l) => l.status === LeaveStatus.APPROVED).length;
+  const totalRejected = leaves.filter((l) => l.status === LeaveStatus.REJECTED).length;
 
   return (
     <div className="space-y-6">
@@ -340,29 +347,50 @@ export default function LeaveManagementPage() {
                       onChange={e => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={requestFilter === 'pending' ? 'default' : 'outline'}
+                      onClick={() => setRequestFilter('pending')}
+                      size="sm"
+                      className="gap-1.5"
+                    >
+                      Pending
+                      {totalPending > 0 && (
+                        <Badge variant="secondary" className="px-1.5 py-0 h-5 bg-amber-500 text-white font-bold">
+                          {totalPending}
+                        </Badge>
+                      )}
+                    </Button>
+                    <Button
+                      variant={requestFilter === 'approved' ? 'default' : 'outline'}
+                      onClick={() => setRequestFilter('approved')}
+                      size="sm"
+                    >
+                      Approved
+                      {totalApproved > 0 && (
+                        <Badge variant="secondary" className="px-1.5 py-0 h-5">
+                          {totalApproved}
+                        </Badge>
+                      )}
+                    </Button>
+                    <Button
+                      variant={requestFilter === 'rejected' ? 'default' : 'outline'}
+                      onClick={() => setRequestFilter('rejected')}
+                      size="sm"
+                    >
+                      Rejected
+                      {totalRejected > 0 && (
+                        <Badge variant="secondary" className="px-1.5 py-0 h-5">
+                          {totalRejected}
+                        </Badge>
+                      )}
+                    </Button>
                     <Button
                       variant={requestFilter === 'all' ? 'default' : 'outline'}
                       onClick={() => setRequestFilter('all')}
                       size="sm"
                     >
                       All
-                    </Button>
-                    <Button
-                      variant={requestFilter === LeaveStatus.PENDING ? 'default' : 'outline'}
-                      onClick={() => setRequestFilter(LeaveStatus.PENDING)}
-                      size="sm"
-                      className="gap-1.5"
-                    >
-                      Pending
-                      {totalPending > 0 && <Badge variant="secondary" className="px-1.5 py-0 h-5 bg-amber-500 text-white font-bold">{totalPending}</Badge>}
-                    </Button>
-                    <Button
-                      variant={requestFilter === LeaveStatus.APPROVED ? 'default' : 'outline'}
-                      onClick={() => setRequestFilter(LeaveStatus.APPROVED)}
-                      size="sm"
-                    >
-                      Approved
                     </Button>
                   </div>
                 </div>
@@ -417,7 +445,7 @@ export default function LeaveManagementPage() {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>{getLeaveTypeLabel(leave.leaveType)}</TableCell>
+                            <TableCell>{resolveLeaveTypeName(leave)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1 text-sm font-medium">
                                 <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
@@ -428,9 +456,14 @@ export default function LeaveManagementPage() {
                               <span className="font-semibold">{leave.totalDays}</span>
                             </TableCell>
                             <TableCell className="max-w-xs truncate" title={leave.reason}>{leave.reason}</TableCell>
-                            <TableCell>{getStatusBadge(leave.status)}</TableCell>
+                            <TableCell>
+                              <Badge variant={getLeaveStatusVariant(leave.status)}>
+                                {getLeaveStatusLabel(leave.status)}
+                              </Badge>
+                            </TableCell>
                             <TableCell className="text-right">
-                              {leave.status === LeaveStatus.PENDING ? (
+                              {isLeaveAwaitingApproval(leave.status) ? (
+                                actionableLeaveIds.has(leave._id) ? (
                                 <div className="flex gap-2 justify-end">
                                   <Button
                                     size="sm"
@@ -451,6 +484,11 @@ export default function LeaveManagementPage() {
                                     Reject
                                   </Button>
                                 </div>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs font-normal">
+                                    Awaiting prior approval
+                                  </Badge>
+                                )
                               ) : (
                                 <span className="text-xs text-muted-foreground font-medium">Reviewed</span>
                               )}
@@ -618,7 +656,7 @@ export default function LeaveManagementPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Leave Type</p>
-                  <p className="font-semibold text-foreground mt-0.5">{getLeaveTypeLabel(selectedLeave.leaveType)}</p>
+                  <p className="font-semibold text-foreground mt-0.5">{resolveLeaveTypeName(selectedLeave)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Duration</p>

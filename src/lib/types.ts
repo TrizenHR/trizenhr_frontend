@@ -272,19 +272,122 @@ export enum WeeklyOffPattern {
   SECOND_FOURTH_SAT = 'second_fourth_sat',
 }
 
-// Leave Types
-export enum LeaveType {
-  SICK = 'sick',
-  CASUAL = 'casual',
-  VACATION = 'vacation',
-  UNPAID = 'unpaid',
+// Leave architecture (configurable types, policies, workflows)
+export enum LeaveTypeStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export interface LeaveTypeRecord {
+  _id: string;
+  organizationId?: string;
+  name: string;
+  code: string;
+  description?: string;
+  isPaid: boolean;
+  requiresDocument: boolean;
+  allowHalfDay: boolean;
+  isOther: boolean;
+  status: LeaveTypeStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export enum ApproverType {
+  SUPERVISOR = 'SUPERVISOR',
+  HR = 'HR',
+  ADMIN = 'ADMIN',
+}
+
+export interface WorkflowStep {
+  order: number;
+  approverType: ApproverType;
+}
+
+export enum WorkflowStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export interface ApprovalWorkflow {
+  _id: string;
+  organizationId?: string;
+  workflowName: string;
+  module: 'LEAVE';
+  steps: WorkflowStep[];
+  isDefault: boolean;
+  status: WorkflowStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LeaveRule {
+  leaveTypeId: string | LeaveTypeRecord;
+  annualAllocation: number;
+  allowNegativeBalance?: boolean;
+  allowCarryForward?: boolean;
+  maxCarryForward?: number;
+}
+
+export enum LeavePolicyStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export interface LeavePolicyRecord {
+  _id: string;
+  organizationId?: string;
+  policyName: string;
+  workflowId: string | ApprovalWorkflow;
+  leaveRules: LeaveRule[];
+  status: LeavePolicyStatus;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export enum ShiftStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export interface Shift {
+  _id: string;
+  organizationId?: string;
+  shiftName: string;
+  startTime: string;
+  endTime: string;
+  expectedHours: number;
+  breakMinutes?: number;
+  graceMinutes: number;
+  isNightShift: boolean;
+  status: ShiftStatus;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export enum LeaveStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  CANCELLED = 'cancelled',
+  PENDING = 'PENDING',
+  PARTIALLY_APPROVED = 'PARTIALLY_APPROVED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+}
+
+export interface LeaveApprovalRecord {
+  _id: string;
+  leaveId: string;
+  workflowStep: number;
+  approverId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+  };
+  action: 'APPROVED' | 'REJECTED';
+  comments?: string;
+  createdAt: string;
 }
 
 export interface Leave {
@@ -297,43 +400,36 @@ export interface Leave {
     employeeId: string;
     department?: string;
   };
-  leaveType: LeaveType;
+  leaveTypeId: string | LeaveTypeRecord;
+  leavePolicyId?: string | LeavePolicyRecord;
+  otherLeaveTypeName?: string;
   startDate: string;
   endDate: string;
   totalDays: number;
+  isHalfDay?: boolean;
   reason: string;
+  attachmentUrl?: string;
+  workflowId?: string | ApprovalWorkflow;
+  currentApprovalStep?: number;
   status: LeaveStatus;
-  reviewedBy?: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-  };
-  reviewedAt?: string;
-  reviewNotes?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface LeaveTypeBalance {
-  total: number;
+export interface LeaveBalanceEntry {
+  leaveTypeId: string | LeaveTypeRecord;
+  allocated: number;
   used: number;
   remaining: number;
-}
-
-export interface UnpaidLeaveBalance {
-  used: number;
 }
 
 export interface LeaveBalance {
   _id: string;
   userId: string;
   year: number;
-  sickLeave: LeaveTypeBalance;
-  casualLeave: LeaveTypeBalance;
-  vacationLeave: LeaveTypeBalance;
-  unpaidLeave: UnpaidLeaveBalance;
-  createdAt: string;
-  updatedAt: string;
+  balances: LeaveBalanceEntry[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LeavePagination {
@@ -344,20 +440,30 @@ export interface LeavePagination {
 }
 
 export interface LeaveRequestPayload {
-  leaveType: LeaveType;
+  leaveTypeId: string;
   startDate: Date | string;
   endDate: Date | string;
   reason: string;
+  isHalfDay?: boolean;
+  attachmentUrl?: string;
+  otherLeaveTypeName?: string;
 }
 
 export interface LeaveFilters {
-  status?: LeaveStatus;
-  leaveType?: LeaveType;
+  status?: LeaveStatus | string;
+  leaveTypeId?: string;
   startDate?: Date;
   endDate?: Date;
   userId?: string;
   page?: number;
   limit?: number;
+}
+
+export interface AdjustLeaveBalancePayload {
+  employeeId: string;
+  year: number;
+  leaveTypeId: string;
+  allocated: number;
 }
 
 // Holiday Types

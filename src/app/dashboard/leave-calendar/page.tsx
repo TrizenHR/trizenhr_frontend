@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { leaveApi } from '@/lib/api';
-import { Leave, LeaveType, LeaveStatus } from '@/lib/types';
+import { Leave, LeaveStatus } from '@/lib/types';
+import { getLeaveTypeColor, resolveLeaveTypeCode } from '@/lib/leave-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,16 +92,6 @@ export default function LeaveCalendarPage() {
     setCurrentDate(new Date());
   };
 
-  const getLeaveTypeColor = (type: LeaveType) => {
-    const colors: Record<LeaveType, string> = {
-      sick: 'bg-red-100 text-red-800 border-red-200',
-      casual: 'bg-blue-100 text-blue-800 border-blue-200',
-      vacation: 'bg-purple-100 text-purple-800 border-purple-200',
-      unpaid: 'bg-gray-100 text-gray-800 border-gray-200',
-    };
-    return colors[type] || 'bg-gray-50 text-gray-700 border-gray-200';
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -173,14 +164,14 @@ export default function LeaveCalendarPage() {
                         {day.leaves.slice(0, 3).map((leave) => (
                           <div
                             key={leave._id}
-                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(leave.leaveType)}`}
+                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(resolveLeaveTypeCode(leave))}`}
                             title={
                               typeof leave.userId === 'object' && 'firstName' in leave.userId
                                 ? `${leave.userId.firstName} ${leave.userId.lastName}`
                                 : 'Leave'
                             }
                           >
-                            {leave.leaveType.charAt(0).toUpperCase()}
+                            {(resolveLeaveTypeCode(leave).charAt(0) || 'L').toUpperCase()}
                           </div>
                         ))}
                         {day.leaves.length > 3 && (

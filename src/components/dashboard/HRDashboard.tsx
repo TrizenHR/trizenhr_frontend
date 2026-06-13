@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { dashboardApi } from '@/lib/api';
 import { DashboardStats } from '@/lib/types';
@@ -72,14 +73,18 @@ export function HRDashboard() {
           description={`${attendancePercentage}% attendance`}
           color="green"
         />
-        <StatCard
-          title="Pending leaves"
-          value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
-          icon={Calendar}
-          description="Awaiting approval"
-          color="orange"
-        />
-        <StatCard title="Reports" value="View" icon={FileText} description="Analytics & exports" />
+        <Link href="/dashboard/leave-approvals" className="block transition-opacity hover:opacity-90">
+          <StatCard
+            title="Pending leaves"
+            value={isLoading ? '…' : stats?.pendingLeaveApprovals ?? 0}
+            icon={Calendar}
+            description="Awaiting your approval — open queue"
+            color="orange"
+          />
+        </Link>
+        <Link href="/dashboard/reports" className="block transition-opacity hover:opacity-90">
+          <StatCard title="Reports" value="View" icon={FileText} description="Analytics & exports" />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">

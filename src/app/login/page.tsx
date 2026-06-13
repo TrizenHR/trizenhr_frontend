@@ -41,7 +41,13 @@ export default function LoginPage() {
       await login(data.email, data.password);
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.response?.data?.error || 'Invalid email or password');
+      if (!err.response) {
+        toast.error('Cannot reach the API server. Make sure the backend is running on port 5000.');
+      } else {
+        toast.error(
+          err.response?.data?.message || err.response?.data?.error || 'Invalid email or password'
+        );
+      }
       setIsLoading(false);
     }
   };

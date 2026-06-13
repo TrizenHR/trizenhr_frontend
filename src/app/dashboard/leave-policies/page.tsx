@@ -1,319 +1,381 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { leavePolicyApi, leaveTypeApi, approvalWorkflowApi } from '@/lib/api';
+import {
+  ApprovalWorkflow,
+  LeavePolicyRecord,
+  LeavePolicyStatus,
+  LeaveTypeRecord,
+} from '@/lib/types';
+import { formatWorkflowSteps, isLeaveTypeRecord } from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { Save, GitMerge, FileSpreadsheet, Percent, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { FileText, Plus, CheckCircle2, Star, Loader2, Trash2 } from 'lucide-react';
+
+type RuleForm = { leaveTypeId: string; annualAllocation: number };
 
 export default function LeavePoliciesPage() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [policies, setPolicies] = useState<LeavePolicyRecord[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveTypeRecord[]>([]);
+  const [workflows, setWorkflows] = useState<ApprovalWorkflow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<LeavePolicyRecord | null>(null);
+  const [policyName, setPolicyName] = useState('');
+  const [workflowId, setWorkflowId] = useState('');
+  const [rules, setRules] = useState<RuleForm[]>([]);
 
-  // Policy state
-  const [policies, setPolicies] = useState({
-    sickLeaveLimit: 12,
-    sickLeaveCarryForward: false,
-    sickLeaveMaxCarry: 0,
-    
-    casualLeaveLimit: 10,
-    casualLeaveCarryForward: false,
-    casualLeaveMaxCarry: 0,
-    
-    vacationLeaveLimit: 15,
-    vacationLeaveCarryForward: true,
-    vacationLeaveMaxCarry: 5,
-    
-    unpaidLeaveLimit: 90,
+  const stats = useMemo(
+    () => ({
+      total: policies.length,
+      active: policies.filter((p) => p.status === LeavePolicyStatus.ACTIVE).length,
+      default: policies.filter((p) => p.isDefault).length,
+    }),
+    [policies]
+  );
 
-    allowEncashment: true,
-    encashmentPercentage: 100,
-    encashmentExpiryYears: 2,
+  useEffect(() => {
+    void loadAll();
+  }, []);
 
-    multiLevelApproval: true,
-    managerFirstApproval: true,
-    hrSecondApproval: true,
-    allowSelfApprovalForManagers: false,
-    autoApproveAfterDays: 7,
-  });
-
-  const handleSave = () => {
-    setIsLoading(true);
-    setTimeout(() => {
+  const loadAll = async () => {
+    try {
+      setIsLoading(true);
+      const [policyData, typeData, workflowData] = await Promise.all([
+        leavePolicyApi.getAll(),
+        leaveTypeApi.getAll(true),
+        approvalWorkflowApi.getAll(),
+      ]);
+      setPolicies(policyData);
+      setLeaveTypes(typeData);
+      setWorkflows(workflowData);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load leave policies', variant: 'destructive' });
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const openCreate = () => {
+    setEditing(null);
+    setPolicyName('');
+    setWorkflowId(workflows.find((w) => w.isDefault)?._id ?? workflows[0]?._id ?? '');
+    setRules(
+      leaveTypes.slice(0, 4).map((t) => ({
+        leaveTypeId: t._id,
+        annualAllocation: t.code === 'UPL' ? 0 : 12,
+      }))
+    );
+    setDialogOpen(true);
+  };
+
+  const openEdit = (policy: LeavePolicyRecord) => {
+    setEditing(policy);
+    setPolicyName(policy.policyName);
+    const wf = policy.workflowId;
+    setWorkflowId(typeof wf === 'string' ? wf : wf._id);
+    setRules(
+      policy.leaveRules.map((r) => ({
+        leaveTypeId: isLeaveTypeRecord(r.leaveTypeId) ? r.leaveTypeId._id : String(r.leaveTypeId),
+        annualAllocation: r.annualAllocation,
+      }))
+    );
+    setDialogOpen(true);
+  };
+
+  const save = async () => {
+    if (!policyName.trim() || !workflowId || rules.length === 0) {
+      toast({ title: 'Validation', description: 'Name, workflow, and rules are required', variant: 'destructive' });
+      return;
+    }
+    const payload = { policyName: policyName.trim(), workflowId, leaveRules: rules };
+    try {
+      setIsSaving(true);
+      if (editing) {
+        await leavePolicyApi.update(editing._id, payload);
+        toast({ title: 'Updated', description: 'Leave policy updated' });
+      } else {
+        await leavePolicyApi.create(payload);
+        toast({ title: 'Created', description: 'Leave policy created' });
+      }
+      setDialogOpen(false);
+      await loadAll();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       toast({
-        title: 'Leave Policy Saved',
-        description: 'Leave configuration stored locally. Backend integration pending.',
+        title: 'Error',
+        description: err.response?.data?.error || 'Failed to save policy',
+        variant: 'destructive',
       });
-    }, 600);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const setDefault = async (id: string) => {
+    try {
+      await leavePolicyApi.setDefault(id);
+      toast({ title: 'Default updated' });
+      await loadAll();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
+      toast({
+        title: 'Error',
+        description: err.response?.data?.error || 'Failed to set default',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const remove = async (policy: LeavePolicyRecord) => {
+    if (!confirm(`Delete policy "${policy.policyName}"?`)) return;
+    try {
+      await leavePolicyApi.delete(policy._id);
+      toast({ title: 'Deleted' });
+      await loadAll();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
+      toast({
+        title: 'Error',
+        description: err.response?.data?.error || 'Failed to delete policy',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const ruleSummary = (policy: LeavePolicyRecord) => {
+    const lines = policy.leaveRules.slice(0, 3).map((r) => {
+      const name = isLeaveTypeRecord(r.leaveTypeId) ? r.leaveTypeId.name : 'Leave';
+      return `${name}: ${r.annualAllocation} days/yr`;
+    });
+    const extra = policy.leaveRules.length > 3 ? `+${policy.leaveRules.length - 3} more` : null;
+    return { lines, extra, count: policy.leaveRules.length };
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold md:text-3xl">Leave Policies</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage leave type allotments, encashment programs, and multi-level approval workflows</p>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Policies</p>
+        <h1 className="text-2xl font-bold md:text-3xl">Leave Policies</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Assign leave allocations and approval workflows
+        </p>
+      </div>
+
+      <div className="grid gap-3 grid-cols-3 max-w-lg">
+        <Card>
+          <CardContent className="pt-4 pb-3 flex items-center gap-3">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xl font-bold">{stats.total}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 flex items-center gap-3">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <div>
+              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-xl font-bold">{stats.active}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 flex items-center gap-3">
+            <Star className="h-4 w-4 text-amber-500" />
+            <div>
+              <p className="text-xs text-muted-foreground">Default</p>
+              <p className="text-xl font-bold">{stats.default}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Button onClick={openCreate} className="w-full sm:w-auto" disabled={workflows.length === 0}>
+        <Plus className="mr-2 h-4 w-4" />
+        Create Leave Policy
+      </Button>
+
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-        <Button onClick={handleSave} disabled={isLoading} className="shadow-md">
-          <Save className="mr-2 h-4 w-4" />
-          {isLoading ? 'Saving...' : 'Save Policies'}
-        </Button>
-      </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {policies.map((policy) => {
+            const summary = ruleSummary(policy);
+            const wf =
+              typeof policy.workflowId === 'object' ? policy.workflowId : undefined;
+            return (
+              <Card key={policy._id}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{policy.policyName}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {wf ? formatWorkflowSteps(wf) : 'Workflow linked'}
+                      </CardDescription>
+                    </div>
+                    {policy.isDefault && <Badge variant="secondary">Default</Badge>}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {summary.count} leave rule{summary.count !== 1 ? 's' : ''}
+                  </p>
+                  <ul className="text-sm space-y-0.5">
+                    {summary.lines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                    {summary.extra && <li className="text-muted-foreground">{summary.extra}</li>}
+                  </ul>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button variant="outline" size="sm" onClick={() => openEdit(policy)}>
+                      Edit
+                    </Button>
+                    {!policy.isDefault && (
+                      <Button variant="outline" size="sm" onClick={() => void setDefault(policy._id)}>
+                        Set Default
+                      </Button>
+                    )}
+                    {!policy.isDefault && (
+                      <Button variant="outline" size="sm" onClick={() => void remove(policy)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Leave Type Allotments */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileSpreadsheet className="h-5 w-5 text-blue-500" />
-              Annual Allotments & Rollover Policies
-            </CardTitle>
-            <CardDescription>Configure yearly quotas and carry-forward rules for default leave types</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
-              {/* Sick Leave Card */}
-              <div className="rounded-xl border border-border/70 p-4 space-y-4 bg-muted/20">
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline" className="text-blue-600 bg-blue-50/20 border-blue-200 font-bold uppercase">Sick Leave</Badge>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Annual Limit (Days)</Label>
-                  <Input
-                    type="number"
-                    value={policies.sickLeaveLimit}
-                    onChange={e => setPolicies(p => ({ ...p, sickLeaveLimit: Number(e.target.value) }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-semibold text-muted-foreground">Carry Forward</span>
-                  <Switch
-                    checked={policies.sickLeaveCarryForward}
-                    onCheckedChange={checked => setPolicies(p => ({ ...p, sickLeaveCarryForward: checked }))}
-                  />
-                </div>
-                {policies.sickLeaveCarryForward && (
-                  <div className="space-y-1.5 pt-1">
-                    <Label className="text-xs">Max Carry Forward (Days)</Label>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Edit Leave Policy' : 'Create Leave Policy'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Policy name</Label>
+              <Input value={policyName} onChange={(e) => setPolicyName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Approval workflow</Label>
+              <Select value={workflowId} onValueChange={setWorkflowId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select workflow" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workflows.map((w) => (
+                    <SelectItem key={w._id} value={w._id}>
+                      {w.workflowName} ({formatWorkflowSteps(w)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-3">
+              <Label>Leave rules</Label>
+              {rules.map((rule, index) => (
+                <div key={index} className="flex gap-2 items-end">
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Type</Label>
+                    <Select
+                      value={rule.leaveTypeId}
+                      onValueChange={(v) => {
+                        const next = [...rules];
+                        next[index] = { ...next[index], leaveTypeId: v };
+                        setRules(next);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leaveTypes.map((t) => (
+                          <SelectItem key={t._id} value={t._id}>
+                            {t.name} ({t.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-24 space-y-1">
+                    <Label className="text-xs">Days/yr</Label>
                     <Input
                       type="number"
-                      value={policies.sickLeaveMaxCarry}
-                      onChange={e => setPolicies(p => ({ ...p, sickLeaveMaxCarry: Number(e.target.value) }))}
+                      min={0}
+                      value={rule.annualAllocation}
+                      onChange={(e) => {
+                        const next = [...rules];
+                        next[index] = {
+                          ...next[index],
+                          annualAllocation: Number(e.target.value),
+                        };
+                        setRules(next);
+                      }}
                     />
                   </div>
-                )}
-              </div>
-
-              {/* Casual Leave Card */}
-              <div className="rounded-xl border border-border/70 p-4 space-y-4 bg-muted/20">
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline" className="text-amber-600 bg-amber-50/20 border-amber-200 font-bold uppercase">Casual Leave</Badge>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRules(rules.filter((_, i) => i !== index))}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Annual Limit (Days)</Label>
-                  <Input
-                    type="number"
-                    value={policies.casualLeaveLimit}
-                    onChange={e => setPolicies(p => ({ ...p, casualLeaveLimit: Number(e.target.value) }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-semibold text-muted-foreground">Carry Forward</span>
-                  <Switch
-                    checked={policies.casualLeaveCarryForward}
-                    onCheckedChange={checked => setPolicies(p => ({ ...p, casualLeaveCarryForward: checked }))}
-                  />
-                </div>
-                {policies.casualLeaveCarryForward && (
-                  <div className="space-y-1.5 pt-1">
-                    <Label className="text-xs">Max Carry Forward (Days)</Label>
-                    <Input
-                      type="number"
-                      value={policies.casualLeaveMaxCarry}
-                      onChange={e => setPolicies(p => ({ ...p, casualLeaveMaxCarry: Number(e.target.value) }))}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Vacation Leave Card */}
-              <div className="rounded-xl border border-border/70 p-4 space-y-4 bg-muted/20">
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline" className="text-emerald-600 bg-emerald-50/20 border-emerald-200 font-bold uppercase">Vacation Leave</Badge>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Annual Limit (Days)</Label>
-                  <Input
-                    type="number"
-                    value={policies.vacationLeaveLimit}
-                    onChange={e => setPolicies(p => ({ ...p, vacationLeaveLimit: Number(e.target.value) }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-semibold text-muted-foreground">Carry Forward</span>
-                  <Switch
-                    checked={policies.vacationLeaveCarryForward}
-                    onCheckedChange={checked => setPolicies(p => ({ ...p, vacationLeaveCarryForward: checked }))}
-                  />
-                </div>
-                {policies.vacationLeaveCarryForward && (
-                  <div className="space-y-1.5 pt-1">
-                    <Label className="text-xs">Max Carry Forward (Days)</Label>
-                    <Input
-                      type="number"
-                      value={policies.vacationLeaveMaxCarry}
-                      onChange={e => setPolicies(p => ({ ...p, vacationLeaveMaxCarry: Number(e.target.value) }))}
-                    />
-                  </div>
-                )}
-              </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setRules([
+                    ...rules,
+                    { leaveTypeId: leaveTypes[0]?._id ?? '', annualAllocation: 0 },
+                  ])
+                }
+              >
+                Add rule
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Approval Workflows */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <GitMerge className="h-5 w-5 text-indigo-500" />
-              Approval Workflow Configuration
-            </CardTitle>
-            <CardDescription>Setup request approval tiers and escalation timelines</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="multiLevel">Require Multi-Level Approval</Label>
-                <p className="text-xs text-muted-foreground">Force requests to be verified by supervisor before HR operations.</p>
-              </div>
-              <Switch
-                id="multiLevel"
-                checked={policies.multiLevelApproval}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, multiLevelApproval: checked }))}
-              />
-            </div>
-
-            {policies.multiLevelApproval && (
-              <div className="space-y-3.5 pl-6 border-l-2 border-primary/20">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">1st Level Approval: Team Supervisor</span>
-                  <Switch checked={policies.managerFirstApproval} disabled />
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">2nd Level Approval: HR Operations</span>
-                  <Switch
-                    checked={policies.hrSecondApproval}
-                    onCheckedChange={checked => setPolicies(p => ({ ...p, hrSecondApproval: checked }))}
-                  />
-                </div>
-              </div>
-            )}
-
-            <hr className="border-border/60" />
-
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="selfApprove">Allow Self-Approval for Supervisors</Label>
-                <p className="text-xs text-muted-foreground">Skip supervisor approvals if the requester is themselves a department supervisor.</p>
-              </div>
-              <Switch
-                id="selfApprove"
-                checked={policies.allowSelfApprovalForManagers}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, allowSelfApprovalForManagers: checked }))}
-              />
-            </div>
-
-            <div className="space-y-1.5 pt-2">
-              <Label htmlFor="autoActionDays">Escalate / Auto-Approve Timeline (Days)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  id="autoActionDays"
-                  value={policies.autoApproveAfterDays}
-                  onChange={e => setPolicies(p => ({ ...p, autoApproveAfterDays: Number(e.target.value) }))}
-                />
-                <span className="text-xs text-muted-foreground font-semibold">days</span>
-              </div>
-              <p className="text-xs text-muted-foreground">Automatically actions request if pending without response after this timeline.</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Leave Encashment Rules */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Percent className="h-5 w-5 text-emerald-500" />
-              Leave Encashment Rules
-            </CardTitle>
-            <CardDescription>Setup parameters for converting accrued leave to financial compensation</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="allowEncashment">Enable Leave Encashment</Label>
-                <p className="text-xs text-muted-foreground">Allow employees to encash outstanding Vacation leaves during tenure or exit.</p>
-              </div>
-              <Switch
-                id="allowEncashment"
-                checked={policies.allowEncashment}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, allowEncashment: checked }))}
-              />
-            </div>
-
-            {policies.allowEncashment && (
-              <div className="space-y-4 pl-6 border-l-2 border-primary/20">
-                <div className="space-y-1.5">
-                  <Label htmlFor="encashPercent">Compensation Value Ratio (%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      id="encashPercent"
-                      max="100"
-                      min="10"
-                      value={policies.encashmentPercentage}
-                      onChange={e => setPolicies(p => ({ ...p, encashmentPercentage: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs text-muted-foreground font-semibold">%</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Determines percentage value paid out relative to employee daily base rate.</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="expiryYears">Allotted Leave Expiry Bounds (Years)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      id="expiryYears"
-                      value={policies.encashmentExpiryYears}
-                      onChange={e => setPolicies(p => ({ ...p, encashmentExpiryYears: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs font-semibold text-muted-foreground">Years</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2 items-start bg-blue-500/10 text-blue-800 rounded-lg p-3 text-xs border border-blue-500/20 font-medium">
-              <HelpCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <p>Leave balance calculations use fiscal year settings configured in Organization settings.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-4">
-        <Button variant="outline" onClick={() => window.location.reload()}>Revert Changes</Button>
-        <Button onClick={handleSave} disabled={isLoading}>
-          <Save className="mr-2 h-4 w-4" />
-          {isLoading ? 'Saving...' : 'Save Policies'}
-        </Button>
-      </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void save()} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

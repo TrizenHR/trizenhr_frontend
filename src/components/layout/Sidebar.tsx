@@ -26,6 +26,9 @@ import {
   BarChart3,
   Shield,
   CreditCard,
+  Moon,
+  Layers,
+  GitBranch,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -139,10 +142,10 @@ const navigationSections: NavSection[] = [
     title: 'Approvals',
     items: [
       {
-        label: 'Leave Requests',
+        label: 'Leave Approvals',
         href: '/dashboard/leave-approvals',
         icon: ClipboardList,
-        roles: [UserRole.HR, UserRole.SUPERVISOR],
+        roles: [UserRole.HR, UserRole.SUPERVISOR, UserRole.ADMIN],
       },
       {
         label: 'Regularizations',
@@ -196,10 +199,16 @@ const navigationSections: NavSection[] = [
     ],
   },
 
-  // ── ADMIN : Policies ──────────────────────────────────────────
+  // ── ADMIN / HR : Policies ─────────────────────────────────────
   {
     title: 'Policies',
     items: [
+      {
+        label: 'Shifts',
+        href: '/dashboard/shifts',
+        icon: Moon,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
       {
         label: 'Attendance Policy',
         href: '/dashboard/attendance-policies',
@@ -207,10 +216,22 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.ADMIN],
       },
       {
-        label: 'Leave Policy',
+        label: 'Leave Types',
+        href: '/dashboard/leave-types',
+        icon: Layers,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Approval Workflows',
+        href: '/dashboard/approval-workflows',
+        icon: GitBranch,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Leave Policies',
         href: '/dashboard/leave-policies',
         icon: FileText,
-        roles: [UserRole.ADMIN],
+        roles: [UserRole.ADMIN, UserRole.HR],
       },
       {
         label: 'Payroll Policy',
