@@ -557,6 +557,10 @@ export const attendancePolicyApi = {
     );
     return response.data.data!;
   },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/attendance-policies/${id}`);
+  },
 };
 
 // Leave API

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -25,7 +24,6 @@ type FormState = {
   endTime: string;
   graceMinutes: number;
   breakMinutes: number;
-  isNightShift: boolean;
 };
 
 const emptyForm: FormState = {
@@ -34,7 +32,6 @@ const emptyForm: FormState = {
   endTime: '18:00',
   graceMinutes: 15,
   breakMinutes: 0,
-  isNightShift: false,
 };
 
 export default function ShiftsPage() {
@@ -84,7 +81,6 @@ export default function ShiftsPage() {
       endTime: shift.endTime,
       graceMinutes: shift.graceMinutes,
       breakMinutes: shift.breakMinutes ?? 0,
-      isNightShift: shift.isNightShift,
     });
     setDialogOpen(true);
   };
@@ -193,7 +189,6 @@ export default function ShiftsPage() {
               <CardContent className="space-y-2">
                 <p className="text-xs text-muted-foreground">
                   Grace {shift.graceMinutes} min
-                  {shift.isNightShift ? ' · Night shift' : ''}
                 </p>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(shift)}>
@@ -265,13 +260,7 @@ export default function ShiftsPage() {
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <Label>Night shift</Label>
-              <Switch
-                checked={form.isNightShift}
-                onCheckedChange={(v) => setForm({ ...form, isNightShift: v })}
-              />
-            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>

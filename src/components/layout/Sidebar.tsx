@@ -156,6 +156,131 @@ const navigationSections: NavSection[] = [
     ],
   },
 
+  // ── ADMIN : Approvals ─────────────────────────────────────────
+  {
+    title: 'APPROVALS',
+    items: [
+      {
+        label: 'Leave Approvals',
+        href: '/dashboard/leave-approvals',
+        icon: ClipboardList,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Approval Workflows',
+        href: '/dashboard/approval-workflows',
+        icon: GitBranch,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
+    ],
+  },
+
+  // ── ADMIN : Attendance ────────────────────────────────────────
+  {
+    title: 'ATTENDANCE',
+    items: [
+      {
+        label: 'Shifts',
+        href: '/dashboard/shifts',
+        icon: Moon,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Attendance Policy',
+        href: '/dashboard/attendance-policies',
+        icon: Shield,
+        roles: [UserRole.ADMIN],
+      },
+    ],
+  },
+
+  // ── ADMIN : Leave Management ──────────────────────────────────
+  {
+    title: 'LEAVE MANAGEMENT',
+    items: [
+      {
+        label: 'Leave Types',
+        href: '/dashboard/leave-types',
+        icon: Layers,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
+      {
+        label: 'Leave Policies',
+        href: '/dashboard/leave-policies',
+        icon: FileText,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
+    ],
+  },
+
+  // ── ADMIN : Payroll ───────────────────────────────────────────
+  {
+    title: 'PAYROLL',
+    items: [
+      {
+        label: 'Payroll Policy',
+        href: '/dashboard/payroll-policies',
+        icon: IndianRupee,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Salary Structures',
+        href: '/dashboard/salary-structures',
+        icon: IndianRupee,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Payroll',
+        href: '/dashboard/payroll',
+        icon: Wallet,
+        roles: [UserRole.ADMIN],
+      },
+    ],
+  },
+
+  // ── ADMIN : Organization ──────────────────────────────────────
+  {
+    title: 'ORGANIZATION',
+    items: [
+      {
+        label: 'Departments',
+        href: '/dashboard/departments',
+        icon: Building2,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Users',
+        href: '/dashboard/users',
+        icon: UserCog,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Holidays',
+        href: '/dashboard/manage-holidays',
+        icon: Calendar,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'System Users',
+        href: '/dashboard/system-users',
+        icon: UserCog,
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        label: 'Subscriptions',
+        href: '/dashboard/subscriptions',
+        icon: CreditCard,
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        label: 'Analytics',
+        href: '/dashboard/analytics',
+        icon: BarChart3,
+        roles: [UserRole.SUPER_ADMIN],
+      },
+    ],
+  },
+
   // ── HR : Operations ───────────────────────────────────────────
   {
     title: 'HR Operations',
@@ -199,103 +324,7 @@ const navigationSections: NavSection[] = [
     ],
   },
 
-  // ── ADMIN / HR : Policies ─────────────────────────────────────
-  {
-    title: 'Policies',
-    items: [
-      {
-        label: 'Shifts',
-        href: '/dashboard/shifts',
-        icon: Moon,
-        roles: [UserRole.ADMIN, UserRole.HR],
-      },
-      {
-        label: 'Attendance Policy',
-        href: '/dashboard/attendance-policies',
-        icon: Shield,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Leave Types',
-        href: '/dashboard/leave-types',
-        icon: Layers,
-        roles: [UserRole.ADMIN, UserRole.HR],
-      },
-      {
-        label: 'Approval Workflows',
-        href: '/dashboard/approval-workflows',
-        icon: GitBranch,
-        roles: [UserRole.ADMIN, UserRole.HR],
-      },
-      {
-        label: 'Leave Policies',
-        href: '/dashboard/leave-policies',
-        icon: FileText,
-        roles: [UserRole.ADMIN, UserRole.HR],
-      },
-      {
-        label: 'Payroll Policy',
-        href: '/dashboard/payroll-policies',
-        icon: IndianRupee,
-        roles: [UserRole.ADMIN],
-      },
-    ],
-  },
 
-  // ── ADMIN : Organization ──────────────────────────────────────
-  {
-    title: 'Organization',
-    items: [
-      {
-        label: 'Departments',
-        href: '/dashboard/departments',
-        icon: Building2,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Salary Structures',
-        href: '/dashboard/salary-structures',
-        icon: IndianRupee,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Holidays',
-        href: '/dashboard/manage-holidays',
-        icon: Calendar,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Users',
-        href: '/dashboard/users',
-        icon: UserCog,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'Payroll',
-        href: '/dashboard/payroll',
-        icon: Wallet,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        label: 'System Users',
-        href: '/dashboard/system-users',
-        icon: UserCog,
-        roles: [UserRole.SUPER_ADMIN],
-      },
-      {
-        label: 'Subscriptions',
-        href: '/dashboard/subscriptions',
-        icon: CreditCard,
-        roles: [UserRole.SUPER_ADMIN],
-      },
-      {
-        label: 'Analytics',
-        href: '/dashboard/analytics',
-        icon: BarChart3,
-        roles: [UserRole.SUPER_ADMIN],
-      },
-    ],
-  },
 ];
 
 const bottomNavItems: NavItem[] = [

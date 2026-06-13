@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { attendancePolicyApi, departmentApi, userApi } from '@/lib/api';
-import { AttendancePolicy, Department, DepartmentFormData, User } from '@/lib/types';
+import { attendancePolicyApi, departmentApi, leavePolicyApi, userApi } from '@/lib/api';
+import { AttendancePolicy, Department, DepartmentFormData, LeavePolicyRecord, User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [attendancePolicies, setAttendancePolicies] = useState<AttendancePolicy[]>([]);
+  const [leavePolicies, setLeavePolicies] = useState<LeavePolicyRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function DepartmentsPage() {
     description: '',
     headOfDepartment: '',
     defaultAttendancePolicyId: null,
+    defaultLeavePolicyId: null,
   });
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -71,8 +73,12 @@ export default function DepartmentsPage() {
       ]);
       setDepartments(depts);
       setAllUsers(users.filter((u) => u.isActive !== false));
-      const policies = await attendancePolicyApi.getAll('ACTIVE');
+      const [policies, leaves] = await Promise.all([
+        attendancePolicyApi.getAll('ACTIVE'),
+        leavePolicyApi.getAll(),
+      ]);
       setAttendancePolicies(policies);
+      setLeavePolicies(leaves);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -91,6 +97,7 @@ export default function DepartmentsPage() {
       description: '',
       headOfDepartment: '',
       defaultAttendancePolicyId: null,
+      defaultLeavePolicyId: null,
     });
     setIsDialogOpen(true);
   };
@@ -101,6 +108,10 @@ export default function DepartmentsPage() {
       typeof dept.defaultAttendancePolicyId === 'object' && dept.defaultAttendancePolicyId
         ? dept.defaultAttendancePolicyId._id
         : (dept.defaultAttendancePolicyId as string) || null;
+    const leavePolicyId =
+      typeof dept.defaultLeavePolicyId === 'object' && dept.defaultLeavePolicyId
+        ? dept.defaultLeavePolicyId._id
+        : (dept.defaultLeavePolicyId as string) || null;
     setFormData({
       name: dept.name,
       description: dept.description || '',
@@ -108,6 +119,7 @@ export default function DepartmentsPage() {
         ? dept.headOfDepartment._id
         : (dept.headOfDepartment as string) || '',
       defaultAttendancePolicyId: policyId,
+      defaultLeavePolicyId: leavePolicyId,
     });
     setIsDialogOpen(true);
   };
@@ -481,6 +493,31 @@ export default function DepartmentsPage() {
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {attendancePolicies.map((policy) => (
+                      <SelectItem key={policy._id} value={policy._id}>
+                        {policy.policyName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="defaultLeavePolicy">Default Leave Policy</Label>
+                <Select
+                  value={formData.defaultLeavePolicyId || 'none'}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      defaultLeavePolicyId: value === 'none' ? null : value,
+                    })
+                  }
+                >
+                  <SelectTrigger id="defaultLeavePolicy">
+                    <SelectValue placeholder="Select leave policy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {leavePolicies.map((policy) => (
                       <SelectItem key={policy._id} value={policy._id}>
                         {policy.policyName}
                       </SelectItem>

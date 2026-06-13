@@ -337,6 +337,8 @@ export default function EmployeesPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Department</TableHead>
+                    <TableHead>Attendance Policy</TableHead>
+                    <TableHead>Leave Policy</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -362,6 +364,24 @@ export default function EmployeesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>{employee.department || '-'}</TableCell>
+                        <TableCell>
+                          {employee.attendancePolicy ? (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                              {employee.attendancePolicy.policyName}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {employee.leavePolicy ? (
+                            <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200">
+                              {employee.leavePolicy.policyName}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {employee.createdAt
                             ? format(new Date(employee.createdAt), 'MMM dd, yyyy')
@@ -401,7 +421,7 @@ export default function EmployeesPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                         No employees found
                       </TableCell>
                     </TableRow>
@@ -444,6 +464,22 @@ export default function EmployeesPage() {
                         <div className="flex items-center gap-2 text-sm">
                           <Users className="h-4 w-4 text-muted-foreground" />
                           <span>{employee.department}</span>
+                        </div>
+                      )}
+                      {employee.attendancePolicy && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground text-xs font-semibold">Attendance:</span>
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-800 border-blue-200">
+                            {employee.attendancePolicy.policyName}
+                          </Badge>
+                        </div>
+                      )}
+                      {employee.leavePolicy && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground text-xs font-semibold">Leave:</span>
+                          <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-800 border-indigo-200">
+                            {employee.leavePolicy.policyName}
+                          </Badge>
                         </div>
                       )}
                       {employee.createdAt && (

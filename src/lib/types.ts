@@ -39,6 +39,14 @@ export interface User {
   platformPreferences?: PlatformPreferences;
   /** Profile picture URL or base64 data URI */
   profilePicture?: string;
+  attendancePolicy?: {
+    _id: string;
+    policyName: string;
+  } | null;
+  leavePolicy?: {
+    _id: string;
+    policyName: string;
+  } | null;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -236,6 +244,16 @@ export interface WeekRule {
   graceMinutes?: number;
 }
 
+export interface PolicyShiftRef {
+  _id: string;
+  shiftName: string;
+  startTime: string;
+  endTime: string;
+  expectedHours: number;
+  graceMinutes: number;
+  status: string;
+}
+
 export interface AttendancePolicy {
   _id: string;
   policyName: string;
@@ -245,6 +263,7 @@ export interface AttendancePolicy {
   allowRegularization: boolean;
   isDefault: boolean;
   status: PolicyStatus;
+  shiftId?: string | PolicyShiftRef;
   createdAt: string;
   updatedAt: string;
 }
@@ -510,6 +529,13 @@ export interface Department {
         policyName: string;
         status?: PolicyStatus;
       };
+  defaultLeavePolicyId?:
+    | string
+    | {
+        _id: string;
+        policyName: string;
+        status?: string;
+      };
   members: (string | User)[];
   createdAt: string;
   updatedAt: string;
@@ -520,6 +546,7 @@ export interface DepartmentFormData {
   description?: string;
   headOfDepartment?: string;
   defaultAttendancePolicyId?: string | null;
+  defaultLeavePolicyId?: string | null;
 }
 
 // Organization Types

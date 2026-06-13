@@ -63,7 +63,7 @@ const faqs = [
       {
         question: 'What is the difference between leave types?',
         answer:
-          'Sick Leave: For medical reasons. Casual Leave: For personal reasons. Vacation Leave: For planned vacations. Unpaid Leave: No balance deduction, can be requested anytime.',
+          'Sick Leave: For medical reasons. Casual Leave: For personal reasons. Vacation Leave: For planned vacations. Loss of Pay: No balance deduction, can be requested anytime.',
         roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
       },
       {
