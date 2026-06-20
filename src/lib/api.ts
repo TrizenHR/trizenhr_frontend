@@ -48,6 +48,8 @@ import {
   DemoInvitationStatus,
   CreateDemoInvitationPayload,
   ValidatedDemoInvite,
+  ValidatedOrgInvite,
+  CompleteProfilePayload,
 } from './types';
 
 function resolveApiBaseUrl(): string {
@@ -208,8 +210,21 @@ export const authApi = {
     email?: string;
     organizationId?: string;
     password: string;
-  }): Promise<void> => {
-    await api.post('/auth/accept-invitation', payload);
+  }): Promise<LoginResponse | null> => {
+    const response = await api.post<ApiResponse<LoginResponse | null>>('/auth/accept-invitation', payload);
+    return response.data.data ?? null;
+  },
+
+  validateOrgInvitation: async (email: string, organizationId: string): Promise<ValidatedOrgInvite> => {
+    const response = await api.get<ApiResponse<ValidatedOrgInvite>>('/auth/invitation/validate', {
+      params: { email, organizationId },
+    });
+    return response.data.data!;
+  },
+
+  completeProfile: async (payload: CompleteProfilePayload): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>('/auth/me/profile', payload);
+    return response.data.data!;
   },
 
   validateDemoInvite: async (token: string): Promise<ValidatedDemoInvite> => {

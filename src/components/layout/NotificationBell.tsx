@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import {
   Bell,
   Building2,
+  Cake,
   CalendarClock,
   Check,
   CheckCheck,
@@ -38,6 +39,9 @@ function iconForType(type: string) {
       return CalendarClock;
     case 'attendance_reminder':
       return CalendarClock;
+    case 'birthday_today':
+    case 'colleague_birthday':
+      return Cake;
     case 'org_new':
     case 'org_inactive':
       return Building2;

@@ -1,19 +1,28 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { useRequireAuth } from '@/hooks/use-auth';
+import { needsProfileCompletion } from '@/lib/profileUtils';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isLoading } = useRequireAuth();
+  const router = useRouter();
+  const { user, isLoading } = useRequireAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const openSidebar = useCallback(() => setSidebarOpen(true), []);
+
+  useEffect(() => {
+    if (!isLoading && user && needsProfileCompletion(user)) {
+      router.replace('/auth/complete-profile');
+    }
+  }, [isLoading, user, router]);
 
   if (isLoading) {
     return (

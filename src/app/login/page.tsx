@@ -15,6 +15,7 @@ import { useAuth } from '@/features/auth-context';
 import { LoginFormData, loginSchema } from '@/lib/validations';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
+import { postAuthRedirectPath } from '@/lib/profileUtils';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,8 +39,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(data.email, data.password);
-      router.push('/dashboard');
+      const loggedInUser = await login(data.email, data.password);
+      router.push(postAuthRedirectPath(loggedInUser));
     } catch (err: any) {
       if (!err.response) {
         toast.error('Cannot reach the API server. Make sure the backend is running on port 5000.');

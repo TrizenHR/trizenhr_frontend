@@ -39,6 +39,11 @@ export interface User {
   platformPreferences?: PlatformPreferences;
   /** Profile picture URL or base64 data URI */
   profilePicture?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  /** False until invitee completes the post-password profile step */
+  profileComplete?: boolean;
   attendancePolicy?: {
     _id: string;
     policyName: string;
@@ -96,7 +101,23 @@ export interface LoginResponse {
     role: UserRole;
     department?: string;
     employeeId?: string;
+    profileComplete?: boolean;
   };
+}
+
+export interface ValidatedOrgInvite {
+  email: string;
+  organizationId: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  status: 'pending_password' | 'profile_incomplete' | 'already_onboarded';
+}
+
+export interface CompleteProfilePayload {
+  dateOfBirth: string;
+  gender: string;
+  phone: string;
 }
 
 export interface CreateUserPayload {
