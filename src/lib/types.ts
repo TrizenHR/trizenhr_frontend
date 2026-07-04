@@ -44,6 +44,9 @@ export interface User {
   phone?: string;
   /** False until invitee completes the post-password profile step */
   profileComplete?: boolean;
+  /** When true, mobile tracks location after check-in */
+  fieldTrackingEnabled?: boolean;
+  fieldTrackingIntervalMinutes?: number;
   attendancePolicy?: {
     _id: string;
     policyName: string;
@@ -166,8 +169,59 @@ export interface Attendance {
   isApproved: boolean;
   approvedBy?: string;
   photoUrl?: string; // Photo captured during check-in
+  fieldTrackingSessionId?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export type FieldTrackingStatus = 'active' | 'completed' | 'force_stopped';
+
+export interface FieldLocationSnapshot {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  recordedAt: string;
+  batteryLevel?: number;
+}
+
+export interface FieldTrackingUserRef {
+  _id?: string;
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  employeeId?: string;
+  email?: string;
+  department?: string;
+}
+
+export interface FieldTrackingLiveSession {
+  sessionId: string;
+  attendanceId?: string;
+  userId: string;
+  user?: FieldTrackingUserRef;
+  status: FieldTrackingStatus;
+  startedAt?: string;
+  lastLocation?: FieldLocationSnapshot;
+  pointCount?: number;
+}
+
+export interface FieldLocationPoint {
+  _id?: string;
+  sessionId?: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  recordedAt: string;
+  receivedAt?: string;
+  batteryLevel?: number;
+}
+
+export interface FieldTrackingDayPath {
+  userId: string;
+  date: string;
+  points: FieldLocationPoint[];
+  sessions?: FieldTrackingLiveSession[];
 }
 
 export interface TodayStatus {

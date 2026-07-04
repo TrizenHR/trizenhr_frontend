@@ -35,6 +35,9 @@ import {
   PlatformNotificationPreferences,
   NotificationListPayload,
   DashboardStats,
+  FieldLocationPoint,
+  FieldTrackingDayPath,
+  FieldTrackingLiveSession,
   SalaryStructure,
   CreateSalaryStructurePayload,
   UpdateSalaryStructurePayload,
@@ -267,6 +270,21 @@ export const userApi = {
 
   updateUser: async (id: string, data: UpdateUserPayload): Promise<User> => {
     const response = await api.patch<ApiResponse<User>>(`/users/${id}`, data);
+    return response.data.data!;
+  },
+
+  /** Enable/disable field tracking for a user (Admin/HR). */
+  toggleFieldTracking: async (
+    id: string,
+    payload: {
+      fieldTrackingEnabled: boolean;
+      fieldTrackingIntervalMinutes?: number;
+    }
+  ): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>(
+      `/users/${id}/field-tracking`,
+      payload
+    );
     return response.data.data!;
   },
 
@@ -1239,6 +1257,121 @@ export const payrollApi = {
   getPayrollRecord: async (recordId: string): Promise<PayrollRecord> => {
     const response = await api.get<ApiResponse<PayrollRecord>>(`/payroll/records/${recordId}`);
     return response.data.data!;
+  },
+};
+
+function normalizeLiveSession(raw: any): FieldTrackingLiveSession | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const sessionId = String(raw.sessionId ?? raw._id ?? raw.id ?? '');
+  if (!sessionId) return null;
+
+  const userRaw = raw.user ?? (typeof raw.userId === 'object' ? raw.userId : undefined);
+  const userId =
+    typeof raw.userId === 'object' && raw.userId
+      ? String(raw.userId._id ?? raw.userId.id ?? '')
+      : String(raw.userId ?? userRaw?._id ?? userRaw?.id ?? '');
+
+  const loc = raw.lastLocation;
+  const lastLocation =
+    loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
+      ? {
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          accuracy: typeof loc.accuracy === 'number' ? loc.accuracy : undefined,
+          recordedAt: String(loc.recordedAt ?? ''),
+          batteryLevel: typeof loc.batteryLevel === 'number' ? loc.batteryLevel : undefined,
+        }
+      : undefined;
+
+  return {
+    sessionId,
+    attendanceId: raw.attendanceId ? String(raw.attendanceId) : undefined,
+    userId,
+    user: userRaw
+      ? {
+          _id: userRaw._id ? String(userRaw._id) : undefined,
+          id: userRaw.id ? String(userRaw.id) : undefined,
+          firstName: userRaw.firstName,
+          lastName: userRaw.lastName,
+          fullName: userRaw.fullName,
+          employeeId: userRaw.employeeId,
+          email: userRaw.email,
+          department: userRaw.department,
+        }
+      : undefined,
+    status: (raw.status as FieldTrackingLiveSession['status']) || 'active',
+    startedAt: raw.startedAt ? String(raw.startedAt) : undefined,
+    lastLocation,
+    pointCount: typeof raw.pointCount === 'number' ? raw.pointCount : undefined,
+  };
+}
+
+function normalizeLocationPoint(raw: any): FieldLocationPoint | null {
+  if (!raw || typeof raw !== 'object') return null;
+  if (typeof raw.latitude !== 'number' || typeof raw.longitude !== 'number') return null;
+  return {
+    _id: raw._id ? String(raw._id) : undefined,
+    sessionId: raw.sessionId ? String(raw.sessionId) : undefined,
+    latitude: raw.latitude,
+    longitude: raw.longitude,
+    accuracy: typeof raw.accuracy === 'number' ? raw.accuracy : undefined,
+    recordedAt: String(raw.recordedAt ?? raw.createdAt ?? ''),
+    receivedAt: raw.receivedAt ? String(raw.receivedAt) : undefined,
+    batteryLevel: typeof raw.batteryLevel === 'number' ? raw.batteryLevel : undefined,
+  };
+}
+
+// Field tracking API (admin live map + history)
+export const fieldTrackingApi = {
+  /** Active sessions with lastLocation for the live map. */
+  getLive: async (): Promise<FieldTrackingLiveSession[]> => {
+    const response = await api.get<ApiResponse<any>>('/field-tracking/live');
+    const payload = response.data.data ?? response.data;
+    const list = Array.isArray(payload)
+      ? payload
+      : (payload?.sessions ?? payload?.items ?? payload?.data ?? []);
+    return (Array.isArray(list) ? list : [])
+      .map(normalizeLiveSession)
+      .filter((s): s is FieldTrackingLiveSession => Boolean(s));
+  },
+
+  /** Full GPS path for one session. */
+  getSessionPath: async (sessionId: string): Promise<FieldLocationPoint[]> => {
+    const response = await api.get<ApiResponse<any>>(`/field-tracking/session/${sessionId}/path`);
+    const payload = response.data.data ?? response.data;
+    const list = Array.isArray(payload) ? payload : (payload?.points ?? payload?.items ?? []);
+    return (Array.isArray(list) ? list : [])
+      .map(normalizeLocationPoint)
+      .filter((p): p is FieldLocationPoint => Boolean(p));
+  },
+
+  /** Full day travel path for an employee. */
+  getDayPath: async (userId: string, date: string): Promise<FieldTrackingDayPath> => {
+    const response = await api.get<ApiResponse<any>>('/field-tracking/day-path', {
+      params: { userId, date },
+    });
+    const payload = response.data.data ?? response.data ?? {};
+    const list = Array.isArray(payload)
+      ? payload
+      : (payload?.points ?? payload?.items ?? payload?.path ?? []);
+    const points = (Array.isArray(list) ? list : [])
+      .map(normalizeLocationPoint)
+      .filter((p): p is FieldLocationPoint => Boolean(p));
+    return {
+      userId,
+      date,
+      points,
+      sessions: Array.isArray(payload?.sessions)
+        ? payload.sessions
+            .map(normalizeLiveSession)
+            .filter((s: FieldTrackingLiveSession | null): s is FieldTrackingLiveSession => Boolean(s))
+        : undefined,
+    };
+  },
+
+  /** Force-stop a forgotten active session. */
+  forceStop: async (sessionId: string): Promise<void> => {
+    await api.patch(`/field-tracking/session/${sessionId}/force-stop`);
   },
 };
 
