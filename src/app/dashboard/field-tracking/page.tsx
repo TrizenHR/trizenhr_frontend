@@ -300,7 +300,8 @@ export default function FieldTrackingPage() {
       await fieldTrackingApi.forceStop(sessionId);
       toast({
         title: 'Session stopped',
-        description: 'Live tracking closed. Location history for this day is still available.',
+        description:
+          'Live tracking closed. History for this day is still available. The employee must check out and check in again on the mobile app to appear live.',
       });
       await loadLive();
       // Keep history visible — force-stop does not delete GPS points.
@@ -353,7 +354,8 @@ export default function FieldTrackingPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Field Tracking</h1>
           <p className="text-sm text-muted-foreground">
-            Live locations and travel routes on one map. Select an employee to draw their path.
+            Live locations and travel routes on one map. Employees must check in on the mobile app
+            (with location permission). This page does not auto-update — use Refresh after check-in.
           </p>
         </div>
         <Button
@@ -412,7 +414,9 @@ export default function FieldTrackingPage() {
             <CardContent className="space-y-3">
               {sessions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No active field tracking sessions. Field employees appear here after check-in.
+                  No active sessions. Enable field tracking on the employee&apos;s user profile, have
+                  them check in on the <strong>mobile app</strong> (not the website) with location
+                  allowed, then click Refresh.
                 </p>
               ) : (
                 sessions.map((session) => {
