@@ -295,12 +295,19 @@ export default function FieldTrackingPage() {
   const handleForceStop = async (sessionId: string) => {
     setForceStoppingId(sessionId);
     try {
+      const stoppedUserId =
+        sessions.find((s) => s.sessionId === sessionId)?.userId || historyUserId;
       await fieldTrackingApi.forceStop(sessionId);
-      toast({ title: 'Session stopped', description: 'Tracking session was force-stopped.' });
+      toast({
+        title: 'Session stopped',
+        description: 'Live tracking closed. Location history for this day is still available.',
+      });
       await loadLive();
-      if (selectedSessionId === sessionId) {
-        setSelectedSessionId(null);
-        setPathPoints([]);
+      // Keep history visible — force-stop does not delete GPS points.
+      setSelectedSessionId(null);
+      if (stoppedUserId) {
+        setHistoryUserId(stoppedUserId);
+        await loadPathForUser(stoppedUserId, pathDate);
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: string } }; message?: string };
