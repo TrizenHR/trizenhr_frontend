@@ -299,9 +299,9 @@ export default function FieldTrackingPage() {
         sessions.find((s) => s.sessionId === sessionId)?.userId || historyUserId;
       await fieldTrackingApi.forceStop(sessionId);
       toast({
-        title: 'Session stopped',
+        title: 'Live tracking stopped for this employee',
         description:
-          'Live tracking closed. History for this day is still available. The employee must check out and check in again on the mobile app to appear live.',
+          'Only this person was removed from the live map. They can resume from the mobile app (Start location tracking). Other employees are not affected.',
       });
       await loadLive();
       // Keep history visible — force-stop does not delete GPS points.
@@ -472,7 +472,7 @@ export default function FieldTrackingPage() {
                       onClick={() => void handleForceStop(selectedSession.sessionId)}
                     >
                       <Square className="mr-2 h-3.5 w-3.5" />
-                      Force stop session
+                      Stop live tracking (this employee)
                     </Button>
                   ) : null}
                 </div>
