@@ -171,6 +171,12 @@ export default function PrivacyPolicyPage() {
                   <p>
                     This Privacy Policy is governed in accordance with the laws of India, unless otherwise required by applicable law.
                   </p>
+                  <p>
+                    <strong>Mobile app — location data:</strong> The TrizenHR Android and iOS apps access and collect location data
+                    (including precise GPS location and, where enabled by your employer, background location while you are checked in).
+                    Location is used for attendance geofencing, field workforce tracking, and fraud prevention. See Section 2.D for full
+                    details on what is collected, how it is used, who can view it, and how you can control permissions.
+                  </p>
                 </PolicySection>
 
                 <PolicySection id="sec-info" title="2. Information We Collect">
@@ -208,8 +214,10 @@ export default function PrivacyPolicyPage() {
                     <div>
                       <h3 className="font-semibold text-foreground">D. Location data (mobile app)</h3>
                       <p className="mt-1">
-                        The TrizenHR mobile app may request access to your device&apos;s location for attendance-related features.
-                        How location is used depends on your organization&apos;s settings and your role.
+                        The TrizenHR mobile app <strong>accesses and collects location data</strong> from your device for
+                        attendance-related features. This may include <strong>precise location</strong> (GPS coordinates) and{' '}
+                        <strong>approximate location</strong>, depending on the permissions you grant. How location is used depends on
+                        your organization&apos;s settings and your role.
                       </p>
                       <p className="mt-2 font-medium text-foreground">Check-in location (geofencing)</p>
                       <p className="mt-1">
@@ -225,12 +233,15 @@ export default function PrivacyPolicyPage() {
                         visible to authorized HR and admin users on the field tracking dashboard (live map and location history).
                       </p>
                       <ul className="mt-2 list-disc space-y-1 pl-5">
-                        <li>Location is used solely for attendance verification, field workforce management, and fraud prevention.</li>
+                        <li>Location data is collected and processed solely for attendance verification, field workforce management, and fraud prevention.</li>
                         <li>
-                          Background location permission may be requested so field tracking can continue when the app is minimized.
+                          <strong>Background location</strong> may be collected while you are checked in when your organization has
+                          enabled field tracking, so updates can continue when the app is minimized. A persistent notification is shown
+                          while background location sharing is active.
                         </li>
                         <li>
-                          Location data is accessible to authorized HR and admin users in your organization; it is not shared publicly.
+                          Location data is shared with your organization and is accessible to authorized HR and admin users; it is not
+                          sold or shared publicly.
                         </li>
                         <li>
                           You can deny or revoke location permission at any time in your device settings; this may prevent geofence
