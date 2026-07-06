@@ -206,13 +206,46 @@ export default function PrivacyPolicyPage() {
                       </ul>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">D. Support and communications</h3>
+                      <h3 className="font-semibold text-foreground">D. Location data (mobile app)</h3>
+                      <p className="mt-1">
+                        The TrizenHR mobile app may request access to your device&apos;s location for attendance-related features.
+                        How location is used depends on your organization&apos;s settings and your role.
+                      </p>
+                      <p className="mt-2 font-medium text-foreground">Check-in location (geofencing)</p>
+                      <p className="mt-1">
+                        When your organization enables geofence-based attendance, the app reads your GPS coordinates when you check in
+                        (and, where applicable, when you check out) to verify that you are within an authorized work area. Location is
+                        collected only at those moments — not continuously for standard office attendance.
+                      </p>
+                      <p className="mt-2 font-medium text-foreground">Field tracking</p>
+                      <p className="mt-1">
+                        For employees whose organization has enabled field tracking, the app collects GPS location updates at regular
+                        intervals (for example, every 5 minutes) while you are checked in. A persistent notification indicates when
+                        background location sharing is active. Location points are stored against your attendance session and are
+                        visible to authorized HR and admin users on the field tracking dashboard (live map and location history).
+                      </p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5">
+                        <li>Location is used solely for attendance verification, field workforce management, and fraud prevention.</li>
+                        <li>
+                          Background location permission may be requested so field tracking can continue when the app is minimized.
+                        </li>
+                        <li>
+                          Location data is accessible to authorized HR and admin users in your organization; it is not shared publicly.
+                        </li>
+                        <li>
+                          You can deny or revoke location permission at any time in your device settings; this may prevent geofence
+                          check-in or field tracking from working.
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">E. Support and communications</h3>
                       <p className="mt-1">
                         Examples: information you send to our support team, including messages, tickets, and related correspondence.
                       </p>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">E. Usage and device information</h3>
+                      <h3 className="font-semibold text-foreground">F. Usage and device information</h3>
                       <p className="mt-1">
                         Examples: IP address, browser type, pages viewed, and other log data used to maintain security and performance.
                       </p>
@@ -227,6 +260,14 @@ export default function PrivacyPolicyPage() {
                     <li>
                       Enable photo-based attendance check-in verification (mobile app only) — check-in photos are stored against the
                       corresponding attendance record and are visible to authorized HR and admin users within your organization.
+                    </li>
+                    <li>
+                      Verify attendance against organization-defined office locations using GPS at check-in (mobile app, when geofencing
+                      is enabled by your organization).
+                    </li>
+                    <li>
+                      Enable field employee location tracking and route history for authorized HR and admin users (mobile app only,
+                      when field tracking is enabled by your organization).
                     </li>
                     <li>Enable role-based access and organizational administration.</li>
                     <li>Operate, maintain, and secure the platform (including fraud detection and incident response).</li>
