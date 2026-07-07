@@ -181,6 +181,12 @@ const navigationSections: NavSection[] = [
     title: 'ATTENDANCE',
     items: [
       {
+        label: 'Company Attendance',
+        href: '/dashboard/attendance',
+        icon: ClipboardList,
+        roles: [UserRole.ADMIN],
+      },
+      {
         label: 'Field Tracking',
         href: '/dashboard/field-tracking',
         icon: MapPin,
@@ -326,7 +332,7 @@ const navigationSections: NavSection[] = [
         label: 'Reports',
         href: '/dashboard/reports',
         icon: BarChart3,
-        roles: [UserRole.HR],
+        roles: [UserRole.HR, UserRole.ADMIN],
       },
     ],
   },

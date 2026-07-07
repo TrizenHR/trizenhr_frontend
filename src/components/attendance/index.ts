@@ -3,3 +3,8 @@ export { AttendanceStatsCard } from './AttendanceStatsCard';
 export { AttendanceTable } from './AttendanceTable';
 export { AttendanceFilters } from './AttendanceFilters';
 export { AttendanceRegularizationPanel } from './AttendanceRegularizationPanel';
+export { CheckInPhotoDialog, CheckInPhotoButton } from './CheckInPhotoDialog';
+export type { CheckInPhotoTarget } from './CheckInPhotoDialog';
+export { AttendancePunchCell, punchExportLabel } from './AttendancePunchCell';
+export { TeamAttendanceBoard } from './TeamAttendanceBoard';
+export type { TeamAttendanceBoardProps } from './TeamAttendanceBoard';

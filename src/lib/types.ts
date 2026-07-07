@@ -168,7 +168,17 @@ export interface Attendance {
   notes?: string;
   isApproved: boolean;
   approvedBy?: string;
-  photoUrl?: string; // Photo captured during check-in
+  photoUrl?: string; // Stable API path for check-in photo
+  hasCheckInPhoto?: boolean;
+  checkInLat?: number;
+  checkInLng?: number;
+  checkInDistance?: number;
+  checkOutLat?: number;
+  checkOutLng?: number;
+  checkOutDistance?: number;
+  checkInLocationLabel?: string;
+  checkOutLocationLabel?: string;
+  locationStatus?: string;
   fieldTrackingSessionId?: string;
   createdAt: string;
   updatedAt: string;

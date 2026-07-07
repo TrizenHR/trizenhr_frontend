@@ -67,7 +67,10 @@ export type FieldTrackingMapProps = {
   /** Travel route drawn on the same map when an employee is selected. */
   pathPoints?: FieldLocationPoint[];
   selectedSessionId?: string | null;
+  /** Date used for check-in photo lookup (yyyy-MM-dd). */
+  routeDate?: string;
   onSelectSession?: (session: FieldTrackingLiveSession) => void;
+  onViewCheckInPhoto?: (session: FieldTrackingLiveSession) => void;
   className?: string;
 };
 
@@ -76,6 +79,7 @@ export function FieldTrackingMap({
   pathPoints = [],
   selectedSessionId,
   onSelectSession,
+  onViewCheckInPhoto,
   className,
 }: FieldTrackingMapProps) {
   const livePositions = useMemo(
@@ -99,7 +103,11 @@ export function FieldTrackingMap({
   const center = fitPositions[0] ?? DEFAULT_CENTER;
 
   return (
-    <div className={className ?? 'h-[520px] w-full overflow-hidden rounded-xl border'}>
+    <div
+      className={`relative z-0 isolate ${
+        className ?? 'h-[520px] w-full overflow-hidden rounded-xl border'
+      }`}
+    >
       <MapContainer
         center={center}
         zoom={DEFAULT_ZOOM}
@@ -151,7 +159,19 @@ export function FieldTrackingMap({
                   {typeof session.pointCount === 'number' ? (
                     <p className="text-muted-foreground">Points: {session.pointCount}</p>
                   ) : null}
-                  <p className="text-xs text-muted-foreground">Click to show route on map</p>
+                  {session.attendanceId && onViewCheckInPhoto ? (
+                    <button
+                      type="button"
+                      className="mt-2 w-full rounded-md border border-primary/30 bg-primary/5 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onViewCheckInPhoto(session);
+                      }}
+                    >
+                      View check-in photo
+                    </button>
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">Click marker to show route on map</p>
                 </div>
               </Popup>
             </Marker>
