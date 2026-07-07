@@ -43,7 +43,14 @@ export function AttendancePunchCell({
       setIsResolving(false);
       return;
     }
-    if (!hasCoordinates(latitude, longitude)) {
+    const lat = latitude;
+    const lng = longitude;
+    if (
+      typeof lat !== 'number' ||
+      !Number.isFinite(lat) ||
+      typeof lng !== 'number' ||
+      !Number.isFinite(lng)
+    ) {
       setResolvedLabel(null);
       setIsResolving(false);
       return;
@@ -51,7 +58,7 @@ export function AttendancePunchCell({
 
     let cancelled = false;
     setIsResolving(true);
-    void reverseGeocodeAreaName(latitude, longitude).then((label) => {
+    void reverseGeocodeAreaName(lat, lng).then((label) => {
       if (!cancelled) {
         setResolvedLabel(label || null);
         setIsResolving(false);
