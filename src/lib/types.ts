@@ -131,6 +131,18 @@ export enum AttendanceStatus {
   ABSENT = 'absent',
   HALF_DAY = 'half_day',
   ON_LEAVE = 'on_leave',
+  WEEKLY_OFF = 'weekly_off',
+  HOLIDAY = 'holiday',
+  NOT_JOINED = 'not_joined',
+  PRESENT_WITH_LATE = 'present_with_late',
+}
+
+export enum LocationStatus {
+  VERIFIED = 'verified',
+  OUT_OF_RANGE = 'out_of_range',
+  NOT_CAPTURED = 'not_captured',
+  NOT_APPLICABLE = 'not_applicable',
+  MANUAL_OVERRIDE = 'manual_override',
 }
 
 export interface Attendance {
@@ -144,7 +156,16 @@ export interface Attendance {
   notes?: string;
   isApproved: boolean;
   approvedBy?: string;
-  photoUrl?: string; // Photo captured during check-in
+  photoUrl?: string;
+  photoKey?: string;
+  officeLocationId?: string;
+  checkInLat?: number;
+  checkInLng?: number;
+  checkInDistance?: number;
+  checkOutLat?: number;
+  checkOutLng?: number;
+  checkOutDistance?: number;
+  locationStatus: LocationStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -188,11 +209,20 @@ export enum RegularizationStatus {
   REJECTED = 'rejected',
 }
 
+export enum RegularizationRequestType {
+  MISSED_CHECK_IN = 'missed_check_in',
+  MISSED_CHECK_OUT = 'missed_check_out',
+  INCORRECT_TIMING = 'incorrect_timing',
+  ATTENDANCE_CORRECTION = 'attendance_correction',
+  LOCATION_OUT_OF_RANGE = 'location_out_of_range',
+}
+
 export interface AttendanceRegularization {
   _id: string;
   organizationId: string;
   userId: string | User;
   date: string;
+  requestType: RegularizationRequestType;
   requestedCheckIn?: string;
   requestedCheckOut?: string;
   requestedStatus: AttendanceStatus;
@@ -201,6 +231,10 @@ export interface AttendanceRegularization {
   reviewedBy?: string;
   reviewedAt?: string;
   reviewNotes?: string;
+  flaggedDistance?: number;
+  flaggedLat?: number;
+  flaggedLng?: number;
+  isSystemGenerated?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -215,6 +249,32 @@ export enum PolicyDayType {
 export enum PolicyStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
+}
+
+export enum GeofenceEnforcementMode {
+  BLOCK = 'BLOCK',
+  FLAG = 'FLAG',
+  DISABLED = 'DISABLED',
+}
+
+export interface GeofenceConfig {
+  enabled: boolean;
+  officeLocationIds: string[];
+  enforcementMode: GeofenceEnforcementMode;
+}
+
+export interface OfficeLocation {
+  _id: string;
+  organizationId: string;
+  name: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export enum WeekDay {
@@ -264,6 +324,7 @@ export interface AttendancePolicy {
   isDefault: boolean;
   status: PolicyStatus;
   shiftId?: string | PolicyShiftRef;
+  geofence?: GeofenceConfig;
   createdAt: string;
   updatedAt: string;
 }

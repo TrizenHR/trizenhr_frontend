@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { attendancePolicyApi, shiftApi } from '@/lib/api';
+import { attendancePolicyApi, shiftApi, officeLocationApi } from '@/lib/api';
 import {
   AttendancePolicy,
   DefaultFullDayRule,
@@ -11,6 +11,9 @@ import {
   Shift,
   WeekDay,
   WeekRule,
+  GeofenceConfig,
+  GeofenceEnforcementMode,
+  OfficeLocation,
 } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,6 +65,7 @@ type PolicyFormState = {
   autoAbsentEnabled: boolean;
   allowRegularization: boolean;
   isDefault: boolean;
+  geofence: GeofenceConfig;
 };
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
@@ -202,6 +206,7 @@ export default function AttendancePoliciesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<AttendancePolicy | null>(null);
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
 
   const [form, setForm] = useState<PolicyFormState>(() => {
     const defaultRule: DefaultFullDayRule = {
@@ -266,6 +271,7 @@ export default function AttendancePoliciesPage() {
         autoAbsentEnabled: policy.autoAbsentEnabled,
         allowRegularization: policy.allowRegularization,
         isDefault: policy.isDefault,
+        geofence: policy.geofence ?? { enabled: false, officeLocationIds: [], enforcementMode: GeofenceEnforcementMode.DISABLED },
       });
       return;
     }
@@ -284,6 +290,7 @@ export default function AttendancePoliciesPage() {
       autoAbsentEnabled: true,
       allowRegularization: true,
       isDefault: false,
+      geofence: { enabled: false, officeLocationIds: [], enforcementMode: GeofenceEnforcementMode.DISABLED },
     });
   };
 
@@ -317,17 +324,26 @@ export default function AttendancePoliciesPage() {
     }));
   };
 
+  const loadOfficeLocations = async () => {
+    try {
+      const data = await officeLocationApi.list(true);
+      setOfficeLocations(Array.isArray(data) ? data : []);
+    } catch {
+      setOfficeLocations([]);
+    }
+  };
+
   const openAddDialog = async () => {
     setEditingPolicy(null);
     resetForm();
-    await loadShifts();
+    await Promise.all([loadShifts(), loadOfficeLocations()]);
     setIsDialogOpen(true);
   };
 
   const openEditDialog = async (policy: AttendancePolicy) => {
     setEditingPolicy(policy);
     resetForm(policy);
-    await loadShifts();
+    await Promise.all([loadShifts(), loadOfficeLocations()]);
     setIsDialogOpen(true);
   };
 
@@ -407,6 +423,10 @@ export default function AttendancePoliciesPage() {
       autoAbsentEnabled: form.autoAbsentEnabled,
       allowRegularization: form.allowRegularization,
     };
+
+    if (form.geofence.enabled) {
+      payload.geofence = form.geofence;
+    }
 
     if (form.isDefault) payload.isDefault = true;
 
@@ -888,6 +908,80 @@ export default function AttendancePoliciesPage() {
                     onCheckedChange={(checked) => setForm((prev) => ({ ...prev, isDefault: checked }))}
                     disabled={editingPolicy?.isDefault}
                   />
+                </div>
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <Label className="font-medium">Geofencing</Label>
+                      <p className="text-xs text-muted-foreground">Verify check-ins are within office radius</p>
+                    </div>
+                    <Switch
+                      checked={form.geofence.enabled}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          geofence: { ...prev.geofence, enabled: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                  {form.geofence.enabled && (
+                    <div className="space-y-3 pl-0">
+                      <div>
+                        <Label className="text-sm">Enforcement Mode</Label>
+                        <Select
+                          value={form.geofence.enforcementMode}
+                          onValueChange={(val: GeofenceEnforcementMode) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              geofence: { ...prev.geofence, enforcementMode: val },
+                            }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={GeofenceEnforcementMode.BLOCK}>Block check-in outside radius</SelectItem>
+                            <SelectItem value={GeofenceEnforcementMode.FLAG}>Flag for review (auto-create regularization)</SelectItem>
+                            <SelectItem value={GeofenceEnforcementMode.DISABLED}>Disabled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-sm">Allowed Office Locations</Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {officeLocations.length === 0 ? (
+                            <p className="text-xs text-muted-foreground">No active office locations found. Create one first.</p>
+                          ) : (
+                            officeLocations.map((loc) => {
+                              const selected = form.geofence.officeLocationIds.includes(loc._id);
+                              return (
+                                <Badge
+                                  key={loc._id}
+                                  variant={selected ? 'default' : 'outline'}
+                                  className="cursor-pointer"
+                                  onClick={() =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      geofence: {
+                                        ...prev.geofence,
+                                        officeLocationIds: selected
+                                          ? prev.geofence.officeLocationIds.filter((id) => id !== loc._id)
+                                          : [...prev.geofence.officeLocationIds, loc._id],
+                                      },
+                                    }))
+                                  }
+                                >
+                                  {loc.name}
+                                </Badge>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

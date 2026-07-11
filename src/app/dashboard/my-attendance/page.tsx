@@ -63,6 +63,20 @@ function formatExpectedHours(hours?: number): string {
   return `${rounded}h`;
 }
 
+function getCurrentPosition(): Promise<{ latitude: number; longitude: number } | null> {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => resolve(null),
+      { timeout: 5000, enableHighAccuracy: true }
+    );
+  });
+}
+
 export default function MyAttendancePage() {
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
@@ -253,21 +267,20 @@ export default function MyAttendancePage() {
     setShowCamera(true);
   };
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     const photo = capturePhoto();
     if (photo) {
-      // Photo captured successfully
       setShowCamera(false);
       stopCamera();
-      // Proceed with check-in
-      submitCheckIn(photo);
+      const coords = await getCurrentPosition();
+      submitCheckIn(photo, coords?.latitude, coords?.longitude);
     }
   };
 
-  const submitCheckIn = async (photo: string) => {
+  const submitCheckIn = async (photo: string, latitude?: number, longitude?: number) => {
     try {
       setIsCheckingIn(true);
-      const attendance = await attendanceApi.checkIn(photo);
+      const attendance = await attendanceApi.checkIn(photo, latitude, longitude);
       setTodayAttendance(attendance);
       await Promise.all([loadMonthlyStats(), loadAttendanceHistory()]);
       resetCamera();
@@ -311,7 +324,8 @@ export default function MyAttendancePage() {
   const handleCheckOut = async () => {
     try {
       setIsCheckingOut(true);
-      const attendance = await attendanceApi.checkOut();
+      const coords = await getCurrentPosition();
+      const attendance = await attendanceApi.checkOut(coords?.latitude, coords?.longitude);
       setTodayAttendance(attendance);
       setShowCheckoutModal(false);
       await Promise.all([loadMonthlyStats(), loadAttendanceHistory()]);

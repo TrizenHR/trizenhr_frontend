@@ -48,6 +48,7 @@ import {
   DemoInvitationStatus,
   CreateDemoInvitationPayload,
   ValidatedDemoInvite,
+  OfficeLocation,
 } from './types';
 
 function resolveApiBaseUrl(): string {
@@ -309,9 +310,11 @@ export const attendanceApi = {
   /**
    * Mark check-in for current user
    */
-  checkIn: async (photoData?: string): Promise<Attendance> => {
+  checkIn: async (photoData?: string, latitude?: number, longitude?: number): Promise<Attendance> => {
     const response = await api.post<ApiResponse<Attendance>>('/attendance/check-in', {
       photoData,
+      latitude,
+      longitude,
     });
     return response.data.data!;
   },
@@ -319,8 +322,11 @@ export const attendanceApi = {
   /**
    * Mark check-out for current user
    */
-  checkOut: async (): Promise<Attendance> => {
-    const response = await api.post<ApiResponse<Attendance>>('/attendance/check-out');
+  checkOut: async (latitude?: number, longitude?: number): Promise<Attendance> => {
+    const response = await api.post<ApiResponse<Attendance>>('/attendance/check-out', {
+      latitude,
+      longitude,
+    });
     return response.data.data!;
   },
 
@@ -560,6 +566,36 @@ export const attendancePolicyApi = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/attendance-policies/${id}`);
+  },
+};
+
+// Office Locations API
+export const officeLocationApi = {
+  list: async (activeOnly?: boolean): Promise<OfficeLocation[]> => {
+    const response = await api.get<ApiResponse<OfficeLocation[]>>('/attendance/office-locations', {
+      params: activeOnly ? { activeOnly: 'true' } : undefined,
+    });
+    return response.data.data!;
+  },
+
+  create: async (data: Partial<OfficeLocation>): Promise<OfficeLocation> => {
+    const response = await api.post<ApiResponse<OfficeLocation>>(
+      '/attendance/office-locations',
+      data
+    );
+    return response.data.data!;
+  },
+
+  update: async (id: string, data: Partial<OfficeLocation>): Promise<OfficeLocation> => {
+    const response = await api.patch<ApiResponse<OfficeLocation>>(
+      `/attendance/office-locations/${id}`,
+      data
+    );
+    return response.data.data!;
+  },
+
+  deactivate: async (id: string): Promise<void> => {
+    await api.patch(`/attendance/office-locations/${id}/deactivate`);
   },
 };
 

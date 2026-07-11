@@ -191,6 +191,12 @@ const navigationSections: NavSection[] = [
         icon: Shield,
         roles: [UserRole.ADMIN],
       },
+      {
+        label: 'Office Locations',
+        href: '/dashboard/office-locations',
+        icon: Building2,
+        roles: [UserRole.ADMIN, UserRole.HR],
+      },
     ],
   },
 
