@@ -213,7 +213,7 @@ export default function TeamLeavesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <Badge className={getLeaveTypeColor(resolveLeaveTypeCode(leave))} variant="outline">
+                        <Badge className={getLeaveTypeColor(resolveLeaveTypeCode(leave), leave.status)} variant="outline">
                           {resolveLeaveTypeName(leave)}
                         </Badge>
                         <div className="text-right">
@@ -272,7 +272,7 @@ export default function TeamLeavesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <Badge className={getLeaveTypeColor(resolveLeaveTypeCode(leave))} variant="outline">
+                        <Badge className={getLeaveTypeColor(resolveLeaveTypeCode(leave), leave.status)} variant="outline">
                           {resolveLeaveTypeName(leave)}
                         </Badge>
                         <div className="text-right">

@@ -12,7 +12,7 @@ interface AttendanceCardProps {
   showUser?: boolean;
 }
 
-const statusColors: Record<AttendanceStatus, string> = {
+const statusColors: Partial<Record<AttendanceStatus, string>> = {
   [AttendanceStatus.PRESENT]: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
   [AttendanceStatus.LATE]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
   [AttendanceStatus.ABSENT]: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
@@ -20,7 +20,7 @@ const statusColors: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ON_LEAVE]: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
 };
 
-const statusLabels: Record<AttendanceStatus, string> = {
+const statusLabels: Partial<Record<AttendanceStatus, string>> = {
   [AttendanceStatus.PRESENT]: 'Present',
   [AttendanceStatus.LATE]: 'Late',
   [AttendanceStatus.ABSENT]: 'Absent',

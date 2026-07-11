@@ -223,6 +223,7 @@ export default function AttendancePoliciesPage() {
       autoAbsentEnabled: true,
       allowRegularization: true,
       isDefault: false,
+      geofence: { enabled: false, officeLocationIds: [], enforcementMode: GeofenceEnforcementMode.DISABLED },
     };
   });
 

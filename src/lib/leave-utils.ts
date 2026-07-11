@@ -99,7 +99,11 @@ export function isLeaveAwaitingApproval(status: LeaveStatus | string): boolean {
   );
 }
 
-export function getLeaveTypeColor(code: string): string {
+export function getLeaveTypeColor(code: string, status?: string): string {
+  const normalized = status ? normalizeLeaveStatus(status) : null;
+  if (normalized === LeaveStatus.APPROVED) {
+    return 'bg-green-50 text-green-700 border-green-200';
+  }
   const colors: Record<string, string> = {
     SL: 'bg-red-50 text-red-700 border-red-200',
     CL: 'bg-blue-50 text-blue-700 border-blue-200',

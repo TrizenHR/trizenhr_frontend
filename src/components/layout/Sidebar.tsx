@@ -81,7 +81,7 @@ const navigationSections: NavSection[] = [
     ],
   },
 
-  // ── EMPLOYEE / SUPERVISOR : Leave ─────────────────────────────
+  // ── EMPLOYEE / SUPERVISOR / HR : Leave ─────────────────────────────
   {
     title: 'Leave',
     items: [
@@ -89,13 +89,13 @@ const navigationSections: NavSection[] = [
         label: 'My Leave',
         href: '/dashboard/my-leave',
         icon: FileText,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE, UserRole.HR],
       },
       {
         label: 'Leave Calendar',
         href: '/dashboard/leave-calendar',
         icon: CalendarDays,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE, UserRole.HR],
       },
     ],
   },

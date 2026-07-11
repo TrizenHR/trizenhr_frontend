@@ -55,6 +55,13 @@ export interface User {
     _id: string;
     policyName: string;
   } | null;
+  supervisor?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    email: string;
+  } | null;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -180,22 +187,23 @@ export interface Attendance {
   notes?: string;
   isApproved: boolean;
   approvedBy?: string;
-  photoUrl?: string;
+  photoUrl?: string; // Stable API path for check-in photo
   photoKey?: string;
   officeLocationId?: string;
-  photoUrl?: string; // Stable API path for check-in photo
   hasCheckInPhoto?: boolean;
   checkInLat?: number;
   checkInLng?: number;
   checkInDistance?: number;
+  checkInLocationLabel?: string;
   checkOutLat?: number;
   checkOutLng?: number;
   checkOutDistance?: number;
-  locationStatus: LocationStatus;
   checkOutLocationLabel?: string;
+  locationStatus: LocationStatus;
   fieldTrackingSessionId?: string;
   createdAt: string;
   updatedAt: string;
+}
 
 export type FieldTrackingStatus = 'active' | 'completed' | 'force_stopped';
 
@@ -587,6 +595,11 @@ export interface LeaveBalance {
   balances: LeaveBalanceEntry[];
   createdAt?: string;
   updatedAt?: string;
+  policy?: {
+    _id: string;
+    policyName: string;
+    workflow?: ApprovalWorkflow;
+  };
 }
 
 export interface LeavePagination {

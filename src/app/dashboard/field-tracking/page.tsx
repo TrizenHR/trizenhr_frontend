@@ -143,11 +143,21 @@ export default function FieldTrackingPage() {
         const users = await userApi.getAllUsers({ isActive: true });
         const fieldUsers = users.filter((u) => u.fieldTrackingEnabled === true);
         setEmployees(fieldUsers.length > 0 ? fieldUsers : users);
-      } catch {
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { error?: string } }; message?: string };
+        console.error('Failed to load employees for field tracking:', error);
+        toast({
+          title: 'Could not load employees',
+          description:
+            err.response?.data?.error ||
+            err.message ||
+            'Failed to retrieve employee list.',
+          variant: 'destructive',
+        });
         setEmployees([]);
       }
     })();
-  }, [canAccess]);
+  }, [canAccess, toast]);
 
   const selectedSession = useMemo(
     () => sessions.find((s) => s.sessionId === selectedSessionId) ?? null,
@@ -621,7 +631,7 @@ export default function FieldTrackingPage() {
               <div className="space-y-2">
                 <Label>Employee</Label>
                 <Select value={historyUserId} onValueChange={handleHistoryUserChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
                   <SelectContent>

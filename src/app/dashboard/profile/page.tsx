@@ -133,17 +133,24 @@ export default function ProfilePage() {
 
     setIsUploadingPic(true);
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64 = reader.result as string;
-      if (user) {
-        const updatedUser = { ...user, profilePicture: base64 };
+      try {
+        const updatedUser = await authApi.updateProfilePhoto(base64);
         updateUser(updatedUser);
         toast({
           title: 'Profile Picture Updated',
           description: 'Your profile picture has been updated successfully.',
         });
+      } catch (error: any) {
+        toast({
+          title: 'Upload Failed',
+          description: error.response?.data?.error || 'Failed to upload profile picture. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUploadingPic(false);
       }
-      setIsUploadingPic(false);
     };
     reader.onerror = () => {
       toast({
@@ -158,14 +165,23 @@ export default function ProfilePage() {
     e.target.value = '';
   };
 
-  const handleRemoveProfilePic = () => {
-    if (user) {
-      const updatedUser = { ...user, profilePicture: undefined };
+  const handleRemoveProfilePic = async () => {
+    try {
+      setIsUploadingPic(true);
+      const updatedUser = await authApi.removeProfilePhoto();
       updateUser(updatedUser);
       toast({
         title: 'Profile Picture Removed',
         description: 'Your profile picture has been removed.',
       });
+    } catch (error: any) {
+      toast({
+        title: 'Removal Failed',
+        description: error.response?.data?.error || 'Failed to remove profile picture. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingPic(false);
     }
   };
 

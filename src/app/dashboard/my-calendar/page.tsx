@@ -137,6 +137,10 @@ export default function MyCalendarPage() {
       [AttendanceStatus.HALF_DAY]: 'bg-yellow-100 border-yellow-300',
       [AttendanceStatus.ON_LEAVE]: 'bg-purple-100 border-purple-300',
       [AttendanceStatus.LATE]: 'bg-orange-100 border-orange-300',
+      [AttendanceStatus.WEEKLY_OFF]: 'bg-gray-100 border-gray-300',
+      [AttendanceStatus.HOLIDAY]: 'bg-teal-100 border-teal-300',
+      [AttendanceStatus.NOT_JOINED]: 'bg-gray-50 border-gray-200',
+      [AttendanceStatus.PRESENT_WITH_LATE]: 'bg-green-100 border-green-300',
     };
     return colors[status] || 'bg-gray-50';
   };
@@ -148,6 +152,10 @@ export default function MyCalendarPage() {
       [AttendanceStatus.HALF_DAY]: 'H',
       [AttendanceStatus.ON_LEAVE]: 'L',
       [AttendanceStatus.LATE]: 'Lt', 
+      [AttendanceStatus.WEEKLY_OFF]: 'Off',
+      [AttendanceStatus.HOLIDAY]: '🎉',
+      [AttendanceStatus.NOT_JOINED]: '',
+      [AttendanceStatus.PRESENT_WITH_LATE]: 'P*',
     };
     return labels[status] || '';
   };
@@ -270,7 +278,7 @@ export default function MyCalendarPage() {
                         {day.myLeaves.map((leave) => (
                           <div
                             key={leave._id}
-                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(resolveLeaveTypeCode(leave))}`}
+                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(resolveLeaveTypeCode(leave), leave.status)}`}
                             title={resolveLeaveTypeName(leave)}
                           >
                             {resolveLeaveTypeCode(leave).charAt(0) || 'L'}

@@ -164,7 +164,7 @@ export default function LeaveCalendarPage() {
                         {day.leaves.slice(0, 3).map((leave) => (
                           <div
                             key={leave._id}
-                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(resolveLeaveTypeCode(leave))}`}
+                            className={`text-xs px-1 py-0.5 rounded border ${getLeaveTypeColor(resolveLeaveTypeCode(leave), leave.status)}`}
                             title={
                               typeof leave.userId === 'object' && 'firstName' in leave.userId
                                 ? `${leave.userId.firstName} ${leave.userId.lastName}`

@@ -13,7 +13,7 @@ interface RecentAttendanceWidgetProps {
 }
 
 /** Status chips — primary + neutral tokens */
-const statusBadgeClass: Record<AttendanceStatus, string> = {
+const statusBadgeClass: Partial<Record<AttendanceStatus, string>> = {
   [AttendanceStatus.PRESENT]: 'border-primary/25 bg-primary/10 text-primary',
   [AttendanceStatus.LATE]: 'border-primary/35 bg-primary/15 text-foreground',
   [AttendanceStatus.ABSENT]: 'border-border bg-muted text-foreground',
@@ -21,7 +21,7 @@ const statusBadgeClass: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ON_LEAVE]: 'border-primary/15 bg-primary/5 text-foreground',
 };
 
-const statusLabels: Record<AttendanceStatus, string> = {
+const statusLabels: Partial<Record<AttendanceStatus, string>> = {
   [AttendanceStatus.PRESENT]: 'Present',
   [AttendanceStatus.LATE]: 'Late',
   [AttendanceStatus.ABSENT]: 'Absent',

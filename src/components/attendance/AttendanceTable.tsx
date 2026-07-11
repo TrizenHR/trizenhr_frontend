@@ -22,7 +22,7 @@ interface AttendanceTableProps {
   isLoading?: boolean;
 }
 
-const statusColors: Record<AttendanceStatus, string> = {
+const statusColors: Partial<Record<AttendanceStatus, string>> = {
   [AttendanceStatus.PRESENT]: 'bg-green-100 text-green-800',
   [AttendanceStatus.LATE]: 'bg-orange-100 text-orange-800',
   [AttendanceStatus.ABSENT]: 'bg-red-100 text-red-800',
@@ -30,7 +30,7 @@ const statusColors: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ON_LEAVE]: 'bg-blue-100 text-blue-800',
 };
 
-const statusLabels: Record<AttendanceStatus, string> = {
+const statusLabels: Partial<Record<AttendanceStatus, string>> = {
   [AttendanceStatus.PRESENT]: 'Present',
   [AttendanceStatus.LATE]: 'Late',
   [AttendanceStatus.ABSENT]: 'Absent',

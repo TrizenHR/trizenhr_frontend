@@ -248,6 +248,16 @@ export const authApi = {
     });
     return response.data.data!;
   },
+
+  updateProfilePhoto: async (photoData: string): Promise<User> => {
+    const response = await api.post<ApiResponse<User>>('/auth/me/profile-photo', { photoData });
+    return response.data.data!;
+  },
+
+  removeProfilePhoto: async (): Promise<User> => {
+    const response = await api.delete<ApiResponse<User>>('/auth/me/profile-photo');
+    return response.data.data!;
+  },
 };
 
 // User API
