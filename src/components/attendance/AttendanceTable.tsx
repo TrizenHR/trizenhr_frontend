@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Attendance, AttendanceStatus } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { formatAttendanceDate, formatTimeOnly } from '@/lib/date-utils';
 import { formatWorkingHours } from '@/lib/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckInPhotoButton, CheckInPhotoDialog, type CheckInPhotoTarget } from './CheckInPhotoDialog';
 
 interface AttendanceTableProps {
   records: Attendance[];
@@ -37,6 +39,8 @@ const statusLabels: Record<AttendanceStatus, string> = {
 };
 
 export function AttendanceTable({ records, pagination, onPageChange, isLoading = false }: AttendanceTableProps) {
+  const [photoTarget, setPhotoTarget] = useState<CheckInPhotoTarget | null>(null);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -60,6 +64,7 @@ export function AttendanceTable({ records, pagination, onPageChange, isLoading =
 
   return (
     <div className="space-y-4">
+      <CheckInPhotoDialog target={photoTarget} onClose={() => setPhotoTarget(null)} />
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -69,6 +74,7 @@ export function AttendanceTable({ records, pagination, onPageChange, isLoading =
               <TableHead>Check Out</TableHead>
               <TableHead>Working Hours</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Photo</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,6 +96,18 @@ export function AttendanceTable({ records, pagination, onPageChange, isLoading =
                   <Badge className={statusColors[record.status]} variant="secondary">
                     {statusLabels[record.status]}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {record.hasCheckInPhoto || record.photoUrl ? (
+                    <CheckInPhotoButton
+                      attendanceId={record._id}
+                      date={record.date}
+                      checkIn={record.checkIn}
+                      onView={setPhotoTarget}
+                    />
+                  ) : (
+                    '—'
+                  )}
                 </TableCell>
               </TableRow>
             ))}

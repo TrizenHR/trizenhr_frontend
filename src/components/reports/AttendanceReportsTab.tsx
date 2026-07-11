@@ -17,6 +17,16 @@ import { cn } from '@/lib/utils';
 import { formatAttendanceDate, formatTimeOnly } from '@/lib/date-utils';
 import { formatWorkingHours } from '@/lib/format';
 import { useToast } from '@/hooks/use-toast';
+import {
+  CheckInPhotoButton,
+  CheckInPhotoDialog,
+  type CheckInPhotoTarget,
+} from '@/components/attendance/CheckInPhotoDialog';
+import { AttendancePunchCell, punchExportLabel } from '@/components/attendance/AttendancePunchCell';
+
+type AttendanceReportsTabProps = {
+  showLocationColumns?: boolean;
+};
 
 const statusColors: Record<AttendanceStatus, string> = {
   [AttendanceStatus.PRESENT]: 'bg-green-100 text-green-800',
@@ -34,7 +44,9 @@ const statusLabels: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ON_LEAVE]: 'On Leave',
 };
 
-export default function AttendanceReportsTab() {
+export default function AttendanceReportsTab({
+  showLocationColumns = false,
+}: AttendanceReportsTabProps) {
   const { toast } = useToast();
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -54,6 +66,7 @@ export default function AttendanceReportsTab() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [photoTarget, setPhotoTarget] = useState<CheckInPhotoTarget | null>(null);
 
   // Summary stats
   const [summary, setSummary] = useState({
@@ -172,7 +185,16 @@ export default function AttendanceReportsTab() {
   };
 
   const exportToCSV = (records: Attendance[]) => {
-    const headers = ['Date', 'Employee Name', 'Employee ID', 'Department', 'Check In', 'Check Out', 'Status', 'Working Hours'];
+    const headers = [
+      'Date',
+      'Employee Name',
+      'Employee ID',
+      'Department',
+      'Check In',
+      'Check Out',
+      'Status',
+      'Working Hours',
+    ];
     const rows = records.map((record) => {
       const user = typeof record.userId === 'object' ? record.userId : null;
       return [
@@ -180,8 +202,28 @@ export default function AttendanceReportsTab() {
         user ? `${user.firstName} ${user.lastName}` : 'N/A',
         user?.employeeId || 'N/A',
         user?.department || 'N/A',
-        record.checkIn ? formatTimeOnly(record.checkIn) : 'N/A',
-        record.checkOut ? formatTimeOnly(record.checkOut) : 'N/A',
+        showLocationColumns
+          ? punchExportLabel(
+              record.checkIn,
+              record.checkInLocationLabel,
+              record.checkInLat,
+              record.checkInLng,
+              true
+            )
+          : record.checkIn
+            ? formatTimeOnly(record.checkIn)
+            : 'N/A',
+        showLocationColumns
+          ? punchExportLabel(
+              record.checkOut,
+              record.checkOutLocationLabel,
+              record.checkOutLat,
+              record.checkOutLng,
+              true
+            )
+          : record.checkOut
+            ? formatTimeOnly(record.checkOut)
+            : 'N/A',
         statusLabels[record.status],
         record.workingHours ? formatWorkingHours(record.workingHours) : 'N/A',
       ];
@@ -228,6 +270,7 @@ export default function AttendanceReportsTab() {
 
   return (
     <div className="space-y-6">
+      <CheckInPhotoDialog target={photoTarget} onClose={() => setPhotoTarget(null)} />
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
@@ -449,6 +492,7 @@ export default function AttendanceReportsTab() {
                       <TableHead className="min-w-[100px]">Check Out</TableHead>
                       <TableHead className="min-w-[100px]">Status</TableHead>
                       <TableHead className="min-w-[100px]">Working Hours</TableHead>
+                      <TableHead className="min-w-[100px]">Photo</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -462,8 +506,24 @@ export default function AttendanceReportsTab() {
                           </TableCell>
                           <TableCell className="whitespace-nowrap">{user?.employeeId || 'N/A'}</TableCell>
                           <TableCell className="whitespace-nowrap">{user?.department || 'N/A'}</TableCell>
-                          <TableCell className="whitespace-nowrap">{record.checkIn ? formatTimeOnly(record.checkIn) : '-'}</TableCell>
-                          <TableCell className="whitespace-nowrap">{record.checkOut ? formatTimeOnly(record.checkOut) : '-'}</TableCell>
+                          <TableCell>
+                            <AttendancePunchCell
+                              time={record.checkIn}
+                              latitude={record.checkInLat}
+                              longitude={record.checkInLng}
+                              locationLabel={record.checkInLocationLabel}
+                              showLocation={showLocationColumns}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <AttendancePunchCell
+                              time={record.checkOut}
+                              latitude={record.checkOutLat}
+                              longitude={record.checkOutLng}
+                              locationLabel={record.checkOutLocationLabel}
+                              showLocation={showLocationColumns}
+                            />
+                          </TableCell>
                           <TableCell className="whitespace-nowrap">
                             <Badge className={statusColors[record.status]}>
                               {statusLabels[record.status]}
@@ -471,6 +531,21 @@ export default function AttendanceReportsTab() {
                           </TableCell>
                           <TableCell className="whitespace-nowrap">
                             {record.workingHours ? formatWorkingHours(record.workingHours) : '-'}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {record.hasCheckInPhoto || record.photoUrl ? (
+                              <CheckInPhotoButton
+                                attendanceId={record._id}
+                                employeeName={
+                                  user ? `${user.firstName} ${user.lastName}` : undefined
+                                }
+                                date={record.date}
+                                checkIn={record.checkIn}
+                                onView={setPhotoTarget}
+                              />
+                            ) : (
+                              '-'
+                            )}
                           </TableCell>
                         </TableRow>
                       );

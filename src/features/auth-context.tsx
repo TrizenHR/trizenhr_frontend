@@ -9,7 +9,8 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  setSession: (token: string, user: User) => void;
   logout: () => void;
   updateUser: (user: User) => void;
   selectedOrganizationId: string | null;
@@ -82,14 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const setSession = (sessionToken: string, sessionUser: User) => {
+    localStorage.setItem('token', sessionToken);
+    localStorage.setItem('user', JSON.stringify(sessionUser));
+    setToken(sessionToken);
+    setUser(sessionUser);
+  };
+
+  const login = async (email: string, password: string): Promise<User> => {
     try {
       const response = await authApi.login(email, password);
 
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setToken(response.token);
-      setUser(response.user as User);
+      setSession(response.token, response.user as User);
 
       // Refresh profile in background (includes organization name when API is up)
       void refreshCurrentUser().then((freshUser) => {
@@ -98,6 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('user', JSON.stringify(freshUser));
         }
       });
+
+      return response.user as User;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -138,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     isLoading,
     login,
+    setSession,
     logout,
     updateUser,
     selectedOrganizationId,

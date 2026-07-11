@@ -78,7 +78,7 @@ const roleActions: Record<UserRole, ActionItem[]> = {
   ],
   [UserRole.ADMIN]: [
     { label: 'Manage Users', href: '/dashboard/users', icon: Users, color: 'blue' },
-    { label: 'View Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck, color: 'green' },
+    { label: 'Company Attendance', href: '/dashboard/attendance', icon: ClipboardCheck, color: 'green' },
     { label: 'Reports', href: '/dashboard/reports', icon: FileText, color: 'orange' },
   ],
   [UserRole.SUPER_ADMIN]: [

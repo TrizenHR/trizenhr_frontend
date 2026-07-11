@@ -35,6 +35,9 @@ import {
   PlatformNotificationPreferences,
   NotificationListPayload,
   DashboardStats,
+  FieldLocationPoint,
+  FieldTrackingDayPath,
+  FieldTrackingLiveSession,
   SalaryStructure,
   CreateSalaryStructurePayload,
   UpdateSalaryStructurePayload,
@@ -49,7 +52,20 @@ import {
   CreateDemoInvitationPayload,
   ValidatedDemoInvite,
   OfficeLocation,
+  ValidatedOrgInvite,
+  CompleteProfilePayload,
 } from './types';
+
+import { formatDateParam } from './date-utils';
+
+function toAttendanceDateParam(value?: Date | string): string | undefined {
+  if (!value) return undefined;
+  if (typeof value === 'string') {
+    const match = /^(\d{4}-\d{2}-\d{2})/.exec(value.trim());
+    return match ? match[1] : value.trim();
+  }
+  return formatDateParam(value);
+}
 
 function resolveApiBaseUrl(): string {
   // In the browser we read the runtime env var injected by Next.js.
@@ -209,8 +225,21 @@ export const authApi = {
     email?: string;
     organizationId?: string;
     password: string;
-  }): Promise<void> => {
-    await api.post('/auth/accept-invitation', payload);
+  }): Promise<LoginResponse | null> => {
+    const response = await api.post<ApiResponse<LoginResponse | null>>('/auth/accept-invitation', payload);
+    return response.data.data ?? null;
+  },
+
+  validateOrgInvitation: async (email: string, organizationId: string): Promise<ValidatedOrgInvite> => {
+    const response = await api.get<ApiResponse<ValidatedOrgInvite>>('/auth/invitation/validate', {
+      params: { email, organizationId },
+    });
+    return response.data.data!;
+  },
+
+  completeProfile: async (payload: CompleteProfilePayload): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>('/auth/me/profile', payload);
+    return response.data.data!;
   },
 
   validateDemoInvite: async (token: string): Promise<ValidatedDemoInvite> => {
@@ -253,6 +282,21 @@ export const userApi = {
 
   updateUser: async (id: string, data: UpdateUserPayload): Promise<User> => {
     const response = await api.patch<ApiResponse<User>>(`/users/${id}`, data);
+    return response.data.data!;
+  },
+
+  /** Enable/disable field tracking for a user (Admin/HR). */
+  toggleFieldTracking: async (
+    id: string,
+    payload: {
+      fieldTrackingEnabled: boolean;
+      fieldTrackingIntervalMinutes?: number;
+    }
+  ): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>(
+      `/users/${id}/field-tracking`,
+      payload
+    );
     return response.data.data!;
   },
 
@@ -364,8 +408,8 @@ export const attendanceApi = {
    * Get current user's attendance history
    */
   getMyAttendance: async (filters?: {
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: Date | string;
+    endDate?: Date | string;
     status?: AttendanceStatus;
     page?: number;
     limit?: number;
@@ -375,8 +419,8 @@ export const attendanceApi = {
     >('/attendance/my-attendance', {
       params: {
         ...filters,
-        startDate: filters?.startDate?.toISOString(),
-        endDate: filters?.endDate?.toISOString(),
+        startDate: toAttendanceDateParam(filters?.startDate),
+        endDate: toAttendanceDateParam(filters?.endDate),
       },
     });
     return {
@@ -399,9 +443,9 @@ export const attendanceApi = {
    * Get all attendance records (Admin/HR only)
    */
   getAllAttendance: async (filters?: {
-    date?: Date;
-    startDate?: Date;
-    endDate?: Date;
+    date?: Date | string;
+    startDate?: Date | string;
+    endDate?: Date | string;
     status?: AttendanceStatus;
     department?: string;
     userId?: string;
@@ -413,9 +457,9 @@ export const attendanceApi = {
     >('/attendance/all', {
       params: {
         ...filters,
-        date: filters?.date?.toISOString(),
-        startDate: filters?.startDate?.toISOString(),
-        endDate: filters?.endDate?.toISOString(),
+        date: toAttendanceDateParam(filters?.date),
+        startDate: toAttendanceDateParam(filters?.startDate),
+        endDate: toAttendanceDateParam(filters?.endDate),
       },
     });
     return {
@@ -430,8 +474,8 @@ export const attendanceApi = {
   getUserAttendance: async (
     userId: string,
     filters?: {
-      startDate?: Date;
-      endDate?: Date;
+      startDate?: Date | string;
+      endDate?: Date | string;
       page?: number;
       limit?: number;
     }
@@ -441,14 +485,61 @@ export const attendanceApi = {
     >(`/attendance/user/${userId}`, {
       params: {
         ...filters,
-        startDate: filters?.startDate?.toISOString(),
-        endDate: filters?.endDate?.toISOString(),
+        startDate: toAttendanceDateParam(filters?.startDate),
+        endDate: toAttendanceDateParam(filters?.endDate),
       },
     });
     return {
       records: response.data.data!,
       pagination: response.data.pagination,
     };
+  },
+
+  /** Resolve GPS to a readable area name (admin attendance views). */
+  resolveAreaName: async (latitude: number, longitude: number): Promise<string | null> => {
+    const response = await api.get<ApiResponse<{ label: string | null }>>(
+      '/attendance/geocode/area',
+      { params: { lat: latitude, lng: longitude } }
+    );
+    return response.data.data?.label ?? null;
+  },
+
+  /** Fetch check-in selfie (authenticated — stable URL, does not expire). */
+  getCheckInPhotoBlob: async (attendanceId: string): Promise<Blob> => {
+    try {
+      const response = await api.get<Blob>(`/attendance/${attendanceId}/check-in-photo`, {
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const contentType = String(response.headers['content-type'] || '');
+      if (contentType.includes('application/json')) {
+        const text = await blob.text();
+        const json = JSON.parse(text) as { error?: string };
+        throw new Error(json.error || 'Could not load check-in photo');
+      }
+      return blob;
+    } catch (error: unknown) {
+      const axiosError = error as {
+        response?: { data?: Blob | { error?: string }; status?: number };
+        message?: string;
+      };
+      const data = axiosError.response?.data;
+      if (data instanceof Blob) {
+        try {
+          const text = await data.text();
+          const json = JSON.parse(text) as { error?: string };
+          throw new Error(json.error || 'Could not load check-in photo');
+        } catch (parseError) {
+          if (parseError instanceof Error && parseError.message !== axiosError.message) {
+            throw parseError;
+          }
+        }
+      }
+      if (data && typeof data === 'object' && 'error' in data && data.error) {
+        throw new Error(String(data.error));
+      }
+      throw error;
+    }
   },
 
   createRegularization: async (data: {
@@ -1260,6 +1351,121 @@ export const payrollApi = {
   getPayrollRecord: async (recordId: string): Promise<PayrollRecord> => {
     const response = await api.get<ApiResponse<PayrollRecord>>(`/payroll/records/${recordId}`);
     return response.data.data!;
+  },
+};
+
+function normalizeLiveSession(raw: any): FieldTrackingLiveSession | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const sessionId = String(raw.sessionId ?? raw._id ?? raw.id ?? '');
+  if (!sessionId) return null;
+
+  const userRaw = raw.user ?? (typeof raw.userId === 'object' ? raw.userId : undefined);
+  const userId =
+    typeof raw.userId === 'object' && raw.userId
+      ? String(raw.userId._id ?? raw.userId.id ?? '')
+      : String(raw.userId ?? userRaw?._id ?? userRaw?.id ?? '');
+
+  const loc = raw.lastLocation;
+  const lastLocation =
+    loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
+      ? {
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          accuracy: typeof loc.accuracy === 'number' ? loc.accuracy : undefined,
+          recordedAt: String(loc.recordedAt ?? ''),
+          batteryLevel: typeof loc.batteryLevel === 'number' ? loc.batteryLevel : undefined,
+        }
+      : undefined;
+
+  return {
+    sessionId,
+    attendanceId: raw.attendanceId ? String(raw.attendanceId) : undefined,
+    userId,
+    user: userRaw
+      ? {
+          _id: userRaw._id ? String(userRaw._id) : undefined,
+          id: userRaw.id ? String(userRaw.id) : undefined,
+          firstName: userRaw.firstName,
+          lastName: userRaw.lastName,
+          fullName: userRaw.fullName,
+          employeeId: userRaw.employeeId,
+          email: userRaw.email,
+          department: userRaw.department,
+        }
+      : undefined,
+    status: (raw.status as FieldTrackingLiveSession['status']) || 'active',
+    startedAt: raw.startedAt ? String(raw.startedAt) : undefined,
+    lastLocation,
+    pointCount: typeof raw.pointCount === 'number' ? raw.pointCount : undefined,
+  };
+}
+
+function normalizeLocationPoint(raw: any): FieldLocationPoint | null {
+  if (!raw || typeof raw !== 'object') return null;
+  if (typeof raw.latitude !== 'number' || typeof raw.longitude !== 'number') return null;
+  return {
+    _id: raw._id ? String(raw._id) : undefined,
+    sessionId: raw.sessionId ? String(raw.sessionId) : undefined,
+    latitude: raw.latitude,
+    longitude: raw.longitude,
+    accuracy: typeof raw.accuracy === 'number' ? raw.accuracy : undefined,
+    recordedAt: String(raw.recordedAt ?? raw.createdAt ?? ''),
+    receivedAt: raw.receivedAt ? String(raw.receivedAt) : undefined,
+    batteryLevel: typeof raw.batteryLevel === 'number' ? raw.batteryLevel : undefined,
+  };
+}
+
+// Field tracking API (admin live map + history)
+export const fieldTrackingApi = {
+  /** Active sessions with lastLocation for the live map. */
+  getLive: async (): Promise<FieldTrackingLiveSession[]> => {
+    const response = await api.get<ApiResponse<any>>('/field-tracking/live');
+    const payload = response.data.data ?? response.data;
+    const list = Array.isArray(payload)
+      ? payload
+      : (payload?.sessions ?? payload?.items ?? payload?.data ?? []);
+    return (Array.isArray(list) ? list : [])
+      .map(normalizeLiveSession)
+      .filter((s): s is FieldTrackingLiveSession => Boolean(s));
+  },
+
+  /** Full GPS path for one session. */
+  getSessionPath: async (sessionId: string): Promise<FieldLocationPoint[]> => {
+    const response = await api.get<ApiResponse<any>>(`/field-tracking/session/${sessionId}/path`);
+    const payload = response.data.data ?? response.data;
+    const list = Array.isArray(payload) ? payload : (payload?.points ?? payload?.items ?? []);
+    return (Array.isArray(list) ? list : [])
+      .map(normalizeLocationPoint)
+      .filter((p): p is FieldLocationPoint => Boolean(p));
+  },
+
+  /** Full day travel path for an employee. */
+  getDayPath: async (userId: string, date: string): Promise<FieldTrackingDayPath> => {
+    const response = await api.get<ApiResponse<any>>('/field-tracking/day-path', {
+      params: { userId, date },
+    });
+    const payload = response.data.data ?? response.data ?? {};
+    const list = Array.isArray(payload)
+      ? payload
+      : (payload?.points ?? payload?.items ?? payload?.path ?? []);
+    const points = (Array.isArray(list) ? list : [])
+      .map(normalizeLocationPoint)
+      .filter((p): p is FieldLocationPoint => Boolean(p));
+    return {
+      userId,
+      date,
+      points,
+      sessions: Array.isArray(payload?.sessions)
+        ? payload.sessions
+            .map(normalizeLiveSession)
+            .filter((s: FieldTrackingLiveSession | null): s is FieldTrackingLiveSession => Boolean(s))
+        : undefined,
+    };
+  },
+
+  /** Force-stop a forgotten active session. */
+  forceStop: async (sessionId: string): Promise<void> => {
+    await api.patch(`/field-tracking/session/${sessionId}/force-stop`);
   },
 };
 

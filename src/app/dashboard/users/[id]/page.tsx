@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -35,6 +36,9 @@ export default function EditUserPage() {
   const [lastName, setLastName] = useState('');
   const [department, setDepartment] = useState('');
   const [employeeId, setEmployeeId] = useState('');
+  const [fieldTrackingEnabled, setFieldTrackingEnabled] = useState(false);
+  const [fieldTrackingIntervalMinutes, setFieldTrackingIntervalMinutes] = useState('5');
+  const [isSavingFieldTracking, setIsSavingFieldTracking] = useState(false);
 
   useEffect(() => {
     if (!canManage || !params?.id) return;
@@ -52,6 +56,12 @@ export default function EditUserPage() {
       setLastName(data.lastName || '');
       setDepartment(data.department || '');
       setEmployeeId(data.employeeId || '');
+      setFieldTrackingEnabled(data.fieldTrackingEnabled === true);
+      setFieldTrackingIntervalMinutes(
+        String(data.fieldTrackingIntervalMinutes && data.fieldTrackingIntervalMinutes > 0
+          ? data.fieldTrackingIntervalMinutes
+          : 5)
+      );
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Failed to load user');
       router.push(returnPath);
@@ -93,6 +103,43 @@ export default function EditUserPage() {
       toast.error(error?.response?.data?.message || 'Failed to update user');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveFieldTracking = async () => {
+    if (!targetUser) return;
+    const interval = parseInt(fieldTrackingIntervalMinutes, 10);
+    if (Number.isNaN(interval) || interval < 1 || interval > 60) {
+      toast.error('Interval must be between 1 and 60 minutes');
+      return;
+    }
+
+    try {
+      setIsSavingFieldTracking(true);
+      const updated = await userApi.toggleFieldTracking(targetUser._id || targetUser.id, {
+        fieldTrackingEnabled,
+        fieldTrackingIntervalMinutes: interval,
+      });
+      setTargetUser(updated);
+      setFieldTrackingEnabled(updated.fieldTrackingEnabled === true);
+      setFieldTrackingIntervalMinutes(
+        String(updated.fieldTrackingIntervalMinutes && updated.fieldTrackingIntervalMinutes > 0
+          ? updated.fieldTrackingIntervalMinutes
+          : interval)
+      );
+      toast.success(
+        fieldTrackingEnabled
+          ? 'Field tracking enabled for this user'
+          : 'Field tracking disabled for this user'
+      );
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          'Failed to update field tracking'
+      );
+    } finally {
+      setIsSavingFieldTracking(false);
     }
   };
 
@@ -199,6 +246,62 @@ export default function EditUserPage() {
               Cancel
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            Field tracking
+          </CardTitle>
+          <CardDescription>
+            Enable live location tracking for field staff only. When enabled, the mobile app
+            tracks location every few minutes after check-in until check-out.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+            <div className="space-y-1">
+              <Label htmlFor="fieldTrackingEnabled" className="text-base">
+                Enable field tracking
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Only turn this on for employees who work in the field.
+              </p>
+            </div>
+            <Switch
+              id="fieldTrackingEnabled"
+              checked={fieldTrackingEnabled}
+              onCheckedChange={setFieldTrackingEnabled}
+              disabled={isSavingFieldTracking}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fieldTrackingInterval">Location interval (minutes)</Label>
+            <Input
+              id="fieldTrackingInterval"
+              type="number"
+              min={1}
+              max={60}
+              value={fieldTrackingIntervalMinutes}
+              onChange={(e) => setFieldTrackingIntervalMinutes(e.target.value)}
+              disabled={isSavingFieldTracking || !fieldTrackingEnabled}
+              className="max-w-[140px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              How often the mobile app sends location while checked in (1–60, default 5).
+            </p>
+          </div>
+
+          <Button
+            onClick={() => void handleSaveFieldTracking()}
+            disabled={isSavingFieldTracking}
+          >
+            {isSavingFieldTracking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save field tracking
+          </Button>
         </CardContent>
       </Card>
     </div>

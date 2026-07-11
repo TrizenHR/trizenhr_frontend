@@ -39,6 +39,14 @@ export interface User {
   platformPreferences?: PlatformPreferences;
   /** Profile picture URL or base64 data URI */
   profilePicture?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  /** False until invitee completes the post-password profile step */
+  profileComplete?: boolean;
+  /** When true, mobile tracks location after check-in */
+  fieldTrackingEnabled?: boolean;
+  fieldTrackingIntervalMinutes?: number;
   attendancePolicy?: {
     _id: string;
     policyName: string;
@@ -96,7 +104,23 @@ export interface LoginResponse {
     role: UserRole;
     department?: string;
     employeeId?: string;
+    profileComplete?: boolean;
   };
+}
+
+export interface ValidatedOrgInvite {
+  email: string;
+  organizationId: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  status: 'pending_password' | 'profile_incomplete' | 'already_onboarded';
+}
+
+export interface CompleteProfilePayload {
+  dateOfBirth: string;
+  gender: string;
+  phone: string;
 }
 
 export interface CreateUserPayload {
@@ -159,6 +183,8 @@ export interface Attendance {
   photoUrl?: string;
   photoKey?: string;
   officeLocationId?: string;
+  photoUrl?: string; // Stable API path for check-in photo
+  hasCheckInPhoto?: boolean;
   checkInLat?: number;
   checkInLng?: number;
   checkInDistance?: number;
@@ -166,8 +192,59 @@ export interface Attendance {
   checkOutLng?: number;
   checkOutDistance?: number;
   locationStatus: LocationStatus;
+  checkOutLocationLabel?: string;
+  fieldTrackingSessionId?: string;
   createdAt: string;
   updatedAt: string;
+
+export type FieldTrackingStatus = 'active' | 'completed' | 'force_stopped';
+
+export interface FieldLocationSnapshot {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  recordedAt: string;
+  batteryLevel?: number;
+}
+
+export interface FieldTrackingUserRef {
+  _id?: string;
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  employeeId?: string;
+  email?: string;
+  department?: string;
+}
+
+export interface FieldTrackingLiveSession {
+  sessionId: string;
+  attendanceId?: string;
+  userId: string;
+  user?: FieldTrackingUserRef;
+  status: FieldTrackingStatus;
+  startedAt?: string;
+  lastLocation?: FieldLocationSnapshot;
+  pointCount?: number;
+}
+
+export interface FieldLocationPoint {
+  _id?: string;
+  sessionId?: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  recordedAt: string;
+  receivedAt?: string;
+  batteryLevel?: number;
+}
+
+export interface FieldTrackingDayPath {
+  userId: string;
+  date: string;
+  points: FieldLocationPoint[];
+  sessions?: FieldTrackingLiveSession[];
 }
 
 export interface TodayStatus {

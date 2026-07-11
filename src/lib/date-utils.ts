@@ -1,17 +1,49 @@
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 
+export const DEFAULT_ORG_TIMEZONE = 'Asia/Kolkata';
+
+/**
+ * Format yyyy-MM-dd for API date filters (avoids UTC shift from toISOString()).
+ */
+export function formatDateParam(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
+/**
+ * Format time in organization timezone (default IST).
+ */
+export function formatTimeOnly(
+  date: Date | string,
+  timeZone: string = DEFAULT_ORG_TIMEZONE
+): string {
+  return new Intl.DateTimeFormat('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  }).format(new Date(date));
+}
+
+/**
+ * 24-hour clock in organization timezone.
+ */
+export function formatTime24(
+  date: Date | string,
+  timeZone: string = DEFAULT_ORG_TIMEZONE
+): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone,
+  }).format(new Date(date));
+}
+
 /**
  * Format date for attendance display: "Mon, Jan 9"
  */
 export function formatAttendanceDate(date: Date | string): string {
   return format(new Date(date), 'EEE, MMM d');
-}
-
-/**
- * Format time only: "09:30 AM"
- */
-export function formatTimeOnly(date: Date | string): string {
-  return format(new Date(date), 'hh:mm a');
 }
 
 /**

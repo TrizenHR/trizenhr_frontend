@@ -29,6 +29,7 @@ import {
   Moon,
   Layers,
   GitBranch,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -180,6 +181,18 @@ const navigationSections: NavSection[] = [
     title: 'ATTENDANCE',
     items: [
       {
+        label: 'Company Attendance',
+        href: '/dashboard/attendance',
+        icon: ClipboardList,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Field Tracking',
+        href: '/dashboard/field-tracking',
+        icon: MapPin,
+        roles: [UserRole.ADMIN],
+      },
+      {
         label: 'Shifts',
         href: '/dashboard/shifts',
         icon: Moon,
@@ -325,7 +338,7 @@ const navigationSections: NavSection[] = [
         label: 'Reports',
         href: '/dashboard/reports',
         icon: BarChart3,
-        roles: [UserRole.HR],
+        roles: [UserRole.HR, UserRole.ADMIN],
       },
     ],
   },
