@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { formatTimeOnly } from '@/lib/date-utils';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, LogIn, LogOut } from 'lucide-react';
 import { attendanceApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,11 +14,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+export type AttendancePhotoKind = 'check-in' | 'check-out';
+
 export type CheckInPhotoTarget = {
   attendanceId: string;
   employeeName?: string;
   date?: string;
   checkIn?: string;
+  checkOut?: string;
+  kind?: AttendancePhotoKind;
 };
 
 type CheckInPhotoDialogProps = {
@@ -30,6 +34,8 @@ export function CheckInPhotoDialog({ target, onClose }: CheckInPhotoDialogProps)
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const kind: AttendancePhotoKind = target?.kind ?? 'check-in';
+  const kindLabel = kind === 'check-out' ? 'Check-out' : 'Check-in';
 
   useEffect(() => {
     if (!target?.attendanceId) {
@@ -47,7 +53,10 @@ export function CheckInPhotoDialog({ target, onClose }: CheckInPhotoDialogProps)
       setImageSrc(null);
 
       try {
-        const blob = await attendanceApi.getCheckInPhotoBlob(target.attendanceId);
+        const blob =
+          kind === 'check-out'
+            ? await attendanceApi.getCheckOutPhotoBlob(target.attendanceId)
+            : await attendanceApi.getCheckInPhotoBlob(target.attendanceId);
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
         setImageSrc(objectUrl);
@@ -57,7 +66,7 @@ export function CheckInPhotoDialog({ target, onClose }: CheckInPhotoDialogProps)
           (err as { response?: { data?: { error?: string } }; message?: string })?.response?.data
             ?.error ||
           (err as Error)?.message ||
-          'Could not load check-in photo';
+          `Could not load ${kindLabel.toLowerCase()} photo`;
         setError(message);
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -70,17 +79,19 @@ export function CheckInPhotoDialog({ target, onClose }: CheckInPhotoDialogProps)
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [target?.attendanceId]);
+  }, [target?.attendanceId, kind, kindLabel]);
 
   const title = target?.employeeName
-    ? `Check-in photo — ${target.employeeName}`
-    : 'Check-in photo';
+    ? `${kindLabel} photo — ${target.employeeName}`
+    : `${kindLabel} photo`;
 
   const descriptionParts: string[] = [];
   if (target?.date) {
     descriptionParts.push(format(new Date(target.date), 'MMMM dd, yyyy'));
   }
-  if (target?.checkIn) {
+  if (kind === 'check-out' && target?.checkOut) {
+    descriptionParts.push(formatTimeOnly(target.checkOut));
+  } else if (target?.checkIn) {
     descriptionParts.push(formatTimeOnly(target.checkIn));
   }
 
@@ -108,7 +119,7 @@ export function CheckInPhotoDialog({ target, onClose }: CheckInPhotoDialogProps)
           ) : imageSrc ? (
             <img
               src={imageSrc}
-              alt="Check-in verification photo"
+              alt={`${kindLabel} verification photo`}
               className="max-h-[420px] w-full rounded-md object-contain"
             />
           ) : (
@@ -131,18 +142,25 @@ type CheckInPhotoButtonProps = {
   employeeName?: string;
   date?: string;
   checkIn?: string;
+  checkOut?: string;
+  kind?: AttendancePhotoKind;
   onView: (target: CheckInPhotoTarget) => void;
   className?: string;
 };
 
+/** Single photo button — prefer AttendancePhotoButtons for admin tables. */
 export function CheckInPhotoButton({
   attendanceId,
   employeeName,
   date,
   checkIn,
+  checkOut,
+  kind = 'check-in',
   onView,
   className,
 }: CheckInPhotoButtonProps) {
+  const label = kind === 'check-out' ? 'View check-out' : 'View check-in';
+  const Icon = kind === 'check-out' ? LogOut : LogIn;
   return (
     <Button
       type="button"
@@ -155,11 +173,74 @@ export function CheckInPhotoButton({
           employeeName,
           date,
           checkIn,
+          checkOut,
+          kind,
         })
       }
     >
-      <Camera className="mr-1.5 h-4 w-4" />
-      View photo
+      <Icon className="mr-1.5 h-4 w-4" />
+      {label}
     </Button>
+  );
+}
+
+type AttendancePhotoButtonsProps = {
+  attendanceId: string;
+  employeeName?: string;
+  date?: string;
+  checkIn?: string;
+  checkOut?: string;
+  hasCheckInPhoto?: boolean;
+  hasCheckOutPhoto?: boolean;
+  photoUrl?: string | null;
+  checkOutPhotoUrl?: string | null;
+  onView: (target: CheckInPhotoTarget) => void;
+  className?: string;
+};
+
+/** Admin: View check-in / View check-out (only when each photo exists). */
+export function AttendancePhotoButtons({
+  attendanceId,
+  employeeName,
+  date,
+  checkIn,
+  checkOut,
+  hasCheckInPhoto,
+  hasCheckOutPhoto,
+  photoUrl,
+  checkOutPhotoUrl,
+  onView,
+  className,
+}: AttendancePhotoButtonsProps) {
+  const showCheckIn = Boolean(hasCheckInPhoto || photoUrl);
+  const showCheckOut = Boolean(hasCheckOutPhoto || checkOutPhotoUrl);
+
+  if (!showCheckIn && !showCheckOut) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  return (
+    <div className={`flex flex-wrap items-center gap-2 ${className ?? ''}`}>
+      {showCheckIn ? (
+        <CheckInPhotoButton
+          attendanceId={attendanceId}
+          employeeName={employeeName}
+          date={date}
+          checkIn={checkIn}
+          kind="check-in"
+          onView={onView}
+        />
+      ) : null}
+      {showCheckOut ? (
+        <CheckInPhotoButton
+          attendanceId={attendanceId}
+          employeeName={employeeName}
+          date={date}
+          checkOut={checkOut}
+          kind="check-out"
+          onView={onView}
+        />
+      ) : null}
+    </div>
   );
 }

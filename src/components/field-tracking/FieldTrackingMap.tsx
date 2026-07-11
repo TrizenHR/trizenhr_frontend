@@ -145,6 +145,9 @@ export function FieldTrackingMap({
               <Popup>
                 <div className="space-y-1 text-sm">
                   <p className="font-semibold">{sessionDisplayName(session)}</p>
+                  {session.locationDisabledSince ? (
+                    <p className="font-medium text-amber-700">Location is off</p>
+                  ) : null}
                   {session.user?.employeeId ? (
                     <p className="text-muted-foreground">ID: {session.user.employeeId}</p>
                   ) : null}

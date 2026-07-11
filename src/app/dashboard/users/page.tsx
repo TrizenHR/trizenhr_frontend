@@ -20,17 +20,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Plus, Search, MoreVertical, Edit, Trash2, UserPlus, Loader2, ShieldX, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { userApi } from '@/lib/api';
 import { User, UserRole } from '@/lib/types';
-import { getRoleColor, getRoleDisplayName, hasAnyRole } from '@/lib/permissions';
+import { canDeleteUser, getRoleColor, getRoleDisplayName, hasAnyRole } from '@/lib/permissions';
 import { toast } from 'sonner';
 
 export default function UsersPage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const canManage = !!user && hasAnyRole(user.role as UserRole, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  const { user: currentUser } = useAuth();
+  const canManage =
+    !!currentUser && hasAnyRole(currentUser.role as UserRole, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -39,6 +50,8 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -52,8 +65,7 @@ export default function UsersPage() {
     try {
       setIsLoading(true);
       const data = await userApi.getAllUsers();
-      // Delete is implemented as soft-delete (isActive=false).
-      // Keep Users page focused on active users so deleted rows disappear.
+      // Hard delete removes the user; keep the list focused on active accounts.
       setUsers(data.filter((u) => u.isActive));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load users');
@@ -106,16 +118,20 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  const handleDeleteAccount = async () => {
+    if (!deleteTarget) return;
+    const userId = deleteTarget.id || deleteTarget._id;
 
     try {
+      setIsDeleting(true);
       await userApi.deleteUser(userId);
-      toast.success('User deleted successfully');
-      // Optimistically remove from UI immediately after successful delete.
+      toast.success('Account deleted successfully');
       setUsers((prev) => prev.filter((u) => (u.id || u._id) !== userId));
+      setDeleteTarget(null);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete user');
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to delete account');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -236,22 +252,26 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => {
-                  const userId = user.id || user._id;
+                {filteredUsers.map((rowUser) => {
+                  const userId = rowUser.id || rowUser._id;
+                  const allowDelete =
+                    !!currentUser &&
+                    canDeleteUser(currentUser.role as UserRole, rowUser.role as UserRole) &&
+                    userId !== (currentUser.id || currentUser._id);
                   return (
                   <TableRow key={userId}>
-                    <TableCell className="font-medium">{user.fullName}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.employeeId || '-'}</TableCell>
+                    <TableCell className="font-medium">{rowUser.fullName}</TableCell>
+                    <TableCell>{rowUser.email}</TableCell>
+                    <TableCell>{rowUser.employeeId || '-'}</TableCell>
                     <TableCell>
-                      <Badge className={getRoleColor(user.role as UserRole)} variant="outline">
-                        {getRoleDisplayName(user.role as UserRole)}
+                      <Badge className={getRoleColor(rowUser.role as UserRole)} variant="outline">
+                        {getRoleDisplayName(rowUser.role as UserRole)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{user.department || '-'}</TableCell>
+                    <TableCell>{rowUser.department || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                        {user.isActive ? 'Active' : 'Inactive'}
+                      <Badge variant={rowUser.isActive ? 'default' : 'secondary'}>
+                        {rowUser.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -262,9 +282,9 @@ export default function UsersPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {user.role !== UserRole.SUPER_ADMIN && (
+                          {rowUser.role !== UserRole.SUPER_ADMIN && (
                             <DropdownMenuItem
-                              onClick={() => handleResendInvitation(user)}
+                              onClick={() => handleResendInvitation(rowUser)}
                               disabled={resendingId === userId}
                             >
                               <Mail className="mr-2 h-4 w-4" />
@@ -277,13 +297,15 @@ export default function UsersPage() {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(userId)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          {allowDelete && (
+                            <DropdownMenuItem
+                              onClick={() => setDeleteTarget(rowUser)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete account
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -294,6 +316,47 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes{' '}
+              <span className="font-medium text-foreground">
+                {deleteTarget?.fullName || deleteTarget?.email}
+              </span>
+              {' '}and related attendance, leave, and tracking data. This cannot be undone.
+              The email can be re-invited later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteAccount();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                'Delete account'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

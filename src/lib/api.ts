@@ -552,6 +552,44 @@ export const attendanceApi = {
     }
   },
 
+  /** Fetch check-out selfie (authenticated — stable URL, does not expire). */
+  getCheckOutPhotoBlob: async (attendanceId: string): Promise<Blob> => {
+    try {
+      const response = await api.get<Blob>(`/attendance/${attendanceId}/check-out-photo`, {
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const contentType = String(response.headers['content-type'] || '');
+      if (contentType.includes('application/json')) {
+        const text = await blob.text();
+        const json = JSON.parse(text) as { error?: string };
+        throw new Error(json.error || 'Could not load check-out photo');
+      }
+      return blob;
+    } catch (error: unknown) {
+      const axiosError = error as {
+        response?: { data?: Blob | { error?: string }; status?: number };
+        message?: string;
+      };
+      const data = axiosError.response?.data;
+      if (data instanceof Blob) {
+        try {
+          const text = await data.text();
+          const json = JSON.parse(text) as { error?: string };
+          throw new Error(json.error || 'Could not load check-out photo');
+        } catch (parseError) {
+          if (parseError instanceof Error && parseError.message !== axiosError.message) {
+            throw parseError;
+          }
+        }
+      }
+      if (data && typeof data === 'object' && 'error' in data && data.error) {
+        throw new Error(String(data.error));
+      }
+      throw error;
+    }
+  },
+
   createRegularization: async (data: {
     date: string;
     requestType: string;
@@ -1407,21 +1445,30 @@ function normalizeLiveSession(raw: any): FieldTrackingLiveSession | null {
     startedAt: raw.startedAt ? String(raw.startedAt) : undefined,
     lastLocation,
     pointCount: typeof raw.pointCount === 'number' ? raw.pointCount : undefined,
+    locationDisabledSince: raw.locationDisabledSince
+      ? String(raw.locationDisabledSince)
+      : raw.locationDisabledSince === null
+        ? null
+        : undefined,
   };
 }
 
 function normalizeLocationPoint(raw: any): FieldLocationPoint | null {
   if (!raw || typeof raw !== 'object') return null;
-  if (typeof raw.latitude !== 'number' || typeof raw.longitude !== 'number') return null;
+  const latitude = Number(raw.latitude);
+  const longitude = Number(raw.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
   return {
     _id: raw._id ? String(raw._id) : undefined,
     sessionId: raw.sessionId ? String(raw.sessionId) : undefined,
-    latitude: raw.latitude,
-    longitude: raw.longitude,
-    accuracy: typeof raw.accuracy === 'number' ? raw.accuracy : undefined,
+    latitude,
+    longitude,
+    accuracy: Number.isFinite(Number(raw.accuracy)) ? Number(raw.accuracy) : undefined,
     recordedAt: String(raw.recordedAt ?? raw.createdAt ?? ''),
     receivedAt: raw.receivedAt ? String(raw.receivedAt) : undefined,
-    batteryLevel: typeof raw.batteryLevel === 'number' ? raw.batteryLevel : undefined,
+    batteryLevel: Number.isFinite(Number(raw.batteryLevel))
+      ? Number(raw.batteryLevel)
+      : undefined,
   };
 }
 
@@ -1439,9 +1486,11 @@ export const fieldTrackingApi = {
       .filter((s): s is FieldTrackingLiveSession => Boolean(s));
   },
 
-  /** Full GPS path for one session. */
-  getSessionPath: async (sessionId: string): Promise<FieldLocationPoint[]> => {
-    const response = await api.get<ApiResponse<any>>(`/field-tracking/session/${sessionId}/path`);
+  /** Full GPS path for one session. Optional date (yyyy-MM-dd) filters points to that org day. */
+  getSessionPath: async (sessionId: string, date?: string): Promise<FieldLocationPoint[]> => {
+    const response = await api.get<ApiResponse<any>>(`/field-tracking/session/${sessionId}/path`, {
+      params: date ? { date } : undefined,
+    });
     const payload = response.data.data ?? response.data;
     const list = Array.isArray(payload) ? payload : (payload?.points ?? payload?.items ?? []);
     return (Array.isArray(list) ? list : [])

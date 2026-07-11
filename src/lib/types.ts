@@ -191,6 +191,9 @@ export interface Attendance {
   photoKey?: string;
   officeLocationId?: string;
   hasCheckInPhoto?: boolean;
+  checkOutPhotoUrl?: string;
+  checkOutPhotoKey?: string;
+  hasCheckOutPhoto?: boolean;
   checkInLat?: number;
   checkInLng?: number;
   checkInDistance?: number;
@@ -235,6 +238,8 @@ export interface FieldTrackingLiveSession {
   startedAt?: string;
   lastLocation?: FieldLocationSnapshot;
   pointCount?: number;
+  /** When set, employee turned location off during this active session. */
+  locationDisabledSince?: string | null;
 }
 
 export interface FieldLocationPoint {
