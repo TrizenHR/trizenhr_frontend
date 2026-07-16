@@ -118,6 +118,363 @@
   }
 }
 
+@keyframes headerFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroBadgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroLineReveal {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes processLineGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes processLineGrowY {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes ctaGlowDrift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(18px, -12px) scale(1.05);
+  }
+}
+
+/* Landing reveal system — Intersection Observer toggles .is-visible */
+.reveal-base {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition-property: opacity, transform;
+  transition-duration: 550ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-fade-up {
+  transform: translateY(20px);
+}
+
+.reveal-fade-left {
+  transform: translateX(-24px);
+}
+
+.reveal-fade-right {
+  transform: translateX(24px);
+}
+
+.reveal-scale-in {
+  transform: scale(0.97);
+}
+
+.reveal-text {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(12px);
+}
+
+.reveal-base.is-visible {
+  opacity: 1;
+  transform: none;
+  clip-path: none;
+}
+
+/* Hero load animations */
+.hero-anim-badge {
+  animation: heroBadgeIn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-anim-line {
+  overflow: hidden;
+  display: block;
+}
+
+.hero-anim-line > span {
+  display: block;
+  animation: heroLineReveal 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-anim-fade {
+  animation: fadeInUp 750ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-anim-shot {
+  animation: fadeInUp 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center top;
+}
+
+.header-anim-enter {
+  animation: headerFadeDown 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Screenshot perspective entrance */
+.shot-enter-center,
+.shot-enter-left,
+.shot-enter-right {
+  opacity: 0;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+.shot-enter-center {
+  transform: perspective(1200px) rotateX(4deg) scale(0.97) translateY(16px);
+}
+
+.shot-enter-left {
+  transform: perspective(1200px) rotateY(3deg) translateX(-28px);
+}
+
+.shot-enter-right {
+  transform: perspective(1200px) rotateY(-3deg) translateX(28px);
+}
+
+.shot-enter-center.is-visible,
+.shot-enter-left.is-visible,
+.shot-enter-right.is-visible {
+  opacity: 1;
+  transform: perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1) translate(0, 0);
+}
+
+/* Process connecting line */
+.process-line-h {
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+.process-line-h.is-visible {
+  animation: processLineGrow 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.process-line-v {
+  transform-origin: top center;
+  transform: scaleY(0);
+}
+
+.process-line-v.is-visible {
+  animation: processLineGrowY 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cta-glow-drift {
+  animation: ctaGlowDrift 14s ease-in-out infinite;
+}
+
+/* Nav link underline */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 1.5px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Landing card hover highlight */
+.card-hover-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-hover-shine::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.card-hover-shine:hover::before {
+  transform: translateX(120%);
+}
+
+@keyframes rolePreviewIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.role-preview-enter {
+  animation: rolePreviewIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 48;
+}
+
+.bento-watermark {
+  font-size: 8rem;
+  line-height: 1;
+  user-select: none;
+}
+@keyframes bentoRingDrift {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes bentoPulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes bentoRowReveal {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bentoPanelRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bento-deco-active .deco-ring {
+  animation: bentoRingDrift 12s ease-in-out infinite alternate;
+}
+
+.bento-deco-active .deco-pulse {
+  animation: bentoPulse 3.2s ease-in-out infinite;
+}
+
+.bento-deco-active .deco-row {
+  animation: bentoRowReveal 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bento-deco-active .deco-doc-line {
+  animation: bentoRowReveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bento-deco-active .deco-panel {
+  animation: bentoPanelRise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-base,
+  .shot-enter-center,
+  .shot-enter-left,
+  .shot-enter-right,
+  .hero-anim-badge,
+  .hero-anim-line > span,
+  .hero-anim-fade,
+  .hero-anim-shot,
+  .header-anim-enter,
+  .process-line-h,
+  .process-line-v,
+  .cta-glow-drift,
+  .card-hover-shine::before,
+  .role-preview-enter,
+  .bento-deco-active .deco-ring,
+  .bento-deco-active .deco-pulse,
+  .bento-deco-active .deco-row,
+  .bento-deco-active .deco-doc-line,
+  .bento-deco-active .deco-panel {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  .nav-link::after {
+    transition: none;
+  }
+}
+
 .dark {
   --background: oklch(0.145 0.02 265);
   --foreground: oklch(0.985 0.003 264.695);
