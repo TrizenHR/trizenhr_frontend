@@ -206,7 +206,7 @@ export function ProblemSection() {
     >
       <div
         ref={contentRef}
-        className="relative mx-auto w-full max-w-[1120px] px-4 py-16 md:px-6 md:py-24 lg:px-8 lg:py-28"
+        className="relative mx-auto w-full max-w-[1120px] px-4 py-12 md:px-6 md:py-16 lg:px-8 lg:py-20"
       >
         <div className="grid items-center gap-10 md:grid-cols-[1fr_1.15fr] md:gap-12 lg:gap-16">
           <div className="max-w-md md:max-w-none">

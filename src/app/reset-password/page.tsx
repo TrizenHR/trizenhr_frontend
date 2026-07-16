@@ -2,21 +2,32 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
+import { AuthField, AuthPageShell } from '@/components/auth/AuthPageShell';
+
+const backToLogin = (
+  <p className="text-center text-[13px] text-slate-500">
+    <Link
+      href="/login"
+      className="inline-flex items-center gap-1.5 font-medium text-slate-600 transition-colors hover:text-primary"
+    >
+      <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+      Back to login
+    </Link>
+  </p>
+);
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +37,7 @@ function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!token) {
       toast.error('Invalid or missing reset token');
       return;
@@ -47,13 +58,14 @@ function ResetPasswordForm() {
       await authApi.resetPassword({ token, password });
       setIsSuccess(true);
       toast.success('Password reset successfully');
-      
-      // Redirect to login after 3 seconds
+
       setTimeout(() => {
         router.push('/login');
       }, 3000);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to reset password. The link may be expired.');
+      toast.error(
+        err.response?.data?.message || 'Failed to reset password. The link may be expired.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -61,157 +73,133 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="text-center space-y-4">
-        <div className="text-red-500 font-semibold">Invalid Reset Link</div>
-        <p className="text-gray-500 text-sm">
-          This password reset link is invalid or has expired. Please request a new one.
-        </p>
-        <Link href="/login">
-          <Button variant="outline" className="mt-4">Back to Login</Button>
-        </Link>
-      </div>
+      <AuthPageShell
+        eyebrow="Link expired"
+        title="This reset link is invalid"
+        description="Your password reset link is invalid or has expired. Request a new one to continue."
+        footer={backToLogin}
+      >
+        <div className="rounded-2xl border border-red-200/80 bg-red-50/70 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15">
+            <ShieldAlert className="h-6 w-6 text-red-600" aria-hidden />
+          </div>
+          <p className="text-[14px] leading-relaxed text-red-900">
+            Password reset links are single-use and time-limited for your security.
+          </p>
+          <Link href="/login">
+            <Button variant="outline" className="mt-5 h-11 w-full">
+              Back to login
+            </Button>
+          </Link>
+        </div>
+      </AuthPageShell>
     );
   }
 
   if (isSuccess) {
     return (
-      <div className="text-center space-y-6 py-4">
-        <div className="flex justify-center">
-          <CheckCircle2 className="h-16 w-16 text-green-500" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-gray-900">Password reset successful</h3>
-          <p className="text-gray-500">
-            Your password has been updated. You will be redirected to the login page shortly.
+      <AuthPageShell
+        eyebrow="All set"
+        title="Password reset successful"
+        description="Your password has been updated. We are redirecting you to sign in."
+        footer={backToLogin}
+      >
+        <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
+            <CheckCircle2 className="h-7 w-7 text-emerald-600" aria-hidden />
+          </div>
+          <p className="text-[14px] leading-relaxed text-emerald-900">
+            You can now sign in with your new password.
           </p>
+          <Link href="/login">
+            <Button className="mt-5 h-11 w-full">Go to login</Button>
+          </Link>
         </div>
-        <Link href="/login">
-          <Button className="w-full">Go to Login</Button>
-        </Link>
-      </div>
+      </AuthPageShell>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="password">New Password</Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            required
-            className="pr-10"
-          />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm New Password</Label>
-        <div className="relative">
-          <Input
-            id="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={isLoading}
-            required
-            className="pr-10"
-          />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Resetting password...
-          </>
-        ) : (
-          'Reset Password'
-        )}
-      </Button>
-    </form>
+    <AuthPageShell
+      eyebrow="Secure your account"
+      title="Set a new password"
+      description="Choose a strong password with at least 6 characters to protect your account."
+      footer={backToLogin}
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField>
+          <Label htmlFor="password">New password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              className="h-11 pr-11"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </AuthField>
+
+        <AuthField>
+          <Label htmlFor="confirmPassword">Confirm new password</Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              className="h-11 pr-11"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </AuthField>
+
+        <Button type="submit" className="h-11 w-full text-[15px]" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Resetting password...
+            </>
+          ) : (
+            'Reset password'
+          )}
+        </Button>
+      </form>
+    </AuthPageShell>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen">
-      {/* Left Panel - Branding */}
-      <div className="hidden w-1/2 bg-gray-900 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div>
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/assets/logo-white.png"
-              alt="Logo"
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-xl font-semibold text-white">Attendance Dashboard</span>
-          </Link>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[100svh] items-center justify-center bg-white">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-        <div className="max-w-md">
-          <h2 className="text-3xl font-semibold text-white">
-            Secure your account
-          </h2>
-          <p className="mt-4 text-gray-400">
-            Choose a strong password to keep your workforce management data safe and secure.
-          </p>
-        </div>
-        <p className="text-sm text-gray-500">© {new Date().getFullYear()} Trizen Ventures</p>
-      </div>
-
-      {/* Right Panel - Reset Form */}
-      <div className="flex w-full items-center justify-center px-4 lg:w-1/2 lg:px-8">
-        <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-sm">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mb-4 lg:hidden">
-              <Link href="/" className="inline-flex items-center gap-2">
-                <Image
-                  src="/assets/logo.png"
-                  alt="Logo"
-                  width={32}
-                  height={32}
-                  className="rounded-lg"
-                />
-                <span className="font-semibold">Attendance Dashboard</span>
-              </Link>
-            </div>
-            <CardTitle className="text-2xl font-semibold">Set new password</CardTitle>
-            <CardDescription>Enter your new password below</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>}>
-              <ResetPasswordForm />
-            </Suspense>
-            
-            <p className="mt-6 text-center text-sm text-gray-500">
-              <Link href="/login" className="hover:text-gray-700">
-                ← Back to login
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

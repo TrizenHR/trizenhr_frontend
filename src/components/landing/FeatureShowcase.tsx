@@ -28,7 +28,7 @@ const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
  */
 export function FeatureShowcase() {
   return (
-    <section className="border-b border-slate-200/70 bg-white py-16 md:py-24 lg:py-28">
+    <section className="overflow-x-clip border-b border-slate-200/70 bg-white py-16 md:py-24 lg:py-28">
       <div className="mx-auto w-full max-w-[1180px] px-4 md:px-6 lg:px-8">
         <div className="space-y-24 md:space-y-32">
           <SmartAttendanceBlock />
@@ -132,7 +132,7 @@ function SmartAttendanceBlock() {
   return (
     <div
       ref={sectionRef}
-      className="grid items-start gap-10 lg:grid-cols-[2fr_3fr] lg:gap-12 xl:gap-16"
+      className="grid items-start gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-10 xl:gap-14"
       style={{ perspective: '1200px' }}
     >
       {/* Left — copy (40%) */}
@@ -180,21 +180,21 @@ function SmartAttendanceBlock() {
       </div>
 
       {/* Right — visual (60%), slightly lower */}
-      <div className="relative lg:mt-10" style={motion(160, 'dash')}>
+      <div className="relative overflow-hidden lg:mt-10 lg:overflow-visible" style={motion(160, 'dash')}>
         <div
-          className="pointer-events-none absolute -inset-8 rounded-[40%] bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22),transparent_62%)] blur-2xl"
+          className="pointer-events-none absolute -inset-4 rounded-[40%] bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22),transparent_62%)] blur-2xl sm:-inset-8"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -right-4 top-8 h-40 w-40 rounded-full bg-sky-400/15 blur-3xl"
+          className="pointer-events-none absolute -right-2 top-8 h-40 w-40 rounded-full bg-sky-400/15 blur-3xl sm:-right-4"
           aria-hidden
         />
 
-        <div className="group/dash relative transition-transform duration-300 ease-out hover:-translate-y-1.5">
+        <div className="group/dash relative mx-auto w-full max-w-[440px] transition-transform duration-300 ease-out hover:-translate-y-1.5 lg:mx-0 lg:ml-auto">
           <AttendanceDashboardMockup />
 
           <FloatingGlassCard
-            className="absolute -left-3 top-6 z-20 hidden sm:flex lg:-left-8 lg:top-8"
+            className="absolute -left-2 top-5 z-20 hidden sm:flex lg:-left-5 lg:top-6"
             style={motion(420, 'float')}
             icon={Wifi}
             label="Real-time Sync"
@@ -202,7 +202,7 @@ function SmartAttendanceBlock() {
             accentBg="bg-emerald-500/10"
           />
           <FloatingGlassCard
-            className="absolute -right-2 top-[38%] z-20 hidden sm:flex lg:-right-6"
+            className="absolute -right-1 top-[38%] z-20 hidden sm:flex lg:-right-4"
             style={motion(520, 'float')}
             icon={Camera}
             label="Photo Verified"
@@ -210,7 +210,7 @@ function SmartAttendanceBlock() {
             accentBg="bg-blue-500/10"
           />
           <FloatingGlassCard
-            className="absolute bottom-6 left-[12%] z-20 hidden sm:flex lg:bottom-8 lg:left-[8%]"
+            className="absolute bottom-5 left-[10%] z-20 hidden sm:flex lg:bottom-6 lg:left-[6%]"
             style={motion(620, 'float')}
             icon={Users}
             label="Employees Online"
@@ -241,15 +241,15 @@ function FloatingGlassCard({
   return (
     <div
       className={cn(
-        'items-center gap-2.5 rounded-2xl border border-white/70 bg-white/75 px-3.5 py-2.5 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:-translate-y-0.5',
+        'items-center gap-2 rounded-xl border border-white/70 bg-white/75 px-2.5 py-2 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:-translate-y-0.5',
         className
       )}
       style={style}
     >
-      <span className={cn('flex h-8 w-8 items-center justify-center rounded-xl', accentBg)}>
-        <Icon className={cn('h-4 w-4', accent)} aria-hidden />
+      <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg', accentBg)}>
+        <Icon className={cn('h-3.5 w-3.5', accent)} aria-hidden />
       </span>
-      <span className="text-[12px] font-semibold tracking-tight text-slate-800">{label}</span>
+      <span className="text-[11px] font-semibold tracking-tight text-slate-800">{label}</span>
     </div>
   );
 }
@@ -293,15 +293,6 @@ function AttendanceDashboardMockup() {
       tone: 'bg-amber-500',
       statusBg: 'bg-amber-50 text-amber-700 ring-amber-200/80',
     },
-    {
-      name: 'Priya Das',
-      initials: 'PD',
-      checkIn: '08:58 AM',
-      checkOut: '06:10 PM',
-      status: 'Present',
-      tone: 'bg-emerald-500',
-      statusBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200/80',
-    },
   ];
 
   const weekBars = [42, 68, 55, 78, 62, 88, 74];
@@ -319,31 +310,31 @@ function AttendanceDashboardMockup() {
   const rangeLabel = weekDays?.rangeLabel ?? 'This week';
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-slate-200/90 bg-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.35),0_8px_24px_-12px_rgba(59,130,246,0.2)]">
-      <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50/95 px-3.5 py-2.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-300/80" />
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-300/60" />
-        <div className="ml-3 h-5 flex-1 rounded-md bg-white ring-1 ring-slate-200/80" />
+    <div className="relative overflow-hidden rounded-[16px] border border-slate-200/90 bg-white shadow-[0_18px_44px_-24px_rgba(15,23,42,0.32),0_6px_18px_-10px_rgba(59,130,246,0.18)]">
+      <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50/95 px-3 py-2">
+        <span className="h-2 w-2 rounded-full bg-slate-300" />
+        <span className="h-2 w-2 rounded-full bg-slate-300/80" />
+        <span className="h-2 w-2 rounded-full bg-slate-300/60" />
+        <div className="ml-2.5 h-4 flex-1 rounded-md bg-white ring-1 ring-slate-200/80" />
       </div>
 
-      <div className="bg-[#F8FAFC] p-3.5 sm:p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="bg-[#F8FAFC] p-2.5 sm:p-3">
+        <div className="mb-2.5 flex items-center justify-between gap-2">
           <div>
-            <div className="text-[12px] font-semibold text-slate-800">Attendance overview</div>
-            <div className="mt-0.5 text-[10px] text-slate-400">{todayLabel || 'Today'}</div>
+            <div className="text-[11px] font-semibold text-slate-800">Attendance overview</div>
+            <div className="mt-0.5 text-[9px] text-slate-400">{todayLabel || 'Today'}</div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-lg bg-blue-500 px-2.5 py-1.5 text-[10px] font-semibold text-white sm:inline">
+          <div className="flex items-center gap-1.5">
+            <span className="hidden rounded-md bg-blue-500 px-2 py-1 text-[9px] font-semibold text-white sm:inline">
               Live
             </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-600">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[9px] font-semibold text-slate-600">
               HR
             </span>
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-3 gap-2">
+        <div className="mb-2.5 grid grid-cols-3 gap-1.5">
           {[
             { label: 'Present', value: '128', bar: 'w-[78%] bg-emerald-400/80' },
             { label: 'Late', value: '09', bar: 'w-[28%] bg-amber-400/80' },
@@ -351,41 +342,41 @@ function AttendanceDashboardMockup() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl border border-slate-200/70 bg-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
+              className="rounded-lg border border-slate-200/70 bg-white p-2 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
             >
-              <div className="text-[10px] font-medium text-slate-400">{stat.label}</div>
-              <div className="mt-0.5 text-[17px] font-semibold tracking-tight text-slate-900">
+              <div className="text-[9px] font-medium text-slate-400">{stat.label}</div>
+              <div className="mt-0.5 text-[15px] font-semibold tracking-tight text-slate-900">
                 {stat.value}
               </div>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-100">
                 <div className={cn('h-full rounded-full', stat.bar)} />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
-          <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
-            <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-              <span className="text-[11px] font-semibold text-slate-700">Team check-ins</span>
-              <span className="text-[10px] font-medium text-slate-400">In → Out</span>
+        <div className="grid gap-2 sm:grid-cols-[1.2fr_0.8fr]">
+          <div className="overflow-hidden rounded-lg border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+            <div className="flex items-center justify-between border-b border-slate-100 px-2.5 py-1.5">
+              <span className="text-[10px] font-semibold text-slate-700">Team check-ins</span>
+              <span className="text-[9px] font-medium text-slate-400">In → Out</span>
             </div>
             <ul className="divide-y divide-slate-100">
               {rows.map((row) => (
-                <li key={row.name} className="flex items-center gap-2.5 px-3 py-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-semibold text-blue-700">
+                <li key={row.name} className="flex items-center gap-2 px-2.5 py-1.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[9px] font-semibold text-blue-700">
                     {row.initials}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[12px] font-semibold text-slate-800">{row.name}</div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <div className="truncate text-[11px] font-semibold text-slate-800">{row.name}</div>
+                    <div className="mt-0.5 flex items-center gap-1 text-[9px] text-slate-500">
                       <span className="font-medium text-slate-600">{row.checkIn}</span>
                       <span className="text-slate-300" aria-hidden>
                         →
                       </span>
                       <span className="font-medium text-slate-600">{row.checkOut}</span>
                     </div>
-                    <div className="mt-1.5 flex h-1 items-center gap-0.5">
+                    <div className="mt-1 flex h-1 items-center gap-0.5">
                       <span className="h-full w-[18%] rounded-full bg-slate-100" />
                       <span className="h-full flex-1 rounded-full bg-gradient-to-r from-blue-400/80 to-emerald-400/70" />
                       <span className="h-full w-[14%] rounded-full bg-slate-100" />
@@ -393,7 +384,7 @@ function AttendanceDashboardMockup() {
                   </div>
                   <span
                     className={cn(
-                      'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ring-1',
+                      'inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-medium ring-1',
                       row.statusBg
                     )}
                   >
@@ -405,13 +396,13 @@ function AttendanceDashboardMockup() {
             </ul>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <div className="flex-1 rounded-xl border border-slate-200/70 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+          <div className="flex flex-col gap-2">
+            <div className="flex-1 rounded-lg border border-slate-200/70 bg-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-slate-700">Weekly trend</span>
-                <span className="text-[10px] font-medium text-slate-400">{rangeLabel}</span>
+                <span className="text-[10px] font-semibold text-slate-700">Weekly trend</span>
+                <span className="text-[9px] font-medium text-slate-400">{rangeLabel}</span>
               </div>
-              <div className="flex h-[100px] items-end gap-1.5 px-0.5 pt-2">
+              <div className="flex h-[72px] items-end gap-1 px-0.5 pt-1.5">
                 {weekBars.map((h, i) => (
                   <div key={`${labels[i]}-${i}`} className="flex flex-1 flex-col items-center gap-1">
                     <div
@@ -424,11 +415,11 @@ function AttendanceDashboardMockup() {
                   </div>
                 ))}
               </div>
-              <div className="mt-1.5 flex justify-between gap-0.5 px-0.5">
+              <div className="mt-1 flex justify-between gap-0.5 px-0.5">
                 {labels.map((label, i) => (
                   <span
                     key={`${label}-${i}`}
-                    className="flex-1 text-center text-[8px] font-medium leading-tight text-slate-500 sm:text-[9px]"
+                    className="flex-1 text-center text-[7px] font-medium leading-tight text-slate-500 sm:text-[8px]"
                   >
                     {label}
                   </span>
@@ -436,33 +427,33 @@ function AttendanceDashboardMockup() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200/70 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
-              <div className="mb-2 text-[11px] font-semibold text-slate-700">Check-in health</div>
-              <div className="flex items-center gap-3">
+            <div className="rounded-lg border border-slate-200/70 bg-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+              <div className="mb-1.5 text-[10px] font-semibold text-slate-700">Check-in health</div>
+              <div className="flex items-center gap-2.5">
                 <div
-                  className="relative h-12 w-12 shrink-0 rounded-full"
+                  className="relative h-10 w-10 shrink-0 rounded-full"
                   style={{
                     background: 'conic-gradient(#3b82f6 0 72%, #e2e8f0 72% 100%)',
                   }}
                   aria-hidden
                 >
-                  <div className="absolute inset-1.5 flex items-center justify-center rounded-full bg-white text-[10px] font-semibold text-slate-800">
+                  <div className="absolute inset-1.5 flex items-center justify-center rounded-full bg-white text-[9px] font-semibold text-slate-800">
                     72%
                   </div>
                 </div>
-                <div className="min-w-0 flex-1 space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px] text-slate-500">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center justify-between text-[9px] text-slate-500">
                     <span>On time</span>
                     <span className="font-medium text-slate-700">72%</span>
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-slate-100">
+                  <div className="h-1 w-full rounded-full bg-slate-100">
                     <div className="h-full w-[72%] rounded-full bg-blue-500/80" />
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500">
+                  <div className="flex items-center justify-between text-[9px] text-slate-500">
                     <span>Photo verified</span>
                     <span className="font-medium text-slate-700">91%</span>
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-slate-100">
+                  <div className="h-1 w-full rounded-full bg-slate-100">
                     <div className="h-full w-[91%] rounded-full bg-emerald-400/80" />
                   </div>
                 </div>
@@ -555,48 +546,48 @@ function LeaveCalendarMockup() {
 
   if (!cal) {
     return (
-      <div className="min-h-[360px] rounded-[18px] border border-slate-200/90 bg-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.28)]" />
+      <div className="min-h-[280px] rounded-[16px] border border-slate-200/90 bg-white shadow-[0_18px_44px_-24px_rgba(15,23,42,0.28)]" />
     );
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-[18px] border border-slate-200/90 bg-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.28)] transition-transform duration-300 hover:-translate-y-1.5">
-      <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50/95 px-3.5 py-2.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-300/80" />
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-300/60" />
-        <div className="ml-3 h-5 flex-1 rounded-md bg-white ring-1 ring-slate-200/80" />
+    <div className="group relative mx-auto w-full max-w-[400px] overflow-hidden rounded-[16px] border border-slate-200/90 bg-white shadow-[0_18px_44px_-24px_rgba(15,23,42,0.28)] transition-transform duration-300 hover:-translate-y-1.5 lg:mx-0">
+      <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50/95 px-3 py-2">
+        <span className="h-2 w-2 rounded-full bg-slate-300" />
+        <span className="h-2 w-2 rounded-full bg-slate-300/80" />
+        <span className="h-2 w-2 rounded-full bg-slate-300/60" />
+        <div className="ml-2.5 h-4 flex-1 rounded-md bg-white ring-1 ring-slate-200/80" />
       </div>
 
-      <div className="bg-gradient-to-br from-emerald-50/80 to-white p-4 sm:p-5">
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+      <div className="bg-gradient-to-br from-emerald-50/80 to-white p-3 sm:p-3.5">
+        <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <div className="text-[13px] font-semibold text-slate-800">{cal.monthLabel}</div>
-            <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-medium text-slate-500">
-              <span className="rounded-full bg-white px-2 py-0.5 ring-1 ring-slate-200/80">
+            <div className="text-[12px] font-semibold text-slate-800">{cal.monthLabel}</div>
+            <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-medium text-slate-500">
+              <span className="rounded-full bg-white px-1.5 py-0.5 ring-1 ring-slate-200/80">
                 {cal.daysInMonth} days
               </span>
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 ring-1 ring-emerald-200/80">
+              <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-emerald-700 ring-1 ring-emerald-200/80">
                 {cal.leaveCount} on leave
               </span>
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700 ring-1 ring-amber-200/80">
+              <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-amber-700 ring-1 ring-amber-200/80">
                 {cal.holidayCount} holiday{cal.holidayCount === 1 ? '' : 's'}
               </span>
-              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700 ring-1 ring-blue-200/80">
+              <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-blue-700 ring-1 ring-blue-200/80">
                 Today {cal.today}
               </span>
             </div>
           </div>
-          <span className="rounded-lg bg-emerald-500 px-2.5 py-1.5 text-[10px] font-semibold text-white">
+          <span className="rounded-md bg-emerald-500 px-2 py-1 text-[9px] font-semibold text-white">
             Team leave
           </span>
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {cal.weekdays.map((d) => (
             <div
               key={d}
-              className="pb-1 text-center text-[9px] font-semibold uppercase tracking-wide text-slate-400"
+              className="pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-slate-400"
             >
               {d}
             </div>
@@ -609,7 +600,7 @@ function LeaveCalendarMockup() {
               <div
                 key={cell.day}
                 className={cn(
-                  'flex aspect-square items-center justify-center rounded-md text-[11px] font-semibold tabular-nums',
+                  'flex aspect-square items-center justify-center rounded-md text-[10px] font-semibold tabular-nums',
                   cell.kind === 'today' &&
                     'bg-blue-500 text-white shadow-[0_4px_12px_-4px_rgba(37,99,235,0.55)] ring-2 ring-blue-200',
                   cell.kind === 'leave' && 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200',
@@ -623,15 +614,15 @@ function LeaveCalendarMockup() {
           })}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-medium text-slate-500">
+        <div className="mt-2.5 flex flex-wrap gap-2.5 text-[9px] font-medium text-slate-500">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-blue-500" /> Today
+            <span className="h-2 w-2 rounded-sm bg-blue-500" /> Today
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-emerald-200 ring-1 ring-emerald-300" /> Leave
+            <span className="h-2 w-2 rounded-sm bg-emerald-200 ring-1 ring-emerald-300" /> Leave
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-amber-100 ring-1 ring-amber-300" /> Holiday
+            <span className="h-2 w-2 rounded-sm bg-amber-100 ring-1 ring-amber-300" /> Holiday
           </span>
         </div>
       </div>
@@ -691,11 +682,11 @@ function LeaveManagementBlock() {
   return (
     <div
       ref={sectionRef}
-      className="grid items-center gap-10 lg:grid-cols-[3fr_2fr] lg:gap-12 xl:gap-16"
+      className="grid items-center gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-10 xl:gap-14"
     >
-      <div className="relative order-2 lg:order-1 lg:mt-8" style={fade(120, 28)}>
+      <div className="relative order-2 overflow-hidden lg:order-1 lg:mt-8 lg:overflow-visible" style={fade(120, 28)}>
         <div
-          className="pointer-events-none absolute -inset-6 rounded-[40%] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.16),transparent_62%)] blur-2xl"
+          className="pointer-events-none absolute -inset-4 rounded-[40%] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.16),transparent_62%)] blur-2xl sm:-inset-6"
           aria-hidden
         />
         <LeaveCalendarMockup />

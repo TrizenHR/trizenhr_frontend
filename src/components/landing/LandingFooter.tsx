@@ -122,7 +122,7 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
   return (
     <footer
       ref={footerRef}
-      className="relative overflow-hidden text-slate-300"
+      className="relative overflow-x-clip text-slate-300"
       style={{
         background:
           'radial-gradient(circle at top, rgba(37,99,235,0.12), transparent 55%), #020d2b',

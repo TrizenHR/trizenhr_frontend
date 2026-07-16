@@ -137,20 +137,39 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
 
       if (reduced) return;
 
+      // Mobile uses a short entrance animation instead of a pinned scroll zoom.
+      // Clear any desktop scrub styles when crossing breakpoints.
+      if (bp === 'mobile') {
+        [headingEl, paraEl, ctaEl, badgeEl, dashEl].forEach((element) => {
+          if (!element) return;
+          element.style.transform = '';
+          element.style.opacity = '';
+          element.style.pointerEvents = '';
+          element.style.willChange = '';
+        });
+        if (dashEl) dashEl.style.filter = '';
+        if (frameEl) {
+          frameEl.style.borderRadius = '18px';
+          frameEl.style.boxShadow = '';
+          frameEl.style.willChange = '';
+        }
+        return;
+      }
+
       const maxScale =
-        bp === 'mobile' ? 1.18 : bp === 'tablet' ? 1.2 : 1.38;
+        bp === 'tablet' ? 1.2 : 1.38;
       const dashLift =
-        bp === 'mobile' ? -72 : bp === 'tablet' ? -110 : -130;
-      const headingLift = bp === 'mobile' ? -28 : -42;
-      const paraLift = bp === 'mobile' ? -20 : -30;
-      const ctaLift = bp === 'mobile' ? -22 : -32;
-      const badgeLift = bp === 'mobile' ? -12 : -18;
+        bp === 'tablet' ? -110 : -130;
+      const headingLift = -42;
+      const paraLift = -30;
+      const ctaLift = -32;
+      const badgeLift = -18;
 
       // Slow continuous curves — quint ease removes the “stepper” feel
       const zoom = easeInOutQuint(smoothstep(p));
       const lift = easeInOutQuint(p);
 
-      const hScale = lerp(1, bp === 'mobile' ? 0.94 : 0.9, zoom);
+      const hScale = lerp(1, 0.9, zoom);
       const hY = lerp(0, headingLift, lift);
       const hOp = 1 - easeInOutQuint(rangeProgress(p, 0.18, 0.78));
 
@@ -189,7 +208,7 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
 
       const dScale = lerp(1, maxScale, zoom);
       const dY = lerp(0, dashLift, lift);
-      const radius = lerp(18, bp === 'mobile' ? 10 : 8, zoom);
+      const radius = lerp(18, 8, zoom);
 
       if (dashEl) {
         dashEl.style.transformOrigin = 'center center';
@@ -294,16 +313,16 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
   }, [applyScrollStyles, reducedMotion, introDone]);
 
   const isMobile = breakpoint === 'mobile';
-  const pinEnabled = !reducedMotion;
+  const pinEnabled = !reducedMotion && !isMobile;
 
-  // Longer pin runway so zoom progresses more slowly with scroll
+  // Mobile flows naturally; tablet and desktop retain the pinned zoom runway.
   const trackHeightClass = reducedMotion
     ? 'min-h-0'
     : isMobile
-      ? 'h-[135vh]'
+      ? 'min-h-[100svh]'
       : breakpoint === 'tablet'
-        ? 'h-[140vh]'
-        : 'h-[155vh]';
+        ? 'h-[122vh]'
+        : 'h-[128vh]';
 
   const badgeVisible = loadPhase >= 1;
   const headingAnimate = loadPhase >= 2;
@@ -438,8 +457,10 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
                       opacity: dashVisible ? 1 : 0,
                       transform: dashVisible
                         ? 'translate3d(0, 0, 0) scale(1) rotateX(0deg)'
-                        : 'translate3d(0, 45px, 0) scale(0.94) rotateX(3deg)',
-                      transition: `opacity 1000ms ${EASE}, transform 1000ms ${EASE}`,
+                        : isMobile
+                          ? 'translate3d(0, 28px, 0) scale(0.97)'
+                          : 'translate3d(0, 45px, 0) scale(0.94) rotateX(3deg)',
+                      transition: `opacity ${isMobile ? 760 : 1000}ms ${EASE}, transform ${isMobile ? 760 : 1000}ms ${EASE}`,
                       transformStyle: 'preserve-3d',
                       transformOrigin: 'center center',
                     }

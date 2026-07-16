@@ -126,9 +126,9 @@ export function LandingNavbar({ onBookDemo }: LandingNavbarProps) {
           <Image
             src="/assets/logo.png"
             alt="TrizenHR"
-            width={44}
-            height={44}
-            className="h-11 w-11 rounded object-contain"
+            width={52}
+            height={52}
+            className="h-12 w-12 rounded object-contain sm:h-[52px] sm:w-[52px]"
             priority
           />
           <div className="flex flex-col leading-none">
@@ -226,7 +226,7 @@ export function LandingNavbar({ onBookDemo }: LandingNavbarProps) {
           {/* Mobile menu toggle */}
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-black/[0.08] bg-white text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center bg-transparent text-slate-800 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden"
             aria-expanded={mobileOpen}
             aria-controls="landing-mobile-menu"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}

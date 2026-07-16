@@ -29,7 +29,7 @@ export function AnimatedHeading({
   lines,
   animate,
   reducedMotion,
-  isMobile: _isMobile,
+  isMobile,
   className,
   style,
 }: AnimatedHeadingProps) {
@@ -76,6 +76,39 @@ export function AnimatedHeading({
             {line.text}
           </span>
         ))}
+      </h1>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <h1
+        className={cn(
+          'text-[36px] font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-[48px]',
+          className
+        )}
+        style={style}
+      >
+        <span className="sr-only">{text}</span>
+        <span aria-hidden="true" className="block">
+          {lines.map((line, index) => (
+            <span key={line.text} className="block overflow-hidden pb-[0.04em]">
+              <span
+                className={cn('block will-change-transform', line.className)}
+                style={{
+                  opacity: started ? 1 : 0,
+                  transform: started ? 'translateY(0)' : 'translateY(72%)',
+                  transitionProperty: 'opacity, transform',
+                  transitionDuration: '680ms',
+                  transitionTimingFunction: EASE,
+                  transitionDelay: started ? `${index * 110}ms` : '0ms',
+                }}
+              >
+                {line.text}
+              </span>
+            </span>
+          ))}
+        </span>
       </h1>
     );
   }

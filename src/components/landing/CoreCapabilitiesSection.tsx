@@ -115,7 +115,7 @@ export function CoreCapabilitiesSection() {
     <section
       ref={sectionRef}
       id="features"
-      className="relative overflow-x-clip border-b border-slate-200/70 bg-white"
+      className="relative overflow-x-hidden border-b border-slate-200/70 bg-white"
       aria-labelledby="core-capabilities-heading"
     >
       <div
@@ -155,18 +155,19 @@ export function CoreCapabilitiesSection() {
         <div className="mt-10 grid grid-cols-1 gap-3 pb-8 md:mt-12 md:grid-cols-2 md:gap-3.5 md:pb-10 lg:mt-14 lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_auto_auto] lg:gap-4 lg:pb-12">
           <article
             className={cn(
-              'group relative overflow-visible rounded-[18px] border border-slate-200/80',
+              'group relative overflow-hidden rounded-[18px] border border-slate-200/80 sm:overflow-visible',
               'bg-gradient-to-br from-[#F5F3FF] to-white',
-              'p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]',
+              'px-5 pb-7 pt-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]',
+              'min-h-[340px] sm:min-h-0',
               'transition-[box-shadow,border-color] duration-300 ease-out',
               'hover:border-violet-300/70 hover:shadow-[0_12px_28px_-16px_rgba(124,58,237,0.25)]',
               'md:col-span-2 md:p-5',
-              'lg:col-span-1 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:flex lg:items-center lg:p-6',
+              'lg:col-span-1 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:flex lg:min-h-0 lg:items-center lg:p-6',
               visible && !reducedMotion && 'bento-deco-active'
             )}
             style={enter(280, { y: 28, scale: 0.98, duration: 700 })}
           >
-            <div className="relative z-10 flex w-full flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="relative z-10 flex w-full flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <CapabilityContent
                 icon={Users}
                 iconBg="bg-violet-500"
@@ -346,30 +347,28 @@ function FolderGallery({
 
   return (
     <div
-      className="relative h-[112px] w-full max-w-[280px] shrink-0 sm:h-[128px] sm:w-[52%] sm:max-w-[300px] lg:-mr-8 lg:h-[150px] lg:w-[55%] lg:max-w-[340px]"
+      className="relative mx-auto h-[168px] w-full max-w-[min(100%,340px)] shrink-0 overflow-hidden sm:mx-0 sm:h-[128px] sm:w-[52%] sm:max-w-[300px] sm:overflow-visible lg:-mr-8 lg:h-[150px] lg:w-[55%] lg:max-w-[340px]"
       aria-hidden
     >
       {GALLERY_FOCUSES.map((focus, i) => {
-        const fromRight = open ? (GALLERY_FOCUSES.length - 1 - i) * 20 : 0;
+        const fromRight = open ? (GALLERY_FOCUSES.length - 1 - i) * 22 : 0;
         const rotate = open ? (i - 1.5) * 1.05 : 0;
         const delayMs = reducedMotion ? 0 : i * 85;
 
         return (
           <div
             key={i}
-            className="absolute bottom-0 top-0 my-auto h-fit"
+            className="absolute bottom-0 top-0 my-auto h-fit w-[86%] max-w-[300px] sm:w-[78%] sm:max-w-[240px]"
             style={{
               right: fromRight,
               zIndex: i + 1,
-              width: '78%',
-              maxWidth: 240,
               transition: reducedMotion
                 ? 'none'
                 : `right 820ms ${EASE} ${delayMs}ms`,
             }}
           >
             <div
-              className="overflow-hidden rounded-[12px] border border-violet-200/80 bg-white shadow-[0_14px_32px_-12px_rgba(91,33,182,0.45)]"
+              className="overflow-hidden rounded-[12px] border border-violet-200/80 bg-white shadow-[0_14px_32px_-12px_rgba(91,33,182,0.45)] sm:rounded-[12px]"
               style={{
                 transform: `rotate(${rotate}deg)`,
                 transition: reducedMotion
@@ -382,7 +381,7 @@ function FolderGallery({
                   src="/image.png"
                   alt=""
                   fill
-                  sizes="240px"
+                  sizes="(max-width: 639px) 300px, 240px"
                   className={cn('object-cover', focus)}
                   priority={i === GALLERY_FOCUSES.length - 1}
                 />
