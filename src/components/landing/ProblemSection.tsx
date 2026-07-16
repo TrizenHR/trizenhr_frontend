@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { FileText, Eye, Shield, CheckCircle2, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  LANDING_SCROLL_REVEAL,
+  landingDelay,
+  landingDuration,
+} from '@/components/landing/scrollReveal';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -109,7 +114,8 @@ export function ProblemSection() {
       ([entry]) => {
         const ratio = entry.intersectionRatio;
         const fullyGone = !entry.isIntersecting || ratio <= 0.02;
-        const deepEnough = ratio >= 0.3;
+        // Wait until section is meaningfully in the center band
+        const deepEnough = entry.isIntersecting && ratio >= 0.2;
 
         // Enter once deep enough — stay until fully gone (no mid-view vanish)
         if (!activeRef.current && deepEnough) {
@@ -125,7 +131,10 @@ export function ProblemSection() {
           activeRef.current = false;
         }
       },
-      { threshold: [0, 0.02, 0.15, 0.3, 0.45, 0.6, 1] }
+      {
+        ...LANDING_SCROLL_REVEAL,
+        threshold: [0, 0.02, 0.15, 0.2, 0.35, 0.5, 0.7, 1],
+      }
     );
 
     observer.observe(node);
@@ -155,7 +164,7 @@ export function ProblemSection() {
       requestAnimationFrame(() => {
         els.forEach((el) => {
           const delay = Number(el.dataset.delay ?? 0);
-          el.style.transition = `opacity 650ms ${EASE} ${delay}ms, transform 650ms ${EASE} ${delay}ms`;
+          el.style.transition = `opacity ${landingDuration(650)}ms ${EASE} ${landingDelay(delay)}ms, transform ${landingDuration(650)}ms ${EASE} ${landingDelay(delay)}ms`;
           el.style.opacity = '1';
           el.style.transform = 'translateY(0)';
         });

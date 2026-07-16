@@ -11,6 +11,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  LANDING_SCROLL_REVEAL,
+  landingDelay,
+  landingDuration,
+} from '@/components/landing/scrollReveal';
+
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -89,7 +95,7 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
           observer.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: '0px 0px -6% 0px' }
+      LANDING_SCROLL_REVEAL
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -109,7 +115,7 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
     return {
       opacity: visible ? 1 : 0,
       transform: visible ? 'translateY(0)' : `translateY(${y}px)`,
-      transition: `opacity ${duration}ms ${EASE} ${delayMs}ms, transform ${duration}ms ${EASE} ${delayMs}ms`,
+      transition: `opacity ${landingDuration(duration)}ms ${EASE} ${landingDelay(delayMs)}ms, transform ${landingDuration(duration)}ms ${EASE} ${landingDelay(delayMs)}ms`,
     };
   };
 

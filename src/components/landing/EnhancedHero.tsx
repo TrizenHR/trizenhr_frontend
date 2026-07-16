@@ -137,41 +137,21 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
 
       if (reduced) return;
 
-      if (bp === 'mobile') {
-        if (headingEl) {
-          headingEl.style.transform = 'none';
-          headingEl.style.opacity = '1';
-        }
-        if (paraEl) {
-          paraEl.style.opacity = '1';
-          paraEl.style.transform = 'none';
-          paraEl.style.pointerEvents = 'auto';
-        }
-        if (ctaEl) {
-          ctaEl.style.opacity = '1';
-          ctaEl.style.transform = 'none';
-          ctaEl.style.pointerEvents = 'auto';
-        }
-        if (badgeEl) {
-          badgeEl.style.opacity = '1';
-          badgeEl.style.transform = 'none';
-        }
-        if (dashEl) {
-          dashEl.style.transform = 'none';
-          dashEl.style.opacity = '1';
-          dashEl.style.filter = 'none';
-        }
-        return;
-      }
-
-      const maxScale = bp === 'tablet' ? 1.2 : 1.38;
+      const maxScale =
+        bp === 'mobile' ? 1.18 : bp === 'tablet' ? 1.2 : 1.38;
+      const dashLift =
+        bp === 'mobile' ? -72 : bp === 'tablet' ? -110 : -130;
+      const headingLift = bp === 'mobile' ? -28 : -42;
+      const paraLift = bp === 'mobile' ? -20 : -30;
+      const ctaLift = bp === 'mobile' ? -22 : -32;
+      const badgeLift = bp === 'mobile' ? -12 : -18;
 
       // Slow continuous curves — quint ease removes the “stepper” feel
       const zoom = easeInOutQuint(smoothstep(p));
       const lift = easeInOutQuint(p);
 
-      const hScale = lerp(1, 0.9, zoom);
-      const hY = lerp(0, -42, lift);
+      const hScale = lerp(1, bp === 'mobile' ? 0.94 : 0.9, zoom);
+      const hY = lerp(0, headingLift, lift);
       const hOp = 1 - easeInOutQuint(rangeProgress(p, 0.18, 0.78));
 
       if (headingEl) {
@@ -182,7 +162,7 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
       }
 
       const paraOp = 1 - easeInOutQuint(rangeProgress(p, 0.04, 0.48));
-      const paraY = lerp(0, -30, lift);
+      const paraY = lerp(0, paraLift, lift);
 
       if (paraEl) {
         paraEl.style.opacity = paraOp.toFixed(3);
@@ -192,7 +172,7 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
       }
 
       const ctaOp = 1 - easeInOutQuint(rangeProgress(p, 0, 0.42));
-      const ctaY = lerp(0, -32, lift);
+      const ctaY = lerp(0, ctaLift, lift);
 
       if (ctaEl) {
         ctaEl.style.opacity = ctaOp.toFixed(3);
@@ -204,12 +184,12 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
       if (badgeEl) {
         const bOp = 1 - easeInOutQuint(rangeProgress(p, 0.02, 0.32));
         badgeEl.style.opacity = bOp.toFixed(3);
-        badgeEl.style.transform = `translate3d(0, ${lerp(0, -18, lift).toFixed(2)}px, 0)`;
+        badgeEl.style.transform = `translate3d(0, ${lerp(0, badgeLift, lift).toFixed(2)}px, 0)`;
       }
 
       const dScale = lerp(1, maxScale, zoom);
-      const dY = lerp(0, bp === 'tablet' ? -110 : -130, lift);
-      const radius = lerp(18, 8, zoom);
+      const dY = lerp(0, dashLift, lift);
+      const radius = lerp(18, bp === 'mobile' ? 10 : 8, zoom);
 
       if (dashEl) {
         dashEl.style.transformOrigin = 'center center';
@@ -314,13 +294,13 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
   }, [applyScrollStyles, reducedMotion, introDone]);
 
   const isMobile = breakpoint === 'mobile';
-  const pinEnabled = !reducedMotion && !isMobile;
+  const pinEnabled = !reducedMotion;
 
   // Longer pin runway so zoom progresses more slowly with scroll
   const trackHeightClass = reducedMotion
     ? 'min-h-0'
     : isMobile
-      ? 'min-h-0'
+      ? 'h-[135vh]'
       : breakpoint === 'tablet'
         ? 'h-[140vh]'
         : 'h-[155vh]';
@@ -340,7 +320,7 @@ export function EnhancedHero({ onBookDemo }: EnhancedHeroProps) {
       <div
         className={cn(
           'relative flex flex-col overflow-hidden bg-white',
-          pinEnabled ? 'sticky top-0 h-screen' : 'relative min-h-[100svh]'
+          pinEnabled ? 'sticky top-0 h-[100svh]' : 'relative min-h-[100svh]'
         )}
       >
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white via-[#F5F8FF] to-slate-50/80" />

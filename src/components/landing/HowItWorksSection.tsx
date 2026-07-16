@@ -9,6 +9,11 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  LANDING_SCROLL_REVEAL,
+  landingDelay,
+  landingDuration,
+} from '@/components/landing/scrollReveal';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -184,7 +189,7 @@ export function HowItWorksSection() {
       ([entry]) => {
         const ratio = entry.intersectionRatio;
         const fullyGone = !entry.isIntersecting || ratio <= 0.02;
-        const deepEnough = ratio >= 0.28;
+        const deepEnough = entry.isIntersecting && ratio >= 0.2;
 
         if (!activeRef.current && deepEnough) {
           setDir(dirRef.current);
@@ -199,7 +204,10 @@ export function HowItWorksSection() {
           activeRef.current = false;
         }
       },
-      { threshold: [0, 0.02, 0.15, 0.28, 0.45, 0.6, 1] }
+      {
+        ...LANDING_SCROLL_REVEAL,
+        threshold: [0, 0.02, 0.15, 0.2, 0.35, 0.5, 0.7, 1],
+      }
     );
 
     observer.observe(node);
@@ -228,9 +236,11 @@ export function HowItWorksSection() {
         els.forEach((el) => {
           const kind = (el.dataset.motion || 'fade') as MotionKind;
           const delay = Number(el.dataset.delay ?? 0);
-          const duration =
-            kind === 'line-x' || kind === 'line-y' ? 900 : kind === 'scale' ? 480 : 620;
-          el.style.transition = `opacity ${duration}ms ${EASE} ${delay}ms, transform ${duration}ms ${EASE} ${delay}ms`;
+          const duration = landingDuration(
+            kind === 'line-x' || kind === 'line-y' ? 900 : kind === 'scale' ? 480 : 620
+          );
+          const delayScaled = landingDelay(delay);
+          el.style.transition = `opacity ${duration}ms ${EASE} ${delayScaled}ms, transform ${duration}ms ${EASE} ${delayScaled}ms`;
           el.style.opacity = '1';
           el.style.transform = finalTransform(kind);
         });

@@ -14,6 +14,11 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  LANDING_SCROLL_REVEAL,
+  landingDelay,
+  landingDuration,
+} from '@/components/landing/scrollReveal';
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
@@ -65,7 +70,7 @@ function SmartAttendanceBlock() {
           observer.disconnect();
         }
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      LANDING_SCROLL_REVEAL
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -78,12 +83,12 @@ function SmartAttendanceBlock() {
     if (reducedMotion) {
       return { opacity: visible ? 1 : 0, transition: `opacity 280ms ${EASE}` };
     }
-    const delay = `${delayMs}ms`;
+    const delay = `${landingDelay(delayMs)}ms`;
     if (kind === 'heading') {
       return {
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(30px)',
-        transition: `opacity 700ms ${EASE} ${delay}, transform 700ms ${EASE} ${delay}`,
+        transition: `opacity ${landingDuration(700)}ms ${EASE} ${delay}, transform ${landingDuration(700)}ms ${EASE} ${delay}`,
       };
     }
     if (kind === 'dash') {
@@ -93,27 +98,27 @@ function SmartAttendanceBlock() {
           ? 'translateY(0) scale(1) rotateY(0deg)'
           : 'translateY(40px) scale(0.95) rotateY(8deg)',
         transformOrigin: 'center right',
-        transition: `opacity 800ms ${EASE} ${delay}, transform 800ms ${EASE} ${delay}`,
+        transition: `opacity ${landingDuration(800)}ms ${EASE} ${delay}, transform ${landingDuration(800)}ms ${EASE} ${delay}`,
       };
     }
     if (kind === 'float') {
       return {
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(16px)',
-        transition: `opacity 650ms ${EASE} ${delay}, transform 650ms ${EASE} ${delay}`,
+        transition: `opacity ${landingDuration(650)}ms ${EASE} ${delay}, transform ${landingDuration(650)}ms ${EASE} ${delay}`,
       };
     }
     if (kind === 'pill') {
       return {
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(10px)',
-        transition: `opacity 520ms ${EASE} ${delay}, transform 520ms ${EASE} ${delay}`,
+        transition: `opacity ${landingDuration(520)}ms ${EASE} ${delay}, transform ${landingDuration(520)}ms ${EASE} ${delay}`,
       };
     }
     return {
       opacity: visible ? 1 : 0,
       transform: visible ? 'translateY(0)' : 'translateY(14px)',
-      transition: `opacity 600ms ${EASE} ${delay}, transform 600ms ${EASE} ${delay}`,
+      transition: `opacity ${landingDuration(600)}ms ${EASE} ${delay}, transform ${landingDuration(600)}ms ${EASE} ${delay}`,
     };
   };
 
@@ -668,7 +673,7 @@ function LeaveManagementBlock() {
           observer.disconnect();
         }
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      LANDING_SCROLL_REVEAL
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -680,7 +685,7 @@ function LeaveManagementBlock() {
       : {
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : `translateY(${y}px)`,
-          transition: `opacity 650ms ${EASE} ${delay}ms, transform 650ms ${EASE} ${delay}ms`,
+          transition: `opacity ${landingDuration(650)}ms ${EASE} ${landingDelay(delay)}ms, transform ${landingDuration(650)}ms ${EASE} ${landingDelay(delay)}ms`,
         };
 
   return (

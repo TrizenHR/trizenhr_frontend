@@ -29,7 +29,7 @@ export function AnimatedHeading({
   lines,
   animate,
   reducedMotion,
-  isMobile,
+  isMobile: _isMobile,
   className,
   style,
 }: AnimatedHeadingProps) {
@@ -39,7 +39,7 @@ export function AnimatedHeading({
     if (animate) setStarted(true);
   }, [animate]);
 
-  const letterDelay = isMobile ? 16 : 26;
+  const letterDelay = 26;
 
   const flatLetters = useMemo(() => {
     let index = 0;

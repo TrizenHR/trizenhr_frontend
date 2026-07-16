@@ -42,8 +42,8 @@ export function Reveal({
   duration,
   className,
   once = true,
-  threshold = 0.15,
-  rootMargin = '0px 0px -40px 0px',
+  threshold = 0.2,
+  rootMargin = '-18% 0px -32% 0px',
   style,
   ...rest
 }: RevealProps) {

@@ -4,6 +4,11 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import Image from 'next/image';
 import { Clock, IndianRupee, Users, Download, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  LANDING_SCROLL_REVEAL,
+  landingDelay,
+  landingDuration,
+} from '@/components/landing/scrollReveal';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -60,7 +65,7 @@ export function CoreCapabilitiesSection() {
           observer.disconnect();
         }
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      LANDING_SCROLL_REVEAL
     );
 
     observer.observe(node);
@@ -76,7 +81,7 @@ export function CoreCapabilitiesSection() {
       setGalleryOpen(true);
       return;
     }
-    const timer = window.setTimeout(() => setGalleryOpen(true), 480);
+    const timer = window.setTimeout(() => setGalleryOpen(true), landingDuration(720));
     return () => window.clearTimeout(timer);
   }, [visible, reducedMotion]);
 
@@ -85,6 +90,8 @@ export function CoreCapabilitiesSection() {
     opts: { y?: number; x?: number; scale?: number; duration?: number } = {}
   ): CSSProperties => {
     const { y = 0, x = 0, scale = 1, duration = 550 } = opts;
+    const delay = landingDelay(delayMs);
+    const dur = landingDuration(duration);
     if (reducedMotion) {
       return {
         opacity: visible ? 1 : 0,
@@ -100,7 +107,7 @@ export function CoreCapabilitiesSection() {
       transform: visible
         ? 'translateX(0) translateY(0) scale(1)'
         : from.join(' ') || undefined,
-      transition: `opacity ${duration}ms ${EASE} ${delayMs}ms, transform ${duration}ms ${EASE} ${delayMs}ms`,
+      transition: `opacity ${dur}ms ${EASE} ${delay}ms, transform ${dur}ms ${EASE} ${delay}ms`,
     };
   };
 
