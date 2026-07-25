@@ -67,6 +67,23 @@ function displayName(session: FieldTrackingLiveSession): string {
   return name || u.employeeId || u.email || 'Employee';
 }
 
+const LOCATION_DISABLED_GRACE_MS = 5 * 60 * 1000;
+
+function isLocationOff(session: FieldTrackingLiveSession): boolean {
+  return Boolean(session.locationDisabledSince);
+}
+
+function locationOffRemainingLabel(sinceIso?: string | null): string | null {
+  if (!sinceIso) return null;
+  const sinceMs = new Date(sinceIso).getTime();
+  if (!Number.isFinite(sinceMs)) return null;
+  const remainingMs = Math.max(0, LOCATION_DISABLED_GRACE_MS - (Date.now() - sinceMs));
+  const totalSec = Math.ceil(remainingMs / 1000);
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 function userLabel(user: User): string {
   const name =
     user.fullName ||
@@ -103,6 +120,11 @@ export default function FieldTrackingPage() {
   const [historySessionActive, setHistorySessionActive] = useState(false);
   const [checkInPhoto, setCheckInPhoto] = useState<CheckInPhotoTarget | null>(null);
   const [photoTarget, setPhotoTarget] = useState<CheckInPhotoTarget | null>(null);
+  /** Attendance punch times for the selected history date (not inferred from GPS points). */
+  const [historyAttendance, setHistoryAttendance] = useState<{
+    checkIn?: string;
+    checkOut?: string;
+  } | null>(null);
 
   const loadLive = useCallback(
     async (silent = false) => {
@@ -175,6 +197,7 @@ export default function FieldTrackingPage() {
     const userId = selectedSession?.userId || historyUserId;
     if (!userId) {
       setCheckInPhoto(null);
+      setHistoryAttendance(null);
       return;
     }
 
@@ -186,7 +209,18 @@ export default function FieldTrackingPage() {
         limit: 1,
       });
       const record = result.records[0];
-      if (!record || (!record.hasCheckInPhoto && !record.photoUrl && !record.checkIn)) {
+      if (!record) {
+        setCheckInPhoto(null);
+        setHistoryAttendance(null);
+        return;
+      }
+
+      setHistoryAttendance({
+        checkIn: record.checkIn ? String(record.checkIn) : undefined,
+        checkOut: record.checkOut ? String(record.checkOut) : undefined,
+      });
+
+      if (!record.hasCheckInPhoto && !record.photoUrl && !record.checkIn) {
         setCheckInPhoto(null);
         return;
       }
@@ -204,6 +238,7 @@ export default function FieldTrackingPage() {
       });
     } catch {
       setCheckInPhoto(null);
+      setHistoryAttendance(null);
     }
   }, [selectedSession, historyUserId, pathDate, employees]);
 
@@ -247,19 +282,56 @@ export default function FieldTrackingPage() {
       return ta - tb;
     });
 
+    const checkInMs = historyAttendance?.checkIn
+      ? new Date(historyAttendance.checkIn).getTime()
+      : NaN;
+    const checkOutMs = historyAttendance?.checkOut
+      ? new Date(historyAttendance.checkOut).getTime()
+      : NaN;
+    const hasCheckIn = Number.isFinite(checkInMs);
+    const hasCheckOut = Number.isFinite(checkOutMs);
+
+    // Match nearest GPS point to attendance punches (±15 min), never invent labels.
+    let checkInIndex = -1;
+    let checkOutIndex = -1;
+    if (hasCheckIn && chronological.length > 0) {
+      let best = Number.POSITIVE_INFINITY;
+      chronological.forEach((point, index) => {
+        const t = new Date(point.recordedAt || 0).getTime();
+        const delta = Math.abs(t - checkInMs);
+        if (delta < best && delta <= 15 * 60 * 1000) {
+          best = delta;
+          checkInIndex = index;
+        }
+      });
+    }
+    if (hasCheckOut && chronological.length > 0) {
+      let best = Number.POSITIVE_INFINITY;
+      chronological.forEach((point, index) => {
+        const t = new Date(point.recordedAt || 0).getTime();
+        const delta = Math.abs(t - checkOutMs);
+        if (delta < best && delta <= 15 * 60 * 1000) {
+          best = delta;
+          checkOutIndex = index;
+        }
+      });
+    }
+
     const labeled = chronological.map((point, index) => {
       let event: HistoryEventKind = 'update';
-      if (chronological.length === 1 || index === 0) {
+      if (index === checkInIndex) {
         event = 'check_in';
-      } else if (index === chronological.length - 1) {
-        event = historySessionActive ? 'latest' : 'check_out';
+      } else if (index === checkOutIndex) {
+        event = 'check_out';
+      } else if (index === chronological.length - 1 && historySessionActive && !hasCheckOut) {
+        event = 'latest';
       }
       return { point, event, seq: index + 1 };
     });
 
     // Newest first for the table.
     return labeled.reverse();
-  }, [pathPoints, historySessionActive]);
+  }, [pathPoints, historySessionActive, historyAttendance]);
 
   function eventLabel(event: HistoryEventKind): string {
     switch (event) {
@@ -291,22 +363,29 @@ export default function FieldTrackingPage() {
     async (session: FieldTrackingLiveSession, date: string) => {
       setPathLoading(true);
       try {
-        // Prefer session path for today's active session; fall back to day path.
+        // Always load the selected calendar day via day-path so multi-day
+        // sessions cannot leak July 7 points into a July 11 view.
         let points: FieldLocationPoint[] = [];
-        const today = format(new Date(), 'yyyy-MM-dd');
-        if (date === today && session.sessionId) {
+        let stillActive = false;
+
+        if (session.userId) {
+          const day = await fieldTrackingApi.getDayPath(session.userId, date);
+          points = day.points;
+          stillActive = (day.sessions ?? []).some((s) => s.status === 'active');
+        }
+
+        // Fallback: session path filtered by the same date (org TZ on backend).
+        if (points.length === 0 && session.sessionId) {
           try {
-            points = await fieldTrackingApi.getSessionPath(session.sessionId);
+            points = await fieldTrackingApi.getSessionPath(session.sessionId, date);
+            stillActive = session.status === 'active';
           } catch {
             points = [];
           }
         }
-        if (points.length === 0 && session.userId) {
-          const day = await fieldTrackingApi.getDayPath(session.userId, date);
-          points = day.points;
-        }
+
         setPathPoints(points);
-        setHistorySessionActive(session.status === 'active');
+        setHistorySessionActive(stillActive);
         if (points.length === 0) {
           toast({
             title: 'No route yet',
@@ -434,6 +513,7 @@ export default function FieldTrackingPage() {
     setHistoryUserId('');
     setPathPoints([]);
     setHistorySessionActive(false);
+    setHistoryAttendance(null);
   };
 
   if (!canAccess) {
@@ -545,6 +625,8 @@ export default function FieldTrackingPage() {
                 sessions.map((session) => {
                   const active = selectedSessionId === session.sessionId;
                   const name = displayName(session);
+                  const locationOff = isLocationOff(session);
+                  const remaining = locationOffRemainingLabel(session.locationDisabledSince);
                   return (
                     <button
                       key={session.sessionId}
@@ -561,16 +643,34 @@ export default function FieldTrackingPage() {
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                           {initialsOf(name)}
                         </div>
-                        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />
+                        <span
+                          className={cn(
+                            'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background',
+                            locationOff ? 'bg-amber-500' : 'bg-emerald-500'
+                          )}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold">{name}</p>
+                          {locationOff ? (
+                            <Badge variant="outline" className="shrink-0 border-amber-300 bg-amber-50 text-amber-800">
+                              Location off
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="shrink-0 border-emerald-200 bg-emerald-50 text-emerald-700">
+                              Live
+                            </Badge>
+                          )}
+                        </div>
                         <p className="truncate text-xs text-muted-foreground">
-                          {session.lastLocation?.recordedAt
-                            ? `Last update ${new Date(
-                                session.lastLocation.recordedAt
-                              ).toLocaleTimeString()}`
-                            : 'Waiting for location…'}
+                          {locationOff
+                            ? `Location off${remaining ? ` · ${remaining} left` : ''}`
+                            : session.lastLocation?.recordedAt
+                              ? `Last update ${new Date(
+                                  session.lastLocation.recordedAt
+                                ).toLocaleTimeString()}`
+                              : 'Waiting for location…'}
                         </p>
                       </div>
                     </button>
@@ -583,7 +683,20 @@ export default function FieldTrackingPage() {
                   <div className="flex items-center gap-2">
                     <MapPin className="h-3.5 w-3.5 text-primary" />
                     <p className="text-sm font-semibold">{displayName(selectedSession)}</p>
+                    {isLocationOff(selectedSession) ? (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                        Location off
+                        {locationOffRemainingLabel(selectedSession.locationDisabledSince)
+                          ? ` · ${locationOffRemainingLabel(selectedSession.locationDisabledSince)} left`
+                          : ''}
+                      </Badge>
+                    ) : null}
                   </div>
+                  {isLocationOff(selectedSession) ? (
+                    <p className="mt-1 text-xs text-amber-800">
+                      Device location is off. Auto check-out runs if not restored within 5 minutes.
+                    </p>
+                  ) : null}
                   {selectedSession.lastLocation ? (
                     <p className="mt-1 font-mono text-xs text-muted-foreground">
                       {selectedSession.lastLocation.latitude.toFixed(5)},{' '}
@@ -686,6 +799,14 @@ export default function FieldTrackingPage() {
               : historyEmployeeLabel
                 ? `${historyEmployeeLabel} · ${pathDate} · ${pathPoints.length} point${
                     pathPoints.length === 1 ? '' : 's'
+                  }${
+                    historyAttendance?.checkIn
+                      ? ` · Check-in ${new Date(historyAttendance.checkIn).toLocaleTimeString()}`
+                      : ''
+                  }${
+                    historyAttendance?.checkOut
+                      ? ` · Check-out ${new Date(historyAttendance.checkOut).toLocaleTimeString()}`
+                      : ''
                   }`
                 : 'Select an active session or an employee and date to view GPS history.'}
           </CardDescription>

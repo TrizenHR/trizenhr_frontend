@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, MapPin } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,9 +25,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth, useCanManageUsers } from '@/hooks/use-auth';
 import { Department, User, UserRole } from '@/lib/types';
 import { departmentApi, userApi } from '@/lib/api';
+import { canDeleteUser } from '@/lib/permissions';
 import { toast } from 'sonner';
 
 export default function EditUserPage() {
@@ -368,11 +379,28 @@ export default function EditUserPage() {
             >
               {isSavingAccountStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {targetUser.isActive ? 'Deactivate Account' : 'Activate Account'}
+      {allowDeleteAccount && (
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete account
+            </CardTitle>
+            <CardDescription>
+              Permanently remove this user and related attendance, leave, and tracking data.
+              The email can be invited again later. This cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete account
             </Button>
           </CardContent>
         </Card>
       )}
 
+<<<<<<< HEAD
       <AlertDialog open={isAccountDialogOpen} onOpenChange={setIsAccountDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -392,11 +420,38 @@ export default function EditUserPage() {
               disabled={isSavingAccountStatus}
             >
               {targetUser?.isActive ? 'Deactivate' : 'Activate'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
+=======
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleteOpen(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes{' '}
+              <span className="font-medium text-foreground">
+                {targetUser
+                  ? `${targetUser.firstName} ${targetUser.lastName}`.trim() || targetUser.email
+                  : 'this user'}
+              . This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteAccount();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting…
+                </>
+              ) : (

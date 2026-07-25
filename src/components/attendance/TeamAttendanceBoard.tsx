@@ -30,8 +30,8 @@ import { format, isBefore, parseISO } from 'date-fns';
 import { hasAnyRole } from '@/lib/permissions';
 import { formatTimeOnly } from '@/lib/date-utils';
 import {
-  CheckInPhotoButton,
   CheckInPhotoDialog,
+  AttendancePhotoButtons,
   type CheckInPhotoTarget,
 } from './CheckInPhotoDialog';
 import { AttendancePunchCell, punchExportLabel } from './AttendancePunchCell';
@@ -464,7 +464,7 @@ export function TeamAttendanceBoard({
                     <TableHead>Status</TableHead>
                     <TableHead>Check-in</TableHead>
                     <TableHead>Check-out</TableHead>
-                    <TableHead>Photo</TableHead>
+                    <TableHead>Photos</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -499,13 +499,17 @@ export function TeamAttendanceBoard({
                           />
                         </TableCell>
                         <TableCell>
-                          {member.attendance?.checkIn &&
-                          (member.attendance.hasCheckInPhoto || member.attendance.photoUrl) ? (
-                            <CheckInPhotoButton
+                          {member.attendance?.checkIn || member.attendance?.checkOut ? (
+                            <AttendancePhotoButtons
                               attendanceId={member.attendance._id}
                               employeeName={`${member.user.firstName} ${member.user.lastName}`}
                               date={member.attendance.date}
                               checkIn={member.attendance.checkIn}
+                              checkOut={member.attendance.checkOut}
+                              hasCheckInPhoto={member.attendance.hasCheckInPhoto}
+                              hasCheckOutPhoto={member.attendance.hasCheckOutPhoto}
+                              photoUrl={member.attendance.photoUrl}
+                              checkOutPhotoUrl={member.attendance.checkOutPhotoUrl}
                               onView={setPhotoTarget}
                             />
                           ) : (

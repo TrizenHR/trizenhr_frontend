@@ -13,6 +13,7 @@ import {
   ClipboardList,
   CreditCard,
   Loader2,
+  MapPin,
   Trash2,
   UserX,
   Wallet,
@@ -54,6 +55,8 @@ function iconForType(type: string) {
       return CreditCard;
     case 'account_deactivated':
       return UserX;
+    case 'field_location_disabled':
+      return MapPin;
     default:
       return Bell;
   }

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { formatAttendanceDate, formatTimeOnly } from '@/lib/date-utils';
 import { formatWorkingHours } from '@/lib/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CheckInPhotoButton, CheckInPhotoDialog, type CheckInPhotoTarget } from './CheckInPhotoDialog';
+import { AttendancePhotoButtons, CheckInPhotoDialog, type CheckInPhotoTarget } from './CheckInPhotoDialog';
 
 interface AttendanceTableProps {
   records: Attendance[];
@@ -74,7 +74,7 @@ export function AttendanceTable({ records, pagination, onPageChange, isLoading =
               <TableHead>Check Out</TableHead>
               <TableHead>Working Hours</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Photo</TableHead>
+              <TableHead>Photos</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -98,16 +98,17 @@ export function AttendanceTable({ records, pagination, onPageChange, isLoading =
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {record.hasCheckInPhoto || record.photoUrl ? (
-                    <CheckInPhotoButton
-                      attendanceId={record._id}
-                      date={record.date}
-                      checkIn={record.checkIn}
-                      onView={setPhotoTarget}
-                    />
-                  ) : (
-                    '—'
-                  )}
+                  <AttendancePhotoButtons
+                    attendanceId={record._id}
+                    date={record.date}
+                    checkIn={record.checkIn}
+                    checkOut={record.checkOut}
+                    hasCheckInPhoto={record.hasCheckInPhoto}
+                    hasCheckOutPhoto={record.hasCheckOutPhoto}
+                    photoUrl={record.photoUrl}
+                    checkOutPhotoUrl={record.checkOutPhotoUrl}
+                    onView={setPhotoTarget}
+                  />
                 </TableCell>
               </TableRow>
             ))}

@@ -4,18 +4,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/features/auth-context';
 import { LoginFormData, loginSchema } from '@/lib/validations';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
 import { postAuthRedirectPath } from '@/lib/profileUtils';
+import { AuthField, AuthPageShell } from '@/components/auth/AuthPageShell';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,9 +55,7 @@ export default function LoginPage() {
   const handleMicrosoftLogin = async () => {
     setIsMicrosoftLoading(true);
     try {
-      // Get Microsoft auth URL from backend
       const response = await authApi.getMicrosoftAuthUrl();
-      // Redirect to Microsoft login
       window.location.href = response.authUrl;
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to initiate Microsoft login');
@@ -85,224 +82,185 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="flex min-h-screen">
-      {/* Left Panel - Branding */}
-      <div className="hidden w-1/2 bg-gray-900 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div>
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/assets/logo-white.png"
-              alt="Logo"
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-xl font-semibold text-white">Attendance Dashboard</span>
-          </Link>
-        </div>
-        <div className="max-w-md">
-          <h2 className="text-3xl font-semibold text-white">
-            Workforce management made simple
-          </h2>
-          <p className="mt-4 text-gray-400">
-            Track attendance, manage teams, and maintain compliance with a centralized platform
-            built for modern organizations.
-          </p>
-        </div>
-        <p className="text-sm text-gray-500">© {new Date().getFullYear()} Trizen Ventures</p>
-      </div>
+  const backToSignIn = () => {
+    setIsForgotPassword(false);
+    setIsForgotSubmitted(false);
+  };
 
-      {/* Right Panel - Login Form */}
-      <div className="flex w-full items-center justify-center px-4 lg:w-1/2 lg:px-8">
-        <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-sm">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mb-4 lg:hidden">
-              <Link href="/" className="inline-flex items-center gap-2">
-                <Image
-                  src="/assets/logo.png"
-                  alt="Logo"
-                  width={32}
-                  height={32}
-                  className="rounded-lg"
-                />
-                <span className="font-semibold">Attendance Dashboard</span>
-              </Link>
+  const eyebrow = isForgotPassword ? 'Account recovery' : 'Welcome back';
+  const title = isForgotPassword ? 'Reset your password' : 'Sign in to TrizenHR';
+  const description = isForgotPassword
+    ? 'Enter the email linked to your account and we will send a secure reset link.'
+    : 'Access your attendance and payroll dashboard.';
+
+  return (
+    <AuthPageShell
+      eyebrow={eyebrow}
+      title={title}
+      description={description}
+      footer={
+        <p className="text-center text-[13px] text-slate-500">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 font-medium text-slate-600 transition-colors hover:text-primary"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+            Back to home
+          </Link>
+        </p>
+      }
+    >
+      {isForgotPassword ? (
+        isForgotSubmitted ? (
+          <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-6 text-center">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600" aria-hidden />
             </div>
-            <CardTitle className="text-2xl font-semibold">
-              {isForgotPassword ? 'Reset password' : 'Welcome back'}
-            </CardTitle>
-            <CardDescription>
-              {isForgotPassword 
-                ? 'Enter your email to receive a password reset link' 
-                : 'Sign in to access your dashboard'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isForgotPassword ? (
-              <div className="space-y-4">
-                {isForgotSubmitted ? (
-                  <div className="rounded-lg bg-green-50 p-4 text-center">
-                    <p className="text-sm text-green-800">
-                      If an account exists with <strong>{forgotEmail}</strong>, you will receive a password reset link shortly.
-                    </p>
-                    <Button 
-                      variant="link" 
-                      onClick={() => {
-                        setIsForgotPassword(false);
-                        setIsForgotSubmitted(false);
-                      }}
-                      className="mt-2 text-green-800 font-semibold"
-                    >
-                      Return to sign in
-                    </Button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleForgotSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="forgot-email">Email</Label>
-                      <Input
-                        id="forgot-email"
-                        type="email"
-                        placeholder="name@company.com"
-                        value={forgotEmail}
-                        onChange={(e) => setForgotEmail(e.target.value)}
-                        disabled={isLoading}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending link...
-                        </>
-                      ) : (
-                        'Send reset link'
-                      )}
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full" 
-                      onClick={() => setIsForgotPassword(false)}
-                      disabled={isLoading}
-                    >
-                      Back to sign in
-                    </Button>
-                  </form>
-                )}
-              </div>
+            <p className="text-[14px] leading-relaxed text-emerald-900">
+              If an account exists for <strong>{forgotEmail}</strong>, a password reset link is on
+              its way. Check your inbox and spam folder.
+            </p>
+            <Button variant="outline" onClick={backToSignIn} className="mt-5 h-11 w-full">
+              Return to sign in
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={handleForgotSubmit} className="space-y-5">
+            <AuthField>
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                placeholder="name@company.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                disabled={isLoading}
+                required
+                className="h-11"
+              />
+            </AuthField>
+            <Button type="submit" className="h-11 w-full text-[15px]" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending link...
+                </>
+              ) : (
+                'Send reset link'
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-11 w-full"
+              onClick={backToSignIn}
+              disabled={isLoading}
+            >
+              Back to sign in
+            </Button>
+          </form>
+        )
+      ) : (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full gap-2.5 text-[15px] font-medium"
+            onClick={handleMicrosoftLogin}
+            disabled={isMicrosoftLoading || isLoading}
+          >
+            {isMicrosoftLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Connecting to Microsoft...
+              </>
             ) : (
               <>
-                {/* Microsoft Sign-In Button */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mb-4 flex items-center justify-center gap-2"
-                  onClick={handleMicrosoftLogin}
-                  disabled={isMicrosoftLoading || isLoading}
-                >
-                  {isMicrosoftLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Connecting to Microsoft...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-5 w-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-                        <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-                        <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-                        <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-                      </svg>
-                      Sign in with Microsoft
-                    </>
-                  )}
-                </Button>
-
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">
-                      Or continue with email
-                    </span>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@company.com"
-                      {...register('email')}
-                      disabled={isLoading}
-                      className={errors.email ? 'border-red-500' : ''}
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-red-500">{errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
-                      <button
-                        type="button"
-                        onClick={() => setIsForgotPassword(true)}
-                        className="text-sm text-gray-500 hover:text-gray-700"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        {...register('password')}
-                        disabled={isLoading}
-                        className={`${errors.password ? 'border-red-500' : ''} pr-10`}
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="text-sm text-red-500">{errors.password.message}</p>
-                    )}
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign in'
-                    )}
-                  </Button>
-                </form>
+                <svg className="h-[18px] w-[18px]" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+                  <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+                </svg>
+                Sign in with Microsoft
               </>
             )}
+          </Button>
 
-            <p className="mt-6 text-center text-sm text-gray-500">
-              <Link href="/" className="hover:text-gray-700">
-                ← Back to home
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center" aria-hidden>
+              <span className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-3 text-[12px] font-medium uppercase tracking-wide text-slate-400">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <AuthField>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                {...register('email')}
+                disabled={isLoading}
+                aria-invalid={!!errors.email}
+                className="h-11"
+              />
+              {errors.email && <p className="text-[13px] text-red-500">{errors.email.message}</p>}
+            </AuthField>
+
+            <AuthField>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPassword(true)}
+                  className="text-[13px] font-medium text-primary transition-colors hover:text-primary/80"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('password')}
+                  disabled={isLoading}
+                  aria-invalid={!!errors.password}
+                  className="h-11 pr-11"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-[13px] text-red-500">{errors.password.message}</p>
+              )}
+            </AuthField>
+
+            <Button type="submit" className="h-11 w-full text-[15px]" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </Button>
+          </form>
+        </>
+      )}
+    </AuthPageShell>
   );
 }
-

@@ -18,8 +18,8 @@ import { formatAttendanceDate, formatTimeOnly } from '@/lib/date-utils';
 import { formatWorkingHours } from '@/lib/format';
 import { useToast } from '@/hooks/use-toast';
 import {
-  CheckInPhotoButton,
   CheckInPhotoDialog,
+  AttendancePhotoButtons,
   type CheckInPhotoTarget,
 } from '@/components/attendance/CheckInPhotoDialog';
 import { AttendancePunchCell, punchExportLabel } from '@/components/attendance/AttendancePunchCell';
@@ -492,7 +492,7 @@ export default function AttendanceReportsTab({
                       <TableHead className="min-w-[100px]">Check Out</TableHead>
                       <TableHead className="min-w-[100px]">Status</TableHead>
                       <TableHead className="min-w-[100px]">Working Hours</TableHead>
-                      <TableHead className="min-w-[100px]">Photo</TableHead>
+                      <TableHead className="min-w-[100px]">Photos</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -533,19 +533,20 @@ export default function AttendanceReportsTab({
                             {record.workingHours ? formatWorkingHours(record.workingHours) : '-'}
                           </TableCell>
                           <TableCell className="whitespace-nowrap">
-                            {record.hasCheckInPhoto || record.photoUrl ? (
-                              <CheckInPhotoButton
-                                attendanceId={record._id}
-                                employeeName={
-                                  user ? `${user.firstName} ${user.lastName}` : undefined
-                                }
-                                date={record.date}
-                                checkIn={record.checkIn}
-                                onView={setPhotoTarget}
-                              />
-                            ) : (
-                              '-'
-                            )}
+                            <AttendancePhotoButtons
+                              attendanceId={record._id}
+                              employeeName={
+                                user ? `${user.firstName} ${user.lastName}` : undefined
+                              }
+                              date={record.date}
+                              checkIn={record.checkIn}
+                              checkOut={record.checkOut}
+                              hasCheckInPhoto={record.hasCheckInPhoto}
+                              hasCheckOutPhoto={record.hasCheckOutPhoto}
+                              photoUrl={record.photoUrl}
+                              checkOutPhotoUrl={record.checkOutPhotoUrl}
+                              onView={setPhotoTarget}
+                            />
                           </TableCell>
                         </TableRow>
                       );

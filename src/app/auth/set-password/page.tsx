@@ -17,6 +17,11 @@ import { authApi } from '@/lib/api';
 import { resolveTenantLoginUrl } from '@/lib/host';
 import { useAuth } from '@/features/auth-context';
 import { ORG_INVITE_PROFILE_PATH } from '@/lib/profileUtils';
+import {
+  buildMobileSetPasswordDeepLink,
+  isLikelyMobileUserAgent,
+  openMobileSetPasswordDeepLink,
+} from '@/lib/mobileDeepLink';
 import type { ValidatedDemoInvite, ValidatedOrgInvite, User } from '@/lib/types';
 
 const setPasswordSchema = z.object({
@@ -41,6 +46,8 @@ function SetPasswordContent() {
   const [loginRedirect, setLoginRedirect] = useState('/login');
   const [nextStepRedirect, setNextStepRedirect] = useState('/auth/complete-profile');
   const [successMessage, setSuccessMessage] = useState('Your password has been set successfully.');
+  const [isMobile, setIsMobile] = useState(false);
+  const [appDeepLink, setAppDeepLink] = useState('');
 
   const token = searchParams.get('token');
   const flow = searchParams.get('flow');
@@ -49,6 +56,7 @@ function SetPasswordContent() {
   const email = searchParams.get('email');
   const role = searchParams.get('role');
   const organizationId = searchParams.get('organizationId');
+  const subdomain = searchParams.get('subdomain');
 
   const displayEmail = isDemoFlow ? demoInvite?.email : orgInvite?.email ?? email;
   const displayRole = isDemoFlow ? demoInvite?.role : orgInvite?.role ?? role;
@@ -60,6 +68,33 @@ function SetPasswordContent() {
   } = useForm<SetPasswordFormData>({
     resolver: zodResolver(setPasswordSchema),
   });
+
+  // On phones, try to hand off to the TrizenHR app for set-password + profile.
+  useEffect(() => {
+    const mobile = isLikelyMobileUserAgent();
+    setIsMobile(mobile);
+    const link = buildMobileSetPasswordDeepLink({
+      email,
+      organizationId,
+      role,
+      subdomain,
+      token,
+      flow,
+    });
+    setAppDeepLink(link);
+    if (!mobile) {
+      return;
+    }
+    // Attempt open; if the app is not installed the page stays usable in the browser.
+    openMobileSetPasswordDeepLink({
+      email,
+      organizationId,
+      role,
+      subdomain,
+      token,
+      flow,
+    });
+  }, [email, organizationId, role, subdomain, token, flow]);
 
   useEffect(() => {
     if (isDemoFlow) {
@@ -336,6 +371,23 @@ function SetPasswordContent() {
             </>
           )}
         </CardDescription>
+        {isMobile && appDeepLink ? (
+          <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-left">
+            <p className="text-sm text-slate-700">
+              Prefer the mobile app? Continue set-password and profile setup there.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3 w-full"
+              onClick={() => {
+                window.location.href = appDeepLink;
+              }}
+            >
+              Open in TrizenHR app
+            </Button>
+          </div>
+        ) : null}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
