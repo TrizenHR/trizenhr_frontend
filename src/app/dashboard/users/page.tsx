@@ -38,6 +38,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('active');
   const [resendingId, setResendingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,15 +47,13 @@ export default function UsersPage() {
 
   useEffect(() => {
     filterUsers();
-  }, [searchTerm, roleFilter, departmentFilter, users]);
+  }, [searchTerm, roleFilter, departmentFilter, statusFilter, users]);
 
   const loadUsers = async () => {
     try {
       setIsLoading(true);
       const data = await userApi.getAllUsers();
-      // Delete is implemented as soft-delete (isActive=false).
-      // Keep Users page focused on active users so deleted rows disappear.
-      setUsers(data.filter((u) => u.isActive));
+      setUsers(data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load users');
     } finally {
@@ -83,6 +82,13 @@ export default function UsersPage() {
     // Filter by department
     if (departmentFilter !== 'all') {
       filtered = filtered.filter((user) => (user.department || '') === departmentFilter);
+    }
+
+    // Filter by status
+    if (statusFilter === 'active') {
+      filtered = filtered.filter((user) => user.isActive);
+    } else if (statusFilter === 'inactive') {
+      filtered = filtered.filter((user) => !user.isActive);
     }
 
     setFilteredUsers(filtered);
@@ -167,7 +173,7 @@ export default function UsersPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -180,7 +186,7 @@ export default function UsersPage() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="rounded-md border border-gray-300 px-4 py-2"
+              className="rounded-md border border-gray-300 px-4 py-2 cursor-pointer"
             >
               <option value="all">All Roles</option>
               {Object.values(UserRole).map((role) => (
@@ -192,7 +198,7 @@ export default function UsersPage() {
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="rounded-md border border-gray-300 px-4 py-2"
+              className="rounded-md border border-gray-300 px-4 py-2 cursor-pointer"
             >
               <option value="all">All Departments</option>
               {uniqueDepartments.map((department) => (
@@ -200,6 +206,15 @@ export default function UsersPage() {
                   {department}
                 </option>
               ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-md border border-gray-300 px-4 py-2 cursor-pointer"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="all">All Statuses</option>
             </select>
           </div>
         </CardContent>

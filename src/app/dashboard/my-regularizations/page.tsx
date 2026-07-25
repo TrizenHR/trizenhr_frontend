@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { attendanceApi } from '@/lib/api';
-import { AttendanceRegularization, AttendanceStatus, RegularizationStatus } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
+import { AttendanceRegularization, AttendanceStatus, RegularizationStatus, UserRole } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,8 @@ const REQUEST_TYPES = [
 ];
 
 export default function MyRegularizationsPage() {
+  const { user } = useAuth();
+  const isHr = user?.role === UserRole.HR;
   const [records, setRecords] = useState<AttendanceRegularization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,7 +119,9 @@ export default function MyRegularizationsPage() {
         <div>
           <h1 className="text-2xl font-bold md:text-3xl">Regularization Requests</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Request corrections for missed or incorrect attendance records
+            {isHr
+              ? 'Request corrections for missed or incorrect attendance records. Company admin will review your requests.'
+              : 'Request corrections for missed or incorrect attendance records. HR will review your requests.'}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

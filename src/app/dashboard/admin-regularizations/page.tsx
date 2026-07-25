@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { attendanceApi } from '@/lib/api';
-import { AttendanceRegularization, RegularizationStatus, User } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
+import { hasAnyRole } from '@/lib/permissions';
+import { AttendanceRegularization, RegularizationStatus, User, UserRole } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -98,6 +100,7 @@ function StatusBadge({ status }: { status: RegularizationStatus }) {
 }
 
 export default function AdminRegularizationsPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [allRecords, setAllRecords] = useState<AttendanceRegularization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,12 +110,35 @@ export default function AdminRegularizationsPage() {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const canAccess =
+    !!user && hasAnyRole(user.role as UserRole, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+
   const loadAll = async () => {
     try {
       setIsLoading(true);
-      // Admin gets all requests (including HR's own) from the backend
-      const res = await attendanceApi.getPendingRegularizations({ limit: 200 });
-      setAllRecords(res.records);
+      // Admin queue is scoped to HR-submitted regularization requests only
+      const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+        attendanceApi.getPendingRegularizations({
+          limit: 200,
+          status: RegularizationStatus.PENDING,
+          requesterRole: 'hr',
+        }),
+        attendanceApi.getPendingRegularizations({
+          limit: 200,
+          status: RegularizationStatus.APPROVED,
+          requesterRole: 'hr',
+        }),
+        attendanceApi.getPendingRegularizations({
+          limit: 200,
+          status: RegularizationStatus.REJECTED,
+          requesterRole: 'hr',
+        }),
+      ]);
+      setAllRecords([
+        ...(pendingRes.records || []),
+        ...(approvedRes.records || []),
+        ...(rejectedRes.records || []),
+      ]);
     } catch {
       toast({ title: 'Error', description: 'Failed to load regularization requests', variant: 'destructive' });
     } finally {
@@ -121,11 +147,20 @@ export default function AdminRegularizationsPage() {
   };
 
   useEffect(() => {
-    void loadAll();
-  }, []);
+    if (canAccess) void loadAll();
+    else setIsLoading(false);
+  }, [canAccess]);
 
-  // Frontend tab filtering: the API returns only pending for admin too (pending endpoint).
-  // We treat them all as pending since that's what the endpoint returns.
+  if (user && !canAccess) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 text-center">
+        <p className="text-muted-foreground">
+          Only company admins can review HR regularization requests.
+        </p>
+      </div>
+    );
+  }
+
   const counts = {
     pending: allRecords.filter((r) => r.status === RegularizationStatus.PENDING).length,
     approved: allRecords.filter((r) => r.status === RegularizationStatus.APPROVED).length,
@@ -192,7 +227,7 @@ export default function AdminRegularizationsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Regularization Approvals</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Review attendance correction requests from all employees and HR staff.
+            Review and approve attendance correction requests submitted by HR staff.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/30">
@@ -388,7 +423,7 @@ export default function AdminRegularizationsPage() {
               placeholder={
                 actionType === 'reject'
                   ? 'Provide a reason for rejection...'
-                  : 'Optional notes for the employee...'
+                  : 'Optional notes for the HR requester...'
               }
               rows={3}
             />

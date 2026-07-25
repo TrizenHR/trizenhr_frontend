@@ -76,7 +76,7 @@ const navigationSections: NavSection[] = [
         label: 'Regularizations',
         href: '/dashboard/my-regularizations',
         icon: ClipboardList,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE, UserRole.HR],
       },
     ],
   },
@@ -165,6 +165,12 @@ const navigationSections: NavSection[] = [
         label: 'Leave Approvals',
         href: '/dashboard/leave-approvals',
         icon: ClipboardList,
+        roles: [UserRole.ADMIN],
+      },
+      {
+        label: 'Regularizations',
+        href: '/dashboard/admin-regularizations',
+        icon: FilePen,
         roles: [UserRole.ADMIN],
       },
       {

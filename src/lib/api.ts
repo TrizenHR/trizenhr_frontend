@@ -69,11 +69,12 @@ function toAttendanceDateParam(value?: Date | string): string | undefined {
 
 function resolveApiBaseUrl(): string {
   // In the browser we read the runtime env var injected by Next.js.
-  // Falls back to localhost for local development.
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    'http://localhost:5000/api'
-  );
+  // Accept either a host or a full API base URL.
+  const rawUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const baseUrl = rawUrl && rawUrl.length > 0 ? rawUrl : 'http://localhost:5000/api';
+  const normalized = baseUrl.replace(/\/+$/, '');
+
+  return normalized.endsWith('/api') ? normalized : `${normalized}/api`;
 }
 
 /** Returns true when running on the platform's own domain (not a tenant sub-domain). */
@@ -292,6 +293,11 @@ export const userApi = {
 
   updateUser: async (id: string, data: UpdateUserPayload): Promise<User> => {
     const response = await api.patch<ApiResponse<User>>(`/users/${id}`, data);
+    return response.data.data!;
+  },
+
+  updateUserStatus: async (id: string, payload: { isActive: boolean }): Promise<User> => {
+    const response = await api.patch<ApiResponse<User>>(`/users/${id}/status`, payload);
     return response.data.data!;
   },
 
@@ -583,6 +589,9 @@ export const attendanceApi = {
   getPendingRegularizations: async (filters?: {
     page?: number;
     limit?: number;
+    status?: string;
+    /** When set to `hr`, returns only requests submitted by HR users (admin queue). */
+    requesterRole?: string;
   }): Promise<{ records: AttendanceRegularization[]; pagination: AttendancePagination }> => {
     const response = await api.get<
       ApiResponse<AttendanceRegularization[]> & { pagination: AttendancePagination }
