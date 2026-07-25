@@ -9,6 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -18,13 +25,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth, useCanManageUsers } from '@/hooks/use-auth';
 import { Department, User, UserRole } from '@/lib/types';
 import { departmentApi, userApi } from '@/lib/api';
@@ -36,6 +36,7 @@ export default function EditUserPage() {
   const params = useParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const canManage = useCanManageUsers() || currentUser?.role === UserRole.SUPER_ADMIN;
+  const returnPath = currentUser?.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users';
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -49,17 +50,8 @@ export default function EditUserPage() {
   const [fieldTrackingEnabled, setFieldTrackingEnabled] = useState(false);
   const [fieldTrackingIntervalMinutes, setFieldTrackingIntervalMinutes] = useState('5');
   const [isSavingFieldTracking, setIsSavingFieldTracking] = useState(false);
-  const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false);
-  const [isSavingAccountStatus, setIsSavingAccountStatus] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const showAccountManagement =
-    currentUser?.role === UserRole.ADMIN ||
-    (currentUser?.role === UserRole.HR &&
-      targetUser &&
-      (targetUser.role === UserRole.EMPLOYEE || targetUser.role === UserRole.SUPERVISOR));
-  const returnPath = currentUser?.role === UserRole.HR ? '/dashboard/employees' : '/dashboard/users';
 
   useEffect(() => {
     if (!canManage || !params?.id) return;
@@ -161,24 +153,6 @@ export default function EditUserPage() {
       );
     } finally {
       setIsSavingFieldTracking(false);
-    }
-  };
-
-  const handleAccountStatusUpdate = async (isActive: boolean) => {
-    if (!targetUser) return;
-
-    try {
-      setIsSavingAccountStatus(true);
-      const updated = await userApi.updateUserStatus(targetUser._id || targetUser.id, { isActive });
-      setTargetUser(updated);
-      setIsAccountDialogOpen(false);
-      toast.success(
-        isActive ? 'User account activated successfully' : 'User account deactivated successfully'
-      );
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to update account status');
-    } finally {
-      setIsSavingAccountStatus(false);
     }
   };
 
@@ -355,7 +329,7 @@ export default function EditUserPage() {
               value={fieldTrackingIntervalMinutes}
               onChange={(e) => setFieldTrackingIntervalMinutes(e.target.value)}
               disabled={isSavingFieldTracking || !fieldTrackingEnabled}
-              className="max-w-35"
+              className="max-w-[140px]"
             />
             <p className="text-xs text-muted-foreground">
               How often the mobile app sends location while checked in (1–60, default 5).
@@ -371,38 +345,6 @@ export default function EditUserPage() {
           </Button>
         </CardContent>
       </Card>
-
-      {targetUser && showAccountManagement && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Management</CardTitle>
-            <CardDescription>Manage the user's account access.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2 rounded-lg border p-4">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <span>Status:</span>
-                <span className={targetUser.isActive ? 'text-emerald-600' : 'text-rose-600'}>
-                  {targetUser.isActive ? '🟢 Active' : '🔴 Inactive'}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {targetUser.isActive
-                  ? 'Deactivate this account to prevent the user from signing in. All records will be preserved.'
-                  : 'Activate this account to restore the user\'s access to the system. All existing employee records and history will remain unchanged.'}
-              </p>
-            </div>
-            <Button
-              variant={targetUser.isActive ? 'destructive' : 'default'}
-              onClick={() => setIsAccountDialogOpen(true)}
-              disabled={isSavingAccountStatus}
-            >
-              {isSavingAccountStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {targetUser.isActive ? 'Deactivate Account' : 'Activate Account'}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       {allowDeleteAccount && (
         <Card className="border-destructive/30">
@@ -424,30 +366,6 @@ export default function EditUserPage() {
           </CardContent>
         </Card>
       )}
-
-      <AlertDialog open={isAccountDialogOpen} onOpenChange={setIsAccountDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {targetUser?.isActive ? 'Deactivate Account?' : 'Activate Account?'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {targetUser?.isActive
-                ? 'Are you sure you want to deactivate this account? The user will no longer be able to sign in. All employee records, attendance, leave, payroll, approvals, and history will remain in the system.'
-                : 'Are you sure you want to activate this account? The user will regain access to the system and can sign in using their existing credentials.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSavingAccountStatus}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => void handleAccountStatusUpdate(!targetUser?.isActive)}
-              disabled={isSavingAccountStatus}
-            >
-              {targetUser?.isActive ? 'Deactivate' : 'Activate'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog
         open={deleteOpen}
@@ -493,3 +411,4 @@ export default function EditUserPage() {
     </div>
   );
 }
+
