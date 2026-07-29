@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { attendanceApi, departmentApi, userApi } from '@/lib/api';
-import { Attendance, AttendanceStatus, Department, User } from '@/lib/types';
+import { attendanceApi, departmentApi, userApi, leaveApi } from '@/lib/api';
+import { Attendance, AttendanceStatus, Department, User, Leave } from '@/lib/types';
+import { resolveLeaveTypeName, getLeaveStatusLabel } from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -152,28 +153,35 @@ export default function AttendanceReportsTab({
 
   const handleExport = async (format: 'csv' | 'excel') => {
     try {
-      // Fetch all records for export (no pagination)
       const filters: any = {};
       if (startDate) filters.startDate = startDate;
       if (endDate) filters.endDate = endDate;
       if (selectedStatus !== 'all') filters.status = selectedStatus;
       if (selectedDepartment !== 'all') filters.department = selectedDepartment;
       if (selectedUser !== 'all') filters.userId = selectedUser;
-      filters.limit = 10000; // Large limit to get all records
+      filters.limit = 10000;
 
-      const result = await attendanceApi.getAllAttendance(filters);
-      const allRecords = result.records;
+      const attendancePromise =
+        selectedUser !== 'all'
+          ? attendanceApi.getUserAttendance(selectedUser, {
+              startDate: filters.startDate,
+              endDate: filters.endDate,
+              status: filters.status,
+              page: 1,
+              limit: 10000,
+            })
+          : attendanceApi.getAllAttendance({ ...filters, includeImpliedAbsents: true });
 
-      if (format === 'csv') {
-        exportToCSV(allRecords);
-      } else {
-        // For Excel, we'll use CSV format (can be enhanced with a library like xlsx)
-        exportToCSV(allRecords);
-      }
+      const [attendanceResult, leaveResult] = await Promise.all([
+        attendancePromise,
+        leaveApi.getAllLeaves(filters),
+      ]);
+
+      exportToCSV(attendanceResult.records, leaveResult.records);
 
       toast({
         title: 'Export Started',
-        description: `Your attendance report is being downloaded as ${format.toUpperCase()}.`,
+        description: `Your combined report is being downloaded as ${format.toUpperCase()}.`,
       });
     } catch (error: any) {
       toast({
@@ -184,24 +192,36 @@ export default function AttendanceReportsTab({
     }
   };
 
-  const exportToCSV = (records: Attendance[]) => {
+  const exportToCSV = (attendanceRecords: Attendance[], leaveRecords: Leave[]) => {
     const headers = [
+      'Type',
       'Date',
       'Employee Name',
       'Employee ID',
       'Department',
       'Check In',
       'Check Out',
-      'Status',
+      'Attendance Status',
       'Working Hours',
+      'Leave Type',
+      'Leave Start Date',
+      'Leave End Date',
+      'Total Days',
+      'Leave Status',
+      'Reason',
     ];
-    const rows = records.map((record) => {
-      const user = typeof record.userId === 'object' ? record.userId : null;
-      return [
-        formatAttendanceDate(record.date),
-        user ? `${user.firstName} ${user.lastName}` : 'N/A',
-        user?.employeeId || 'N/A',
-        user?.department || 'N/A',
+
+    const attendanceRows = attendanceRecords
+      .slice()
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .map((record) => {
+        const user = typeof record.userId === 'object' ? record.userId : null;
+        return [
+          'Attendance',
+          formatAttendanceDate(record.date),
+          user ? `${user.firstName} ${user.lastName}` : 'N/A',
+          user?.employeeId || 'N/A',
+          user?.department || 'N/A',
         showLocationColumns
           ? punchExportLabel(
               record.checkIn,
@@ -226,19 +246,57 @@ export default function AttendanceReportsTab({
             : 'N/A',
         statusLabels[record.status],
         record.workingHours ? formatWorkingHours(record.workingHours) : 'N/A',
+        '',
+        '',
+        '',
+        '',
+        '',
       ];
+    });
+
+    const leaveRows = leaveRecords.map((record) => {
+      const user = typeof record.userId === 'object' ? record.userId : null;
+      return [
+        'Leave',
+        '',
+        user ? `${user.firstName} ${user.lastName}` : 'N/A',
+        user?.employeeId || 'N/A',
+        user?.department || 'N/A',
+        '',
+        '',
+        '',
+        '',
+        resolveLeaveTypeName(record),
+        formatAttendanceDate(record.startDate),
+        formatAttendanceDate(record.endDate),
+        record.totalDays.toString(),
+        getLeaveStatusLabel(record.status),
+        record.reason || 'N/A',
+      ];
+    });
+
+    const allRows = [...attendanceRows, ...leaveRows] as string[][];
+    const parseCsvDate = (value: string) => {
+      const time = Date.parse(value);
+      return Number.isNaN(time) ? 0 : time;
+    };
+    allRows.sort((a, b) => {
+      const dateA = parseCsvDate(a[1] || '');
+      const dateB = parseCsvDate(b[1] || '');
+      if (dateA !== dateB) return dateB - dateA;
+      return String(a[2] || '').localeCompare(String(b[2] || ''));
     });
 
     const csvContent = [
       headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ...allRows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `attendance-report-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute('download', `combined-report-${format(new Date(), 'yyyy-MM-dd')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

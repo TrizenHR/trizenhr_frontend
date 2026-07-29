@@ -465,6 +465,7 @@ export const attendanceApi = {
     status?: AttendanceStatus;
     department?: string;
     userId?: string;
+    includeImpliedAbsents?: boolean;
     page?: number;
     limit?: number;
   }): Promise<{ records: Attendance[]; pagination: AttendancePagination }> => {
@@ -492,6 +493,7 @@ export const attendanceApi = {
     filters?: {
       startDate?: Date | string;
       endDate?: Date | string;
+      status?: AttendanceStatus;
       page?: number;
       limit?: number;
     }
