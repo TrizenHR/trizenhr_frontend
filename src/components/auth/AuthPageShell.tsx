@@ -130,7 +130,7 @@ export function AuthPageShell({
         </div>
 
         <p className="relative z-10 text-[13px] text-white/40" style={enter(360)}>
-          © {new Date().getFullYear()} Trizen Ventures. All rights reserved.
+          © {new Date().getFullYear()} Trizen Ventures LLP. All rights reserved.
         </p>
       </aside>
 
