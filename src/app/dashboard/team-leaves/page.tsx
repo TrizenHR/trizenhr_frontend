@@ -5,7 +5,6 @@ import { leaveApi } from '@/lib/api';
 import { Leave, LeaveStatus } from '@/lib/types';
 import {
   getLeaveTypeColor,
-  isLeaveAwaitingApproval,
   resolveLeaveTypeCode,
   resolveLeaveTypeName,
 } from '@/lib/leave-utils';
@@ -75,10 +74,14 @@ export default function TeamLeavesPage() {
       });
       setUpcomingLeaves(upcoming);
 
-      // Get pending approvals count
-      const pending = allLeaves.records.filter((leave) =>
-        isLeaveAwaitingApproval(leave.status)
-      ).length;
+      // Get pending approvals count awaiting current user's review
+      let pending = 0;
+      try {
+        const pendingRes = await leaveApi.getPendingLeaves();
+        pending = pendingRes.pagination?.total ?? pendingRes.records.length;
+      } catch {
+        pending = 0;
+      }
 
       setStats({
         onLeaveToday,

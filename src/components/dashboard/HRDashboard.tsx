@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { dashboardApi } from '@/lib/api';
-import { DashboardStats } from '@/lib/types';
+import { dashboardApi, attendanceApi } from '@/lib/api';
+import { DashboardStats, Attendance } from '@/lib/types';
 import { QuickActions } from './QuickActions';
 import { TodayAttendanceSummary } from './TodayAttendanceSummary';
 import { StatCard } from './StatCard';
@@ -18,14 +18,15 @@ export function HRDashboard() {
   const [organizationName, setOrganizationName] = useState(
     user?.organization?.name || 'your organization'
   );
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user?.organization?.name) {
       setOrganizationName(user.organization.name);
     }
   }, [user?.organization?.name]);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardStats();
@@ -34,8 +35,12 @@ export function HRDashboard() {
   const loadDashboardStats = async () => {
     try {
       setIsLoading(true);
-      const data = await dashboardApi.getStats();
+      const [data, status] = await Promise.all([
+        dashboardApi.getStats(),
+        attendanceApi.getTodayStatus().catch(() => null),
+      ]);
       setStats(data);
+      setTodayAttendance(status);
     } catch (error) {
       console.error('Failed to load dashboard stats:', error);
     } finally {
@@ -105,7 +110,11 @@ export function HRDashboard() {
           )}
         </div>
         <div className="xl:col-span-4">
-          <QuickActions userRole={UserRole.HR} />
+          <QuickActions
+            userRole={UserRole.HR}
+            todayAttendance={todayAttendance}
+            onCheckOut={loadDashboardStats}
+          />
         </div>
       </div>
     </DashboardShell>

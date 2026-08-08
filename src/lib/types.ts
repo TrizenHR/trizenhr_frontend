@@ -978,3 +978,44 @@ export interface ValidatedDemoInvite {
   demoAccessTtlDays: number;
 }
 
+export enum DemoRequestSource {
+  MOBILE = 'mobile',
+  WEB = 'web',
+  ADMIN = 'admin',
+}
+
+export enum DemoRequestStatus {
+  PENDING = 'pending',
+  CONTACTED = 'contacted',
+  CLOSED = 'closed',
+}
+
+export interface DemoRequestItem {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  phone?: string;
+  message?: string;
+  source: DemoRequestSource;
+  status: DemoRequestStatus;
+  demoInvitationId?: string;
+  invitationSentAt?: string;
+  invitationLinkTtlHours?: number;
+  invitationAccessTtlDays?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAdminDemoRequestPayload {
+  name: string;
+  email: string;
+  company: string;
+  phone?: string;
+  message?: string;
+  sendInvitation?: boolean;
+  role?: UserRole;
+  invitationEmail?: string;
+}
+
+

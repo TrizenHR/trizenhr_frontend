@@ -379,7 +379,7 @@ function FolderGallery({
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                 <Image
                   src="/image.png"
-                  alt=""
+                  alt="TrizenHR attendance dashboard screenshot"
                   fill
                   sizes="(max-width: 639px) 300px, 240px"
                   className={cn('object-cover', focus)}

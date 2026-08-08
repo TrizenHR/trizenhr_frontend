@@ -30,6 +30,7 @@ import {
   Layers,
   GitBranch,
   MapPin,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -43,6 +44,8 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   roles?: UserRole[];
+  allowedEmails?: string[];
+  excludedEmails?: string[];
 }
 
 interface NavSection {
@@ -56,7 +59,7 @@ const navigationSections: NavSection[] = [
     items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
   },
 
-  // ── EMPLOYEE / SUPERVISOR : Attendance ────────────────────────
+  // ── Attendance (All Roles) ────────────────────────
   {
     title: 'Attendance',
     items: [
@@ -64,24 +67,27 @@ const navigationSections: NavSection[] = [
         label: 'My Attendance',
         href: '/dashboard/my-attendance',
         icon: Clock,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Calendar',
         href: '/dashboard/my-calendar',
         icon: Calendar,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Regularizations',
         href: '/dashboard/my-regularizations',
         icon: ClipboardList,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE, UserRole.HR],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
     ],
   },
 
-  // ── EMPLOYEE / SUPERVISOR / HR : Leave ─────────────────────────────
+  // ── Leave (All Roles) ─────────────────────────────
   {
     title: 'Leave',
     items: [
@@ -89,18 +95,20 @@ const navigationSections: NavSection[] = [
         label: 'My Leave',
         href: '/dashboard/my-leave',
         icon: FileText,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE, UserRole.HR],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Leave Calendar',
         href: '/dashboard/leave-calendar',
         icon: CalendarDays,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE, UserRole.HR],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
     ],
   },
 
-  // ── EMPLOYEE / SUPERVISOR : Payroll ───────────────────────────
+  // ── Payroll (My Salary) ───────────────────────────
   {
     title: 'Payroll',
     items: [
@@ -108,7 +116,7 @@ const navigationSections: NavSection[] = [
         label: 'My Salary',
         href: '/dashboard/my-salary',
         icon: Wallet,
-        roles: [UserRole.SUPERVISOR, UserRole.EMPLOYEE],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN],
       },
     ],
   },
@@ -122,6 +130,7 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/team-attendance',
         icon: Users,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Team Calendar',
@@ -134,6 +143,7 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/team-leaves',
         icon: CalendarDays,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
     ],
   },
@@ -147,12 +157,14 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/leave-approvals',
         icon: ClipboardList,
         roles: [UserRole.HR, UserRole.SUPERVISOR, UserRole.ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Regularizations',
         href: '/dashboard/attendance-regularizations',
         icon: FilePen,
         roles: [UserRole.HR, UserRole.SUPERVISOR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
     ],
   },
@@ -166,12 +178,14 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/leave-approvals',
         icon: ClipboardList,
         roles: [UserRole.ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Regularizations',
         href: '/dashboard/admin-regularizations',
         icon: FilePen,
         roles: [UserRole.ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Approval Workflows',
@@ -191,6 +205,7 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/attendance',
         icon: ClipboardList,
         roles: [UserRole.ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Field Tracking',
@@ -209,6 +224,7 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/attendance-policies',
         icon: Shield,
         roles: [UserRole.ADMIN],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Office Locations',
@@ -228,12 +244,14 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/leave-types',
         icon: Layers,
         roles: [UserRole.ADMIN, UserRole.HR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Leave Policies',
         href: '/dashboard/leave-policies',
         icon: FileText,
         roles: [UserRole.ADMIN, UserRole.HR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
     ],
   },
@@ -292,6 +310,13 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.SUPER_ADMIN],
       },
       {
+        label: 'Demo Requests',
+        href: '/dashboard/demo-requests',
+        icon: UserCheck,
+        roles: [UserRole.SUPER_ADMIN],
+        allowedEmails: ['demo@trizenventures.com'],
+      },
+      {
         label: 'Subscriptions',
         href: '/dashboard/subscriptions',
         icon: CreditCard,
@@ -321,6 +346,7 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/attendance-exceptions',
         icon: AlertTriangle,
         roles: [UserRole.HR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Holidays',
@@ -333,6 +359,7 @@ const navigationSections: NavSection[] = [
         href: '/dashboard/leave-management',
         icon: FileCheck,
         roles: [UserRole.HR],
+        excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Payroll',
@@ -372,6 +399,16 @@ function isNavItemActive(pathname: string, href: string): boolean {
 
 function filterItemsByRole(items: NavItem[], user: User | null) {
   return items.filter((item) => {
+    if (user?.email && item.excludedEmails && item.excludedEmails.length > 0) {
+      if (item.excludedEmails.some((e) => e.toLowerCase() === user.email.toLowerCase())) {
+        return false;
+      }
+    }
+    if (item.allowedEmails && item.allowedEmails.length > 0) {
+      if (!user?.email || !item.allowedEmails.some((e) => e.toLowerCase() === user.email.toLowerCase())) {
+        return false;
+      }
+    }
     if (!item.roles) return true;
     if (!user) return false;
     return hasAnyRole(user.role as UserRole, item.roles);
@@ -456,7 +493,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   const header = (
     <header className="flex shrink-0 items-center gap-3 border-b border-border/70 bg-background/80 px-4 py-4 backdrop-blur-sm sm:px-5">
       <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl">
-        <Image src="/assets/logo.png" alt="" width={32} height={32} priority className="size-8 object-contain" />
+        <Image src="/assets/logo.png" alt="TrizenHR logo" width={32} height={32} priority className="size-8 object-contain" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold tracking-tight text-foreground">TrizenHR</p>

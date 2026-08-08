@@ -67,19 +67,22 @@ const roleActions: Record<UserRole, ActionItem[]> = {
     { label: 'Request Leave', href: '/dashboard/my-leave', icon: Calendar, color: 'orange' },
   ],
   [UserRole.SUPERVISOR]: [
-    { label: 'View Team', href: '/dashboard/team-attendance', icon: Users, color: 'blue' },
+    { label: 'Check In', href: '/dashboard/my-attendance', icon: Camera, color: 'green' },
+    { label: 'My Attendance', href: '/dashboard/my-attendance', icon: ClipboardCheck, color: 'blue' },
     { label: 'Approve Leaves', href: '/dashboard/leave-approvals', icon: Calendar, color: 'orange' },
-    { label: 'Team Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck, color: 'green' },
+    { label: 'Team Attendance', href: '/dashboard/team-attendance', icon: Users, color: 'purple' },
   ],
   [UserRole.HR]: [
-    { label: 'Add Employee', href: '/dashboard/users/create', icon: UserPlus, color: 'green' },
+    { label: 'Check In', href: '/dashboard/my-attendance', icon: Camera, color: 'green' },
+    { label: 'My Attendance', href: '/dashboard/my-attendance', icon: ClipboardCheck, color: 'blue' },
+    { label: 'Add Employee', href: '/dashboard/users/create', icon: UserPlus, color: 'purple' },
     { label: 'Leave Approvals', href: '/dashboard/leave-approvals', icon: Calendar, color: 'orange' },
-    { label: 'View Attendance', href: '/dashboard/team-attendance', icon: ClipboardCheck, color: 'blue' },
   ],
   [UserRole.ADMIN]: [
-    { label: 'Manage Users', href: '/dashboard/users', icon: Users, color: 'blue' },
-    { label: 'Company Attendance', href: '/dashboard/attendance', icon: ClipboardCheck, color: 'green' },
-    { label: 'Reports', href: '/dashboard/reports', icon: FileText, color: 'orange' },
+    { label: 'Check In', href: '/dashboard/my-attendance', icon: Camera, color: 'green' },
+    { label: 'My Attendance', href: '/dashboard/my-attendance', icon: ClipboardCheck, color: 'blue' },
+    { label: 'Manage Users', href: '/dashboard/users', icon: Users, color: 'purple' },
+    { label: 'Company Attendance', href: '/dashboard/attendance', icon: FileText, color: 'orange' },
   ],
   [UserRole.SUPER_ADMIN]: [
     { label: 'Create Organization', href: '/dashboard/organizations', icon: Building2, color: 'blue' },
@@ -91,9 +94,9 @@ const roleActions: Record<UserRole, ActionItem[]> = {
 export function QuickActions({ userRole, todayAttendance, onCheckOut }: QuickActionsProps) {
   const actions = roleActions[userRole] || [];
 
-  // For employee: determine check-in/check-out state
-  const hasCheckedIn = userRole === UserRole.EMPLOYEE && todayAttendance?.checkIn != null;
-  const hasCheckedOut = userRole === UserRole.EMPLOYEE && todayAttendance?.checkOut != null;
+  // Determine check-in/check-out state
+  const hasCheckedIn = todayAttendance?.checkIn != null;
+  const hasCheckedOut = todayAttendance?.checkOut != null;
 
   return (
     <Card className="overflow-hidden rounded-2xl border-border/80 bg-card py-0 shadow-sm ring-1 ring-border/40">

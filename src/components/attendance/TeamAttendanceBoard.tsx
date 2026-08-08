@@ -37,6 +37,8 @@ import {
 import { AttendancePunchCell, punchExportLabel } from './AttendancePunchCell';
 
 type TeamMemberStatus = {
+  id: string;
+  date: string;
   user: User;
   attendance?: Attendance;
   status: 'present' | 'absent' | 'on_leave' | 'half_day' | 'late' | 'not_marked';
@@ -63,7 +65,8 @@ export function TeamAttendanceBoard({
   const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState<TeamMemberStatus[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<TeamMemberStatus[]>([]);
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -84,11 +87,13 @@ export function TeamAttendanceBoard({
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
   ]);
-  const selectedDateIsPast = isBefore(parseISO(`${selectedDate}T12:00:00`), new Date());
+  const isSingleDate = startDate === endDate;
+  const targetMarkDate = endDate;
+  const targetDateIsPast = isBefore(parseISO(`${targetMarkDate}T12:00:00`), new Date());
 
   const handleMarkAutoAbsent = async () => {
     try {
-      const result = await attendanceApi.markAutoAbsent(selectedDate);
+      const result = await attendanceApi.markAutoAbsent(targetMarkDate);
       toast({
         title: 'Auto absent complete',
         description: `Marked ${result.marked} absent (${result.skipped} skipped)`,
@@ -106,7 +111,7 @@ export function TeamAttendanceBoard({
 
   useEffect(() => {
     loadTeamAttendance();
-  }, [selectedDate, user?._id, user?.role]);
+  }, [startDate, endDate, user?._id, user?.role]);
 
   useEffect(() => {
     filterMembers();
@@ -123,33 +128,51 @@ export function TeamAttendanceBoard({
 
       const isSupervisor = user?.role === UserRole.SUPERVISOR;
       const users = await userApi.getAllUsers({ isActive: true });
+      const userMap = new Map<string, User>();
+      users.forEach((u) => {
+        const uId = String(u._id || u.id);
+        if (uId) userMap.set(uId, u);
+      });
 
-      const attendanceByUserId = new Map<string, Attendance | undefined>();
+      const effectiveStartDate = startDate <= endDate ? startDate : endDate;
+      const effectiveEndDate = startDate <= endDate ? endDate : startDate;
+      const isSingleDay = effectiveStartDate === effectiveEndDate;
+
+      let fetchedRecords: Attendance[] = [];
+
       if (isSupervisor) {
-        await Promise.all(
+        const recordsByMember = await Promise.all(
           users.map(async (u) => {
             const userKey = String(u._id || u.id);
             try {
               const res = await attendanceApi.getUserAttendance(userKey, {
-                startDate: selectedDate,
-                endDate: selectedDate,
+                startDate: effectiveStartDate,
+                endDate: effectiveEndDate,
                 page: 1,
-                limit: 1,
+                limit: 1000,
               });
-              attendanceByUserId.set(userKey, res.records?.[0]);
+              return res.records || [];
             } catch {
-              attendanceByUserId.set(userKey, undefined);
+              return [];
             }
           })
         );
+        fetchedRecords = recordsByMember.flat();
       } else {
-        const allAttendance = await attendanceApi.getAllAttendance({
-          startDate: selectedDate,
-          endDate: selectedDate,
+        const res = await attendanceApi.getAllAttendance({
+          startDate: effectiveStartDate,
+          endDate: effectiveEndDate,
           page: 1,
           limit: 1000,
         });
-        for (const record of allAttendance.records) {
+        fetchedRecords = res.records || [];
+      }
+
+      let list: TeamMemberStatus[] = [];
+
+      if (isSingleDay) {
+        const attendanceByUserId = new Map<string, Attendance>();
+        for (const record of fetchedRecords) {
           const recordUserId =
             typeof record.userId === 'object' && record.userId
               ? String((record.userId as { _id?: string; id?: string })._id || (record.userId as { id?: string }).id)
@@ -158,16 +181,53 @@ export function TeamAttendanceBoard({
             attendanceByUserId.set(recordUserId, record);
           }
         }
-      }
 
-      const teamStatus: TeamMemberStatus[] = users.map((member) => {
-        const memberKey = String(member._id || member.id);
-        const attendance = attendanceByUserId.get(memberKey);
+        list = users.map((member) => {
+          const memberKey = String(member._id || member.id);
+          const attendance = attendanceByUserId.get(memberKey);
+          let status: TeamMemberStatus['status'] = 'not_marked';
 
-        let status: TeamMemberStatus['status'] = 'not_marked';
+          if (attendance) {
+            switch (attendance.status) {
+              case AttendanceStatus.PRESENT:
+                status = 'present';
+                break;
+              case AttendanceStatus.ABSENT:
+                status = 'absent';
+                break;
+              case AttendanceStatus.ON_LEAVE:
+                status = 'on_leave';
+                break;
+              case AttendanceStatus.HALF_DAY:
+                status = 'half_day';
+                break;
+              case AttendanceStatus.LATE:
+                status = 'late';
+                break;
+            }
+          }
 
-        if (attendance) {
-          switch (attendance.status) {
+          return {
+            id: `${memberKey}-${effectiveStartDate}`,
+            date: effectiveStartDate,
+            user: member,
+            attendance,
+            status,
+          };
+        });
+      } else {
+        list = fetchedRecords.map((record) => {
+          const recordUserId =
+            typeof record.userId === 'object' && record.userId
+              ? String((record.userId as { _id?: string; id?: string })._id || (record.userId as { id?: string }).id)
+              : String(record.userId);
+
+          const memberObj = (typeof record.userId === 'object' && record.userId
+            ? record.userId
+            : userMap.get(recordUserId)) as User;
+
+          let status: TeamMemberStatus['status'] = 'not_marked';
+          switch (record.status) {
             case AttendanceStatus.PRESENT:
               status = 'present';
               break;
@@ -184,18 +244,39 @@ export function TeamAttendanceBoard({
               status = 'late';
               break;
           }
-        }
 
-        return {
-          user: member,
-          attendance,
-          status,
-        };
-      });
+          const recordDateStr = record.date
+            ? format(new Date(record.date), 'yyyy-MM-dd')
+            : effectiveStartDate;
 
-      setTeamMembers(teamStatus);
-      calculateStats(teamStatus);
-    } catch {
+          return {
+            id: record._id || `${recordUserId}-${recordDateStr}`,
+            date: recordDateStr,
+            user: memberObj || {
+              _id: recordUserId,
+              firstName: 'Unknown',
+              lastName: 'User',
+              email: '-',
+              role: UserRole.EMPLOYEE,
+            },
+            attendance: record,
+            status,
+          };
+        });
+
+        list.sort((a, b) => {
+          const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+          if (dateDiff !== 0) return dateDiff;
+          const nameA = `${a.user.firstName} ${a.user.lastName}`;
+          const nameB = `${b.user.firstName} ${b.user.lastName}`;
+          return nameA.localeCompare(nameB);
+        });
+      }
+
+      setTeamMembers(list);
+      calculateStats(list);
+    } catch (err: unknown) {
+      console.error(err);
       toast({
         title: 'Error',
         description: 'Failed to load attendance',
@@ -260,47 +341,72 @@ export function TeamAttendanceBoard({
     );
   };
 
-  const exportToCSV = () => {
-    const headers = ['Employee ID', 'Name', 'Email', 'Status', 'Check-in', 'Check-out'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredMembers.map((m) =>
-        [
-          m.user.employeeId || '',
-          `${m.user.firstName} ${m.user.lastName}`,
-          m.user.email,
-          m.status.toUpperCase(),
-          showLocationColumns
-            ? punchExportLabel(
-                m.attendance?.checkIn,
-                m.attendance?.checkInLocationLabel,
-                m.attendance?.checkInLat,
-                m.attendance?.checkInLng,
-                true
-              )
-            : m.attendance?.checkIn
-              ? formatTimeOnly(m.attendance.checkIn)
-              : '-',
-          showLocationColumns
-            ? punchExportLabel(
-                m.attendance?.checkOut,
-                m.attendance?.checkOutLocationLabel,
-                m.attendance?.checkOutLat,
-                m.attendance?.checkOutLng,
-                true
-              )
-            : m.attendance?.checkOut
-              ? formatTimeOnly(m.attendance.checkOut)
-              : '-',
-        ].join(',')
-      ),
-    ].join('\n');
+  const formatDateDisplay = (dateStr: string) => {
+    try {
+      return format(parseISO(`${dateStr}T00:00:00`), 'MMMM dd, yyyy');
+    } catch {
+      return dateStr;
+    }
+  };
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+  const exportToCSV = () => {
+    const headers = ['Date', 'Employee ID', 'Name', 'Email', 'Role', 'Status', 'Check-in', 'Check-out'];
+
+    const escapeCSV = (val: unknown): string => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = filteredMembers.map((m) => [
+      escapeCSV(m.date ? format(parseISO(`${m.date}T00:00:00`), 'dd-MMM-yyyy') : '-'),
+      escapeCSV(m.user.employeeId || '-'),
+      escapeCSV(`${m.user.firstName} ${m.user.lastName}`.trim()),
+      escapeCSV(m.user.email),
+      escapeCSV(m.user.role),
+      escapeCSV(m.status.toUpperCase()),
+      escapeCSV(
+        showLocationColumns
+          ? punchExportLabel(
+              m.attendance?.checkIn,
+              m.attendance?.checkInLocationLabel,
+              m.attendance?.checkInLat,
+              m.attendance?.checkInLng,
+              true
+            )
+          : m.attendance?.checkIn
+            ? formatTimeOnly(m.attendance.checkIn)
+            : '-'
+      ),
+      escapeCSV(
+        showLocationColumns
+          ? punchExportLabel(
+              m.attendance?.checkOut,
+              m.attendance?.checkOutLocationLabel,
+              m.attendance?.checkOutLat,
+              m.attendance?.checkOutLng,
+              true
+            )
+          : m.attendance?.checkOut
+            ? formatTimeOnly(m.attendance.checkOut)
+            : '-'
+      ),
+    ]);
+
+    const csvContent =
+      '\uFEFF' +
+      [
+        headers.map((h) => escapeCSV(h)).join(','),
+        ...rows.map((r) => r.join(',')),
+      ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${exportFilePrefix}-${selectedDate}.csv`;
+    a.download = isSingleDate
+      ? `${exportFilePrefix}-${startDate}.csv`
+      : `${exportFilePrefix}-${startDate}-to-${endDate}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -316,7 +422,7 @@ export function TeamAttendanceBoard({
             <p className="text-muted-foreground">{subtitle}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {canMarkAutoAbsent && selectedDateIsPast && (
+            {canMarkAutoAbsent && targetDateIsPast && (
               <Button onClick={handleMarkAutoAbsent} variant="secondary">
                 <UserX className="mr-2 h-4 w-4" />
                 Mark auto absent
@@ -335,13 +441,34 @@ export function TeamAttendanceBoard({
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>Start Date</Label>
               <Input
                 type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                value={startDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setStartDate(val);
+                  if (val > endDate) {
+                    setEndDate(val);
+                  }
+                }}
+                className="cursor-pointer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEndDate(val);
+                  if (val < startDate) {
+                    setStartDate(val);
+                  }
+                }}
                 className="cursor-pointer"
               />
             </div>
@@ -446,7 +573,9 @@ export function TeamAttendanceBoard({
             {membersTableTitle} ({filteredMembers.length})
           </CardTitle>
           <CardDescription>
-            Showing attendance for {format(new Date(selectedDate), 'MMMM dd, yyyy')}
+            {isSingleDate
+              ? `Showing attendance for ${formatDateDisplay(startDate)}`
+              : `Showing attendance from ${formatDateDisplay(startDate)} to ${formatDateDisplay(endDate)}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -457,6 +586,7 @@ export function TeamAttendanceBoard({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Date</TableHead>
                     <TableHead>Employee ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
@@ -470,7 +600,10 @@ export function TeamAttendanceBoard({
                 <TableBody>
                   {filteredMembers.length > 0 ? (
                     filteredMembers.map((member) => (
-                      <TableRow key={member.user._id}>
+                      <TableRow key={member.id}>
+                        <TableCell className="whitespace-nowrap font-medium text-muted-foreground">
+                          {formatDateDisplay(member.date)}
+                        </TableCell>
                         <TableCell className="font-medium">{member.user.employeeId || '-'}</TableCell>
                         <TableCell>
                           {member.user.firstName} {member.user.lastName}
@@ -520,7 +653,7 @@ export function TeamAttendanceBoard({
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                      <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                         No employees found
                       </TableCell>
                     </TableRow>
@@ -534,3 +667,4 @@ export function TeamAttendanceBoard({
     </div>
   );
 }
+

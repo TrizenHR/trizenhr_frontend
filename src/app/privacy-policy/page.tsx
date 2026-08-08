@@ -1,8 +1,42 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trizenhr.com';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'How TrizenHR (Trizen Ventures Private Limited) collects, uses, and protects your personal data on our attendance and payroll platform.',
+  alternates: { canonical: `${baseUrl}/privacy-policy` },
+  openGraph: {
+    type: 'website',
+    siteName: 'TrizenHR',
+    locale: 'en_US',
+    url: `${baseUrl}/privacy-policy`,
+    title: 'Privacy Policy | TrizenHR',
+    description:
+      'How TrizenHR (Trizen Ventures Private Limited) collects, uses, and protects your personal data on our attendance and payroll platform.',
+    images: [
+      {
+        url: `${baseUrl}/image.png`,
+        width: 1200,
+        height: 700,
+        alt: 'TrizenHR attendance dashboard preview',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy | TrizenHR',
+    description:
+      'How TrizenHR (Trizen Ventures Private Limited) collects, uses, and protects your personal data on our attendance and payroll platform.',
+    images: [`${baseUrl}/image.png`],
+  },
+};
 
 function MarketingHeader() {
   return (

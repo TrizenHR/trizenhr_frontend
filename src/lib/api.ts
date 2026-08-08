@@ -54,6 +54,10 @@ import {
   OfficeLocation,
   ValidatedOrgInvite,
   CompleteProfilePayload,
+  DemoRequestSource,
+  DemoRequestStatus,
+  DemoRequestItem,
+  CreateAdminDemoRequestPayload,
 } from './types';
 
 import { formatDateParam } from './date-utils';
@@ -258,6 +262,16 @@ export const authApi = {
   removeProfilePhoto: async (): Promise<User> => {
     const response = await api.delete<ApiResponse<User>>('/auth/me/profile-photo');
     return response.data.data!;
+  },
+
+  requestDemo: async (payload: {
+    name: string;
+    email: string;
+    company: string;
+    phone?: string;
+    message?: string;
+  }): Promise<void> => {
+    await api.post('/auth/demo-request', payload);
   },
 };
 
@@ -1301,6 +1315,55 @@ export const platformApi = {
       `/platform/demo-invites/${id}/resend`
     );
     return response.data.data!;
+  },
+
+  listDemoRequests: async (params?: {
+    status?: DemoRequestStatus;
+    source?: DemoRequestSource;
+    email?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ items: DemoRequestItem[]; meta: ApiResponse['meta'] }> => {
+    const response = await api.get<ApiResponse<DemoRequestItem[]>>('/platform/demo-requests', {
+      params,
+    });
+    return {
+      items: response.data.data || [],
+      meta: response.data.meta,
+    };
+  },
+
+  createDemoRequest: async (
+    payload: CreateAdminDemoRequestPayload
+  ): Promise<{ request: DemoRequestItem; invitation?: DemoInvitation }> => {
+    const response = await api.post<ApiResponse<{ request: DemoRequestItem; invitation?: DemoInvitation }>>(
+      '/platform/demo-requests',
+      payload
+    );
+    return response.data.data!;
+  },
+
+  updateDemoRequestStatus: async (id: string, status: DemoRequestStatus): Promise<DemoRequestItem> => {
+    const response = await api.patch<ApiResponse<DemoRequestItem>>(`/platform/demo-requests/${id}/status`, {
+      status,
+    });
+    return response.data.data!;
+  },
+
+  sendDemoRequestInvitation: async (
+    id: string,
+    role?: string,
+    email?: string
+  ): Promise<{ request: DemoRequestItem; invitation: DemoInvitation }> => {
+    const response = await api.post<ApiResponse<{ request: DemoRequestItem; invitation: DemoInvitation }>>(
+      `/platform/demo-requests/${id}/send-invitation`,
+      { role, email }
+    );
+    return response.data.data!;
+  },
+
+  deleteDemoRequest: async (id: string): Promise<void> => {
+    await api.delete(`/platform/demo-requests/${id}`);
   },
 };
 

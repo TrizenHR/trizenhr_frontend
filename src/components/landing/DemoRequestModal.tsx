@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { authApi } from '@/lib/api';
 
 const demoFormSchema = {
   name: (v: string) => (v.trim().length >= 2 ? null : 'Name must be at least 2 characters'),
@@ -67,8 +68,13 @@ export function DemoRequestModal({ open, onOpenChange }: DemoRequestModalProps) 
 
     setIsSubmitting(true);
     try {
-      // Simulate API call - replace with actual endpoint when ready
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await authApi.requestDemo({
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        phone: formData.phone || undefined,
+        message: formData.message || undefined,
+      });
       setIsSuccess(true);
       toast({
         title: "We'll be in touch soon!",
@@ -80,10 +86,11 @@ export function DemoRequestModal({ open, onOpenChange }: DemoRequestModalProps) 
         setFormData({ name: '', email: '', company: '', phone: '', message: '' });
         setErrors({});
       }, 1500);
-    } catch {
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
       toast({
         title: 'Something went wrong',
-        description: 'Please try again or contact us directly.',
+        description: err.response?.data?.message || 'Please try again or contact us directly.',
         variant: 'destructive',
       });
     } finally {
