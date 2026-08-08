@@ -53,7 +53,7 @@ function MarketingHeader() {
             />
             <div className="flex flex-col">
               <span className="text-base font-semibold tracking-tight text-slate-900">TrizenHR</span>
-              <span className="text-[10px] text-slate-500 -mt-0.5">by Trizen Ventures</span>
+              <span className="text-[10px] text-slate-500 -mt-0.5">by Trizen Ventures LLP</span>
             </div>
           </Link>
         </div>
@@ -86,7 +86,7 @@ function MarketingFooter() {
             />
             <div className="flex flex-col">
               <span className="font-semibold text-gray-200">TrizenHR</span>
-              <span className="text-xs text-slate-400">by Trizen Ventures</span>
+              <span className="text-xs text-slate-400">by Trizen Ventures LLP</span>
             </div>
           </div>
 
@@ -104,7 +104,7 @@ function MarketingFooter() {
         </div>
 
         <div className="mt-2 border-t border-slate-800 pt-6 text-xs text-slate-400">
-          © {year} Trizen Ventures. All rights reserved.
+          © {year} Trizen Ventures LLP. All rights reserved.
         </div>
       </div>
     </footer>
@@ -194,7 +194,7 @@ export default function PrivacyPolicyPage() {
               <div className="mt-8">
                 <PolicySection id="sec-overview" title="1. Overview">
                   <p>
-                    This Privacy Policy explains how Trizen Ventures Private Limited (“TrizenHR”, “we”, “us”, or “our”) collects, uses,
+                    This Privacy Policy explains how Trizen Ventures LLP (“TrizenHR”, “we”, “us”, or “our”) collects, uses,
                     and shares personal data when you use our attendance &amp; payroll platform and related services.
                   </p>
                   <p>

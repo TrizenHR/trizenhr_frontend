@@ -136,7 +136,7 @@ export function LandingNavbar({ onBookDemo }: LandingNavbarProps) {
               TrizenHR
             </span>
             <span className="mt-0.5 text-[11px] tracking-[0.5px] text-slate-900/65">
-              by Trizen Ventures
+              by Trizen Ventures LLP
             </span>
           </div>
         </Link>

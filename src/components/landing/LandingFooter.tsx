@@ -10,13 +10,11 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import {
   LANDING_SCROLL_REVEAL,
   landingDelay,
   landingDuration,
 } from '@/components/landing/scrollReveal';
-
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -49,6 +47,7 @@ const COMPANY_LINKS = [
   { href: '#security', label: 'Security' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#customers', label: 'Customers' },
+  { href: '#contact', label: 'Contact' },
 ] as const;
 
 const RESOURCE_LINKS = [
@@ -58,11 +57,18 @@ const RESOURCE_LINKS = [
   { href: '/login', label: 'Login' },
 ] as const;
 
+const PHONE_DISPLAY = '+91 86396 48822';
+const PHONE_TEL = 'tel:+918639648822';
+const WHATSAPP_HREF = 'https://wa.me/918639648822';
+const SALES_EMAIL = 'sales@trizenhr.com';
+const LINKEDIN_HREF = 'https://www.linkedin.com/company/trizenhr/';
+const INSTAGRAM_HREF = 'https://www.instagram.com/trizenhr';
+
 const linkClass =
   'inline-block text-[13.5px] text-white/65 transition-[opacity,transform,color] duration-200 ease-out hover:translate-x-[3px] hover:text-white hover:opacity-100 motion-reduce:hover:translate-x-0 sm:text-[14px]';
 
 /**
- * Compact premium footer — existing routes/links preserved.
+ * Premium footer — restored link columns + clean contact bar.
  */
 export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
   const footerRef = useRef<HTMLElement>(null);
@@ -137,33 +143,34 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
         aria-hidden
       />
 
-      <div className="relative mx-auto w-full max-w-[1240px] px-4 py-10 md:px-6 md:py-12 lg:px-8 lg:py-14">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.28fr)_minmax(0,0.72fr)] lg:gap-12 xl:gap-14">
-          {/* Left — brand (compact) */}
+      <div className="relative mx-auto w-full max-w-[1240px] px-4 py-12 md:px-6 md:py-14 lg:px-8 lg:py-16">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.28fr)_minmax(0,0.72fr)] lg:gap-12 xl:gap-14">
+          {/* Brand */}
           <div style={enter(0, { y: 16, duration: 500 })}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Image
                 src="/assets/logo.png"
                 alt="TrizenHR"
-                width={28}
-                height={28}
+                width={32}
+                height={32}
                 className="brightness-0 invert"
               />
               <div className="flex flex-col leading-tight">
-                <span className="text-[14px] font-semibold text-white">TrizenHR</span>
-                <span className="text-[11px] text-white/40">by Trizen Ventures</span>
+                <span className="text-[15px] font-semibold text-white">TrizenHR</span>
+                <span className="text-[11px] text-white/40">by Trizen Ventures LLP</span>
               </div>
             </div>
 
-            <p className="mt-3.5 max-w-[260px] text-[13px] leading-[1.55] text-white/55">
-              Attendance, payroll and compliance software built for modern organizations.
+            <p className="mt-4 max-w-[280px] text-[14px] leading-[1.6] text-white/55">
+              Attendance, payroll, and compliance software built for modern organizations —
+              clear roles, accurate records, and reports you can trust.
             </p>
 
-            <ul className="mt-3.5 flex flex-wrap gap-1.5">
+            <ul className="mt-4 flex flex-wrap gap-1.5">
               {FEATURE_PILLS.map((pill) => (
                 <li
                   key={pill}
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-white/65"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white/65"
                 >
                   <Check className="h-2.5 w-2.5 text-blue-400" strokeWidth={3} aria-hidden />
                   {pill}
@@ -174,15 +181,15 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
             <button
               type="button"
               onClick={onBookDemo}
-              className="group mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white transition-colors hover:text-blue-300"
+              className="group mt-5 inline-flex items-center gap-1.5 text-[14px] font-semibold text-white transition-colors hover:text-blue-300"
             >
               Book a personalized demo
               <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
             </button>
           </div>
 
-          {/* Right — balanced columns */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-5">
+          {/* Link columns */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-5">
             <FooterColumn title="Core HR" delay={80} enter={enter}>
               {CORE_HR_LINKS.map((item) => (
                 <li key={item.label}>
@@ -216,16 +223,17 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
             <FooterColumn title="Company" delay={260} enter={enter}>
               {COMPANY_LINKS.map((item) => (
                 <li key={item.label}>
-                  <Link href={item.href} className={linkClass}>
-                    {item.label}
-                  </Link>
+                  {item.href.startsWith('#') || item.href === '/' ? (
+                    <a href={item.href} className={linkClass}>
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link href={item.href} className={linkClass}>
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
-              <li>
-                <button type="button" onClick={onBookDemo} className={cn(linkClass, 'text-left')}>
-                  Contact
-                </button>
-              </li>
             </FooterColumn>
 
             <FooterColumn title="Resources" delay={320} enter={enter}>
@@ -240,12 +248,73 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
           </div>
         </div>
 
+        {/* Contact — single clean bar, not a card or tall list */}
         <div
-          className="mt-9 flex flex-col gap-3 border-t border-white/10 pt-5 sm:mt-10 sm:flex-row sm:items-center sm:justify-between"
-          style={enter(380, { y: 10, duration: 400 })}
+          id="contact"
+          className="mt-12 scroll-mt-24 border-t border-white/10 pt-7"
+          style={enter(220, { y: 10, duration: 450 })}
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-white/35">
+                Contact
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
+                <a
+                  href={`mailto:${SALES_EMAIL}`}
+                  className="text-[14px] text-white/75 transition-colors hover:text-white"
+                >
+                  {SALES_EMAIL}
+                </a>
+                <span className="hidden h-3 w-px bg-white/15 sm:inline-block" aria-hidden />
+                <a
+                  href={PHONE_TEL}
+                  className="text-[14px] text-white/75 transition-colors hover:text-white"
+                >
+                  {PHONE_DISPLAY}
+                </a>
+                <span className="hidden h-3 w-px bg-white/15 sm:inline-block" aria-hidden />
+                <a
+                  href={WHATSAPP_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[14px] text-white/75 transition-colors hover:text-white"
+                >
+                  WhatsApp
+                </a>
+              </div>
+              <p className="mt-2.5 text-[13px] leading-relaxed text-white/45">
+                Hyderabad, Telangana, India · Mon–Sat, 10:00 AM – 7:00 PM IST
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-5">
+              <a
+                href={LINKEDIN_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] font-medium text-white/60 transition-colors hover:text-white"
+              >
+                LinkedIn
+              </a>
+              <a
+                href={INSTAGRAM_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] font-medium text-white/60 transition-colors hover:text-white"
+              >
+                Instagram
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="mt-7 flex flex-col gap-2 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between"
+          style={enter(300, { y: 8, duration: 400 })}
         >
           <span className="text-[12px] text-white/40">
-            © {new Date().getFullYear()} Trizen Ventures.
+            © {new Date().getFullYear()} Trizen Ventures LLP.
           </span>
           <nav
             className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-white/45"
@@ -257,13 +326,9 @@ export function LandingFooter({ onBookDemo }: { onBookDemo: () => void }) {
             <Link href="/privacy-policy" className="transition-colors hover:text-white">
               Terms
             </Link>
-            <button
-              type="button"
-              onClick={onBookDemo}
-              className="transition-colors hover:text-white"
-            >
+            <a href="#contact" className="transition-colors hover:text-white">
               Contact
-            </button>
+            </a>
           </nav>
         </div>
       </div>
@@ -284,8 +349,8 @@ function FooterColumn({
 }) {
   return (
     <div style={enter(delay, { y: 14, duration: 450 })}>
-      <h4 className="mb-3 text-[13px] font-semibold text-white sm:text-[14px]">{title}</h4>
-      <ul className="space-y-2">{children}</ul>
+      <h4 className="mb-3.5 text-[13px] font-semibold text-white sm:text-[14px]">{title}</h4>
+      <ul className="space-y-2.5">{children}</ul>
     </div>
   );
 }
