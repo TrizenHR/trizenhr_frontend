@@ -59,7 +59,7 @@ const navigationSections: NavSection[] = [
     items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
   },
 
-  // ── Attendance (All Roles) ────────────────────────
+  // ── Attendance (Employee, Supervisor, HR) ────────────────────────
   {
     title: 'Attendance',
     items: [
@@ -67,27 +67,27 @@ const navigationSections: NavSection[] = [
         label: 'My Attendance',
         href: '/dashboard/my-attendance',
         icon: Clock,
-        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
         excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Calendar',
         href: '/dashboard/my-calendar',
         icon: Calendar,
-        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
         excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Regularizations',
         href: '/dashboard/my-regularizations',
         icon: ClipboardList,
-        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
         excludedEmails: ['demo@trizenventures.com'],
       },
     ],
   },
 
-  // ── Leave (All Roles) ─────────────────────────────
+  // ── Leave (Employee, Supervisor, HR) ─────────────────────────────
   {
     title: 'Leave',
     items: [
@@ -95,14 +95,14 @@ const navigationSections: NavSection[] = [
         label: 'My Leave',
         href: '/dashboard/my-leave',
         icon: FileText,
-        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
         excludedEmails: ['demo@trizenventures.com'],
       },
       {
         label: 'Leave Calendar',
         href: '/dashboard/leave-calendar',
         icon: CalendarDays,
-        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
         excludedEmails: ['demo@trizenventures.com'],
       },
     ],
@@ -116,7 +116,7 @@ const navigationSections: NavSection[] = [
         label: 'My Salary',
         href: '/dashboard/my-salary',
         icon: Wallet,
-        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR, UserRole.ADMIN],
+        roles: [UserRole.EMPLOYEE, UserRole.SUPERVISOR, UserRole.HR],
       },
     ],
   },
