@@ -33,7 +33,7 @@ export default function DemoInvitationsPage() {
   const [invites, setInvites] = useState<DemoInvitation[]>([]);
   const [defaults, setDefaults] = useState<DemoInvitationDefaults>({
     inviteLinkTtlHours: 48,
-    demoAccessTtlDays: 7,
+    demoAccessTtlDays: 30,
   });
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');

@@ -26,7 +26,7 @@ export function DemoInvitationDefaultsSettings() {
   const [saving, setSaving] = useState(false);
   const [defaults, setDefaults] = useState<DemoInvitationDefaults>({
     inviteLinkTtlHours: 48,
-    demoAccessTtlDays: 7,
+    demoAccessTtlDays: 30,
   });
 
   useEffect(() => {

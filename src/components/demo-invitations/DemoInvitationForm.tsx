@@ -137,7 +137,7 @@ export function DemoInvitationForm({ defaults, onSubmit, onCancel }: DemoInvitat
               min={1}
               max={90}
               value={demoAccessTtlDays}
-              onChange={(e) => setDemoAccessTtlDays(parseInt(e.target.value, 10) || 7)}
+              onChange={(e) => setDemoAccessTtlDays(parseInt(e.target.value, 10) || 30)}
             />
           </div>
         </div>

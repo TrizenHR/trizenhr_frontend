@@ -58,7 +58,12 @@ export default function LoginPage() {
       const response = await authApi.getMicrosoftAuthUrl();
       window.location.href = response.authUrl;
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to initiate Microsoft login');
+      const message = err.response?.data?.message;
+      if (!message || message === 'Microsoft authentication is not configured' || message === 'Coming soon') {
+        toast.info('Coming soon');
+      } else {
+        toast.error(message);
+      }
       setIsMicrosoftLoading(false);
     }
   };
