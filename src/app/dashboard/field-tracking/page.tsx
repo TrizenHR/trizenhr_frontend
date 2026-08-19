@@ -20,6 +20,7 @@ import { UserRole } from '@/lib/types';
 import { hasAnyRole } from '@/lib/permissions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useFieldTrackingLiveSocket } from '@/hooks/use-field-tracking-socket';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,7 +153,34 @@ export default function FieldTrackingPage() {
     [toast]
   );
 
-  // Load once when opening the page — no auto-poll (use Refresh for updates).
+  useFieldTrackingLiveSocket(
+    canAccess,
+    payload => {
+    setSessions(prev => {
+      const idx = prev.findIndex(s => s.sessionId === payload.sessionId);
+      const lastLocation = {
+        latitude: payload.lat,
+        longitude: payload.lng,
+        accuracy: payload.accuracy,
+        recordedAt: new Date(payload.timestamp).toISOString(),
+      };
+      if (idx < 0) {
+        void loadLive(true);
+        return prev;
+      }
+      const next = [...prev];
+      next[idx] = {
+        ...next[idx],
+        lastLocation,
+        locationDisabledSince: null,
+      };
+      return next;
+    });
+    },
+    user?.organizationId || user?.organization?._id
+  );
+
+  // Load once when opening the page — socket keeps the map live; Refresh still reloads.
   useEffect(() => {
     if (!canAccess) return;
     void loadLive();

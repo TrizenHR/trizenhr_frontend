@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import {
   MapContainer,
   Marker,
@@ -37,8 +37,11 @@ const selectedMarkerIcon = L.icon({
 
 function FitBounds({
   positions,
+  lockKey,
 }: {
   positions: Array<[number, number]>;
+  /** Only re-fit when this changes (new people / new route), not every GPS ping. */
+  lockKey: string;
 }) {
   const map = useMap();
 
@@ -49,8 +52,47 @@ function FitBounds({
       return;
     }
     map.fitBounds(L.latLngBounds(positions), { padding: [40, 40], maxZoom: 16 });
-  }, [map, positions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lockKey gates refits; positions captured on that change
+  }, [map, lockKey]);
 
+  return null;
+}
+
+function MovingMarker({
+  position,
+  icon,
+  eventHandlers,
+  children,
+}: {
+  position: [number, number];
+  icon: L.Icon;
+  eventHandlers?: L.LeafletEventHandlerFnMap;
+  children?: ReactNode;
+}) {
+  const markerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    markerRef.current?.setLatLng(position);
+  }, [position]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={position}
+      icon={icon}
+      eventHandlers={eventHandlers}
+    >
+      {children}
+    </Marker>
+  );
+}
+
+function PanSelected({ position }: { position: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!position) return;
+    map.panTo(position, { animate: true });
+  }, [map, position]);
   return null;
 }
 
@@ -101,6 +143,18 @@ export function FieldTrackingMap({
   // Prefer fitting to the selected route; otherwise show all live markers.
   const fitPositions = pathPositions.length > 0 ? pathPositions : livePositions;
   const center = fitPositions[0] ?? DEFAULT_CENTER;
+  const fitLockKey = useMemo(
+    () =>
+      `${sessions.map((s) => s.sessionId).join(',')}|${pathPoints.length}|${selectedSessionId ?? ''}`,
+    [sessions, pathPoints.length, selectedSessionId]
+  );
+
+  const selectedLivePosition = useMemo((): [number, number] | null => {
+    if (pathPositions.length > 0) return null;
+    const selected = sessions.find((s) => s.sessionId === selectedSessionId);
+    if (!selected?.lastLocation) return null;
+    return [selected.lastLocation.latitude, selected.lastLocation.longitude];
+  }, [pathPositions.length, sessions, selectedSessionId]);
 
   return (
     <div
@@ -118,7 +172,8 @@ export function FieldTrackingMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <FitBounds positions={fitPositions} />
+        <FitBounds positions={fitPositions} lockKey={fitLockKey} />
+        <PanSelected position={selectedLivePosition} />
 
         {/* Route for the selected employee — drawn on the same map */}
         {pathPositions.length > 0 ? (
@@ -134,7 +189,7 @@ export function FieldTrackingMap({
           const { latitude, longitude, recordedAt, accuracy } = session.lastLocation;
           const isSelected = session.sessionId === selectedSessionId;
           return (
-            <Marker
+            <MovingMarker
               key={session.sessionId}
               position={[latitude, longitude]}
               icon={isSelected ? selectedMarkerIcon : markerIcon}
@@ -177,7 +232,7 @@ export function FieldTrackingMap({
                   <p className="text-xs text-muted-foreground">Click marker to show route on map</p>
                 </div>
               </Popup>
-            </Marker>
+            </MovingMarker>
           );
         })}
       </MapContainer>
