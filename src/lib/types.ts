@@ -775,19 +775,37 @@ export interface BillingInvoice {
 }
 
 export interface BillingOverview {
-  organizationId: string;
-  organizationName: string;
+  organizationId?: string;
+  organizationName?: string;
+  status?: 'TRIALING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
   subscriptionPlan: SubscriptionPlan | string;
+  planName?: string;
+  employeeLimit?: number;
   pricePerUserPerDay: number;
+  pricePerUserPerMonth?: number;
   billingCycle: string;
-  currency: string;
+  pricingVersion?: string;
+  trialStartAt?: string;
+  trialEndAt?: string;
+  currency?: string;
   activeUsers: number;
   currentMonthEstimate: number;
   monthlyHistory: {
     month: string; // 'YYYY-MM'
     amount: number;
-    status: BillingInvoiceStatus;
+    status?: BillingInvoiceStatus | string;
   }[];
+}
+
+export interface RegisterTrialPayload {
+  fullName: string;
+  email: string;
+  phone?: string;
+  password: string;
+  organizationName: string;
+  employeeCount: number;
+  planId?: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
+  billingCycle?: 'MONTHLY' | 'ANNUAL';
 }
 
 export interface CreateOrganizationPayload {

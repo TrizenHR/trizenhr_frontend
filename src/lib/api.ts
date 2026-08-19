@@ -273,6 +273,36 @@ export const authApi = {
   }): Promise<void> => {
     await api.post('/auth/demo-request', payload);
   },
+
+  sendOtp: async (email: string): Promise<{ success: boolean; message: string; otp?: string }> => {
+    const response = await api.post<ApiResponse<{ success: boolean; message: string; otp?: string }>>(
+      '/auth/send-otp',
+      { email }
+    );
+    return response.data.data!;
+  },
+
+  verifyOtp: async (email: string, otp: string): Promise<boolean> => {
+    await api.post('/auth/verify-otp', { email, otp });
+    return true;
+  },
+
+  registerTrial: async (payload: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    password: string;
+    organizationName: string;
+    employeeCount: number;
+    planId?: string;
+    billingCycle?: string;
+  }): Promise<LoginResponse & { organization: any; subscription: any }> => {
+    const response = await api.post<ApiResponse<LoginResponse & { organization: any; subscription: any }>>(
+      '/auth/register-trial',
+      payload
+    );
+    return response.data.data!;
+  },
 };
 
 // User API

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 import { LandingFooter } from '@/components/landing/LandingFooter';
-import { DemoRequestModal } from '@/components/landing/DemoRequestModal';
+import { TrialOnboardingModal } from '@/components/landing/TrialOnboardingModal';
 import { EnhancedHero } from '@/components/landing/EnhancedHero';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { CoreCapabilitiesSection } from '@/components/landing/CoreCapabilitiesSection';
@@ -16,12 +16,13 @@ import { RoleBasedExperienceSection } from '@/components/landing/RoleBasedExperi
 import { ReportsComplianceSection } from '@/components/landing/ReportsComplianceSection';
 
 export default function LandingPage() {
-  const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [trialModalOpen, setTrialModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'STARTER' | 'GROWTH' | 'ENTERPRISE'>('GROWTH');
 
   useEffect(() => {
     const openIfHashDemo = () => {
-      if (typeof window !== 'undefined' && window.location.hash === '#demo') {
-        setDemoModalOpen(true);
+      if (typeof window !== 'undefined' && (window.location.hash === '#demo' || window.location.hash === '#trial')) {
+        setTrialModalOpen(true);
       }
     };
     openIfHashDemo();
@@ -29,27 +30,37 @@ export default function LandingPage() {
     return () => window.removeEventListener('hashchange', openIfHashDemo);
   }, []);
 
-  const openDemoModal = () => setDemoModalOpen(true);
+  const openTrialModal = (plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE' = 'GROWTH') => {
+    setSelectedPlan(plan);
+    setTrialModalOpen(true);
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <LandingNavbar onBookDemo={openDemoModal} />
+      <LandingNavbar onBookDemo={() => openTrialModal('GROWTH')} />
 
       <main className="flex-1">
-        <EnhancedHero onBookDemo={openDemoModal} />
+        <EnhancedHero onBookDemo={() => openTrialModal('GROWTH')} />
         <ProblemSection />
         <HowItWorksSection />
         <CoreCapabilitiesSection />
         <FeatureShowcase />
         <RoleBasedExperienceSection />
         <ReportsComplianceSection />
-        <PricingSection onBookDemo={openDemoModal} />
+        <PricingSection
+          onBookDemo={() => openTrialModal('GROWTH')}
+          onSelectPlan={(planId) => openTrialModal(planId)}
+        />
         <EnhancedSocialProof />
-        <FinalCTASection onBookDemo={openDemoModal} />
+        <FinalCTASection onBookDemo={() => openTrialModal('GROWTH')} />
       </main>
 
-      <LandingFooter onBookDemo={openDemoModal} />
-      <DemoRequestModal open={demoModalOpen} onOpenChange={setDemoModalOpen} />
+      <LandingFooter onBookDemo={() => openTrialModal('GROWTH')} />
+      <TrialOnboardingModal
+        open={trialModalOpen}
+        onOpenChange={setTrialModalOpen}
+        defaultPlan={selectedPlan}
+      />
     </div>
   );
 }

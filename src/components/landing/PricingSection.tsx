@@ -28,38 +28,43 @@ const SHARED_BENEFITS = [
 const PLANS = [
   {
     name: 'Starter',
+    planId: 'STARTER' as const,
     description: 'Up to 50 employees',
     features: 'Core attendance + payroll',
     price: '₹1',
     period: '/ user / day',
-    cta: 'Book demo',
+    cta: 'Start 30-Day Trial',
     highlighted: false,
   },
   {
     name: 'Growth',
+    planId: 'GROWTH' as const,
     description: 'Up to 200 employees',
     features: 'All features + basic integrations',
     price: '₹2',
     period: '/ user / day',
-    cta: 'Book demo',
+    cta: 'Start 30-Day Trial',
     highlighted: true,
   },
   {
     name: 'Enterprise',
+    planId: 'ENTERPRISE' as const,
     description: '200+ employees',
     features: 'Custom workflows, SLAs, support',
     price: 'Contact sales',
     period: '',
-    cta: 'Contact sales',
+    cta: 'Start Free Trial',
     highlighted: false,
   },
 ] as const;
 
-/**
- * Pricing section — layout, hierarchy, and motion only.
- * All plan names, prices, ranges, descriptions, and CTAs unchanged.
- */
-export function PricingSection({ onBookDemo }: { onBookDemo: () => void }) {
+export function PricingSection({
+  onBookDemo,
+  onSelectPlan,
+}: {
+  onBookDemo: () => void;
+  onSelectPlan?: (planId: 'STARTER' | 'GROWTH' | 'ENTERPRISE') => void;
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -288,7 +293,13 @@ export function PricingSection({ onBookDemo }: { onBookDemo: () => void }) {
                               )
                         )}
                         variant={isGrowth ? 'default' : 'outline'}
-                        onClick={onBookDemo}
+                        onClick={() => {
+                          if (onSelectPlan) {
+                            onSelectPlan(plan.planId);
+                          } else {
+                            onBookDemo();
+                          }
+                        }}
                       >
                         {plan.cta}
                       </Button>
