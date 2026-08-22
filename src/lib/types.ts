@@ -781,6 +781,7 @@ export interface BillingOverview {
   subscriptionPlan: SubscriptionPlan | string;
   planName?: string;
   employeeLimit?: number;
+  trialEmployeeLimit?: number;
   pricePerUserPerDay: number;
   pricePerUserPerMonth?: number;
   billingCycle: string;

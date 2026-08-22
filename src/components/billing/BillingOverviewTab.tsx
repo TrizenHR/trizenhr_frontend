@@ -14,6 +14,7 @@ export function BillingOverviewTab({ overview, loading }: BillingOverviewTabProp
   }
 
   const isTrial = overview.status === 'TRIALING' || !overview.status;
+  const effectiveTrialLimit = overview.trialEmployeeLimit || 25;
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'N/A';
@@ -45,7 +46,7 @@ export function BillingOverviewTab({ overview, loading }: BillingOverviewTabProp
               </div>
               <h3 className="text-lg font-bold text-white">Your organization is currently on a 30-Day FREE Trial</h3>
               <p className="text-xs text-slate-400">
-                Full access enabled for up to {overview.employeeLimit || 200} employees. Payment required after trial ends.
+                Full access enabled for up to {isTrial ? effectiveTrialLimit : overview.employeeLimit || 200} employees. Payment required after trial ends.
               </p>
             </div>
 

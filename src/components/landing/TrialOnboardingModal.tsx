@@ -19,6 +19,8 @@ interface TrialOnboardingModalProps {
   defaultPlan?: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 }
 
+const FREE_TRIAL_EMPLOYEE_LIMIT = 25;
+
 export function TrialOnboardingModal({
   open,
   onOpenChange,
@@ -40,7 +42,7 @@ export function TrialOnboardingModal({
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [organizationName, setOrganizationName] = useState('');
-  const [employeeCount, setEmployeeCount] = useState<number | ''>(78);
+  const [employeeCount, setEmployeeCount] = useState<number | ''>(FREE_TRIAL_EMPLOYEE_LIMIT);
   const [selectedPlan, setSelectedPlan] = useState<'STARTER' | 'GROWTH' | 'ENTERPRISE'>(defaultPlan);
 
   // Auto-recommend plan based on employee count
@@ -140,6 +142,14 @@ export function TrialOnboardingModal({
       toast({ title: 'Validation error', description: 'Please enter a valid employee count.', variant: 'destructive' });
       return;
     }
+    if (Number(employeeCount) > FREE_TRIAL_EMPLOYEE_LIMIT) {
+      toast({
+        title: 'Free trial limit exceeded',
+        description: `Free trial supports up to ${FREE_TRIAL_EMPLOYEE_LIMIT} employees.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setStep(4); // Move to Plan Selection
   };
 
@@ -156,7 +166,7 @@ export function TrialOnboardingModal({
         phone: phone || undefined,
         password,
         organizationName,
-        employeeCount: Number(employeeCount) || 50,
+        employeeCount: Number(employeeCount) || FREE_TRIAL_EMPLOYEE_LIMIT,
         planId: selectedPlan,
         billingCycle: 'MONTHLY',
       });
@@ -435,15 +445,28 @@ export function TrialOnboardingModal({
                     <Input
                       type="number"
                       min={1}
-                      max={10000}
-                      placeholder="e.g. 78"
+                      max={FREE_TRIAL_EMPLOYEE_LIMIT}
+                      placeholder="e.g. 25"
                       value={employeeCount}
-                      onChange={(e) => setEmployeeCount(e.target.value ? parseInt(e.target.value, 10) : '')}
+                      onChange={(e) => {
+                        if (!e.target.value) {
+                          setEmployeeCount('');
+                          return;
+                        }
+
+                        const parsed = parseInt(e.target.value, 10);
+                        if (Number.isNaN(parsed)) {
+                          setEmployeeCount('');
+                          return;
+                        }
+
+                        setEmployeeCount(Math.min(parsed, FREE_TRIAL_EMPLOYEE_LIMIT));
+                      }}
                       className="pl-10 bg-white border-slate-300 text-slate-900 text-lg font-semibold focus:border-indigo-500 h-12"
                     />
                   </div>
                   <p className="text-xs text-slate-400 mt-1.5">
-                    Note: Billable employees = active employees in organization. Exited/inactive employees are not billed.
+                    Free trial supports up to {FREE_TRIAL_EMPLOYEE_LIMIT} active employees.
                   </p>
                 </div>
 
@@ -671,7 +694,7 @@ export function TrialOnboardingModal({
 
                     <div>
                       <span className="text-slate-400 text-xs block">Employees</span>
-                      <span className="font-semibold text-slate-900">{employeeCount || 78}</span>
+                      <span className="font-semibold text-slate-900">{employeeCount || FREE_TRIAL_EMPLOYEE_LIMIT}</span>
                     </div>
 
                     <div>
@@ -684,6 +707,11 @@ export function TrialOnboardingModal({
                     <div>
                       <span className="text-slate-400 text-xs block">Trial Period</span>
                       <span className="font-semibold text-emerald-600">30 Days FREE</span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-xs block">Trial Employee Limit</span>
+                      <span className="font-semibold text-slate-900">Up to {FREE_TRIAL_EMPLOYEE_LIMIT} employees</span>
                     </div>
 
                     <div>
