@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { leaveApi } from '@/lib/api';
 import { Leave, LeaveStatus } from '@/lib/types';
 import {
-  getLeaveStatusLabel,
-  getLeaveStatusVariant,
   resolveLeaveTypeName,
+  getLeaveTypeColor,
+  isLeaveTypeRecord,
 } from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { CheckCircle2, XCircle, Calendar, User, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Calendar, Clock, ArrowRight, FileText, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 type ActionType = 'approve' | 'reject' | null;
@@ -171,91 +171,163 @@ export default function LeaveApprovalsPage() {
   };
 
   const renderLeaveTable = (leaves: Leave[], showActions: boolean = false) => (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-hidden">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/40">
           <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Dates</TableHead>
-            <TableHead>Days</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead>Status</TableHead>
-            {showActions && <TableHead>Actions</TableHead>}
+            <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Employee</TableHead>
+            <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Type</TableHead>
+            <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Dates</TableHead>
+            <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Days</TableHead>
+            <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Reason</TableHead>
+            <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Status</TableHead>
+            {showActions && <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {leaves.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-8">
-                {showActions
-                  ? 'No leave requests awaiting your approval. Requests still with a manager will appear here once they reach your step.'
-                  : 'No leave requests found'}
+              <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground py-12">
+                <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm">
+                  {showActions
+                    ? 'No leave requests awaiting your approval. Requests still with a manager will appear here once they reach your step.'
+                    : 'No leave requests found'}
+                </p>
               </TableCell>
             </TableRow>
           ) : (
-            leaves.map((leave) => (
-              <TableRow key={leave._id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">
-                        {typeof leave.userId === 'object' && 'firstName' in leave.userId
-                          ? `${leave.userId.firstName} ${leave.userId.lastName}`
-                          : 'Unknown'}
-                      </p>
-                      {typeof leave.userId === 'object' && 'employeeId' in leave.userId && (
-                        <p className="text-xs text-muted-foreground">{leave.userId.employeeId}</p>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{resolveLeaveTypeName(leave)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    {format(new Date(leave.startDate), 'MMM dd')} - {format(new Date(leave.endDate), 'MMM dd, yyyy')}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    {leave.totalDays}
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-xs truncate">{leave.reason}</TableCell>
-                <TableCell>
-                  <Badge variant={getLeaveStatusVariant(leave.status)}>
-                    {getLeaveStatusLabel(leave.status)}
-                  </Badge>
-                </TableCell>
-                {showActions && (
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleApprove(leave)}
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleReject(leave)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
+            leaves.map((leave) => {
+              const firstName = typeof leave.userId === 'object' && 'firstName' in leave.userId ? leave.userId.firstName : '';
+              const lastName = typeof leave.userId === 'object' && 'lastName' in leave.userId ? leave.userId.lastName : '';
+              const fullName = firstName || lastName ? `${firstName} ${lastName}`.trim() : 'Unknown';
+              const initials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'EE';
+
+              const typeColor = isLeaveTypeRecord(leave.leaveTypeId)
+                ? getLeaveTypeColor(leave.leaveTypeId.code, leave.status)
+                : 'bg-slate-100 text-slate-700 border-slate-200';
+              const typeCode = isLeaveTypeRecord(leave.leaveTypeId)
+                ? leave.leaveTypeId.code
+                : 'LV';
+
+              const isPending = leave.status === 'PENDING';
+              const isPartiallyApproved = leave.status === 'PARTIALLY_APPROVED';
+              const isApproved = leave.status === 'APPROVED';
+              const isRejected = leave.status === 'REJECTED';
+              const isCancelled = leave.status === 'CANCELLED';
+
+              return (
+                <TableRow key={leave._id} className="hover:bg-muted/30 transition-colors">
+                  <TableCell className="py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-xs font-semibold text-primary shrink-0">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground leading-tight">{fullName}</p>
+                        {typeof leave.userId === 'object' && 'employeeId' in leave.userId && (
+                          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{leave.userId.employeeId}</p>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                )}
-              </TableRow>
-            ))
+                  <TableCell className="py-4">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`flex size-7 items-center justify-center rounded-lg text-[10px] font-bold border ${typeColor} shrink-0`}>
+                        {typeCode}
+                      </span>
+                      <span className="font-semibold text-sm text-foreground">
+                        {resolveLeaveTypeName(leave)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4">
+                    <div className="flex items-center gap-2 text-sm text-foreground">
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-medium">{format(new Date(leave.startDate), 'MMM dd, yyyy')}</span>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0 mx-0.5" />
+                      <span className="font-medium">{format(new Date(leave.endDate), 'MMM dd, yyyy')}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4">
+                    <span className="inline-flex items-center gap-1 bg-muted px-2.5 py-1 text-xs font-semibold rounded-md text-foreground border border-border/50">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      {leave.totalDays} {leave.totalDays === 1 ? 'Day' : 'Days'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-4 max-w-xs">
+                    <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                      <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                      <span className="truncate max-w-[180px]" title={leave.reason}>
+                        {leave.reason}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4">
+                    {isApproved && (
+                      <Badge className="bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                        Approved
+                      </Badge>
+                    )}
+                    {isRejected && (
+                      <Badge className="bg-rose-500/10 hover:bg-rose-500/15 text-rose-700 border-rose-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                        <XCircle className="w-3.5 h-3.5 mr-1" />
+                        Rejected
+                      </Badge>
+                    )}
+                    {isCancelled && (
+                      <Badge className="bg-slate-500/10 hover:bg-slate-500/15 text-slate-700 border-slate-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                        <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                        Cancelled
+                      </Badge>
+                    )}
+                    {isPending && (
+                      <Badge className="bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 border-amber-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                        <span className="relative flex h-2 w-2 mr-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        Pending
+                      </Badge>
+                    )}
+                    {isPartiallyApproved && (
+                      <Badge className="bg-blue-500/10 hover:bg-blue-500/15 text-blue-700 border-blue-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                        <span className="relative flex h-2 w-2 mr-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                        In Review
+                      </Badge>
+                    )}
+                  </TableCell>
+                  {showActions && (
+                    <TableCell className="py-4">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleApprove(leave)}
+                          className="text-emerald-600 border-emerald-100 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-all font-medium rounded-lg"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReject(leave)}
+                          className="text-rose-600 border-rose-100 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 transition-all font-medium rounded-lg"
+                        >
+                          <XCircle className="h-3.5 w-3.5 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>

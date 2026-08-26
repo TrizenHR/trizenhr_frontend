@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { leaveTypeApi } from '@/lib/api';
 import { LeaveTypeRecord, LeaveTypeStatus } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Layers, Plus, CheckCircle2, PauseCircle, Loader2 } from 'lucide-react';
+import { Layers, Plus, CheckCircle2, PauseCircle, Loader2, Banknote, FileCheck, Clock, Edit3 } from 'lucide-react';
+import { getLeaveTypeColor } from '@/lib/leave-utils';
 
 type FormState = {
   name: string;
@@ -192,37 +193,124 @@ export default function LeaveTypesPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {types.map((type) => (
-            <Card key={type._id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">{type.name}</CardTitle>
-                    <CardDescription>
-                      {type.code} · {type.isPaid ? 'Paid' : 'Unpaid'}
-                    </CardDescription>
-                  </div>
-                  <Badge variant={type.status === LeaveTypeStatus.ACTIVE ? 'default' : 'secondary'}>
-                    {type.status}
-                  </Badge>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {types.map((type) => {
+            const typeColor = getLeaveTypeColor(type.code);
+            const isActive = type.status === LeaveTypeStatus.ACTIVE;
+
+            return (
+              <Card key={type._id} className="border-border/60 shadow-sm hover:shadow-md hover:border-border/80 transition-all flex flex-col justify-between overflow-hidden">
+                <div>
+                  {/* Decorative Color Bar */}
+                  <div className={`h-1.5 w-full ${typeColor.split(' ')[0]}`} />
+
+                  <CardHeader className="pt-4 pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`flex size-10 items-center justify-center rounded-lg text-xs font-bold border ${typeColor} shrink-0`}>
+                          {type.code}
+                        </span>
+                        <div>
+                          <CardTitle className="text-base font-bold text-foreground line-clamp-1">
+                            {type.name}
+                          </CardTitle>
+                          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+                            Code: {type.code}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold shrink-0 shadow-none ${
+                          isActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-50 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        <span className={`size-1.5 rounded-full mr-1.5 shrink-0 ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                        {isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pb-4 space-y-3">
+                    <p className="text-xs text-muted-foreground line-clamp-2 min-h-[32px] leading-relaxed">
+                      {type.description || 'No description provided for this leave category.'}
+                    </p>
+
+                    {/* Features Badges */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded shadow-none ${
+                          type.isPaid
+                            ? 'bg-sky-500/10 text-sky-700 border-sky-500/20'
+                            : 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                        }`}
+                      >
+                        <Banknote className="size-3 mr-1 shrink-0" />
+                        {type.isPaid ? 'Paid' : 'Unpaid'}
+                      </Badge>
+
+                      {type.requiresDocument && (
+                        <Badge
+                          variant="outline"
+                          className="bg-rose-500/10 text-rose-700 border-rose-500/20 text-[10px] font-semibold px-2 py-0.5 rounded shadow-none"
+                        >
+                          <FileCheck className="size-3 mr-1 shrink-0" />
+                          Doc Required
+                        </Badge>
+                      )}
+
+                      {type.allowHalfDay && (
+                        <Badge
+                          variant="outline"
+                          className="bg-indigo-500/10 text-indigo-700 border-indigo-500/20 text-[10px] font-semibold px-2 py-0.5 rounded shadow-none"
+                        >
+                          <Clock className="size-3 mr-1 shrink-0" />
+                          Half Day
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
                 </div>
-              </CardHeader>
-              <CardContent className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(type)}>
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => void toggleStatus(type)}
-                >
-                  {type.status === LeaveTypeStatus.ACTIVE ? 'Deactivate' : 'Activate'}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+
+                <CardContent className="pt-0 pb-4 border-t border-border/30 mt-auto flex gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs font-semibold rounded-lg"
+                    onClick={() => openEdit(type)}
+                  >
+                    <Edit3 className="size-3.5 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`flex-1 text-xs font-semibold rounded-lg transition-all ${
+                      isActive
+                        ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-100 hover:border-rose-200'
+                        : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-100 hover:border-emerald-200'
+                    }`}
+                    onClick={() => void toggleStatus(type)}
+                  >
+                    {isActive ? (
+                      <>
+                        <PauseCircle className="size-3.5 mr-1" />
+                        Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="size-3.5 mr-1" />
+                        Activate
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

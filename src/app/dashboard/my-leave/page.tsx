@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 import { leaveApi, leaveTypeApi } from '@/lib/api';
 import { Leave, LeaveBalance, LeaveTypeRecord } from '@/lib/types';
 import {
-  getLeaveStatusLabel,
-  getLeaveStatusVariant,
   isLeaveAwaitingApproval,
   isLeaveTypeRecord,
   resolveLeaveTypeName,
+  getLeaveTypeColor,
 } from '@/lib/leave-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +42,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, Shield } from 'lucide-react';
+import { Plus, Loader2, Shield, Calendar, Clock, FileText, CheckCircle2, XCircle, AlertCircle, Trash2, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function MyLeavePage() {
@@ -510,58 +509,147 @@ export default function MyLeavePage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Leave History</CardTitle>
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 border-b border-border/40">
+          <CardTitle className="text-xl font-bold flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Calendar className="size-4" />
+            </span>
+            Leave History
+          </CardTitle>
           <CardDescription>Your past and pending leave requests</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoadingLeaves ? (
-            <p className="text-muted-foreground">Loading...</p>
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           ) : leaves.length > 0 ? (
-            <div className="rounded-md border overflow-x-auto">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/40">
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Dates</TableHead>
-                    <TableHead>Days</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Approver Details</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Type</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Dates</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Days</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Reason</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Approval Flow</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Status</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leaves.map((leave) => (
-                    <TableRow key={leave._id}>
-                      <TableCell>{resolveLeaveTypeName(leave)}</TableCell>
-                      <TableCell>
-                        {format(new Date(leave.startDate), 'MMM dd, yyyy')} –{' '}
-                        {format(new Date(leave.endDate), 'MMM dd, yyyy')}
-                      </TableCell>
-                      <TableCell>{leave.totalDays}</TableCell>
-                      <TableCell className="max-w-xs truncate">{leave.reason}</TableCell>
-                      <TableCell>{renderApproverInfo(leave)}</TableCell>
-                      <TableCell>
-                        <Badge variant={getLeaveStatusVariant(leave.status)}>
-                          {getLeaveStatusLabel(leave.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {isLeaveAwaitingApproval(leave.status) && (
-                          <Button variant="ghost" size="sm" onClick={() => void handleCancel(leave._id)}>
-                            Cancel
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {leaves.map((leave) => {
+                    const typeColor = isLeaveTypeRecord(leave.leaveTypeId)
+                      ? getLeaveTypeColor(leave.leaveTypeId.code, leave.status)
+                      : 'bg-slate-100 text-slate-700 border-slate-200';
+                    const typeCode = isLeaveTypeRecord(leave.leaveTypeId)
+                      ? leave.leaveTypeId.code
+                      : 'LV';
+
+                    const isPending = leave.status === 'PENDING';
+                    const isPartiallyApproved = leave.status === 'PARTIALLY_APPROVED';
+                    const isApproved = leave.status === 'APPROVED';
+                    const isRejected = leave.status === 'REJECTED';
+                    const isCancelled = leave.status === 'CANCELLED';
+
+                    return (
+                      <TableRow key={leave._id} className="hover:bg-muted/30 transition-colors group">
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-3">
+                            <span className={`flex size-8 items-center justify-center rounded-lg text-xs font-bold border ${typeColor} shrink-0`}>
+                              {typeCode}
+                            </span>
+                            <div className="font-semibold text-sm text-foreground">
+                              {resolveLeaveTypeName(leave)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2 text-sm text-foreground">
+                            <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            <span className="font-medium">{format(new Date(leave.startDate), 'MMM dd, yyyy')}</span>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0 mx-0.5" />
+                            <span className="font-medium">{format(new Date(leave.endDate), 'MMM dd, yyyy')}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <span className="inline-flex items-center gap-1 bg-muted px-2.5 py-1 text-xs font-semibold rounded-md text-foreground border border-border/50">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            {leave.totalDays} {leave.totalDays === 1 ? 'Day' : 'Days'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-4 max-w-xs">
+                          <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                            <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                            <span className="truncate max-w-[200px]" title={leave.reason}>
+                              {leave.reason}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">{renderApproverInfo(leave)}</TableCell>
+                        <TableCell className="py-4">
+                          {isApproved && (
+                            <Badge className="bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                              Approved
+                            </Badge>
+                          )}
+                          {isRejected && (
+                            <Badge className="bg-rose-500/10 hover:bg-rose-500/15 text-rose-700 border-rose-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                              <XCircle className="w-3.5 h-3.5 mr-1" />
+                              Rejected
+                            </Badge>
+                          )}
+                          {isCancelled && (
+                            <Badge className="bg-slate-500/10 hover:bg-slate-500/15 text-slate-700 border-slate-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                              Cancelled
+                            </Badge>
+                          )}
+                          {isPending && (
+                            <Badge className="bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 border-amber-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                              <span className="relative flex h-2 w-2 mr-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                              </span>
+                              Pending
+                            </Badge>
+                          )}
+                          {isPartiallyApproved && (
+                            <Badge className="bg-blue-500/10 hover:bg-blue-500/15 text-blue-700 border-blue-500/20 px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none">
+                              <span className="relative flex h-2 w-2 mr-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                              </span>
+                              In Review
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-4 text-right">
+                          {isLeaveAwaitingApproval(leave.status) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => void handleCancel(leave._id)}
+                              className="text-rose-600 border-rose-200 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-300 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 duration-200"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-1" />
+                              Cancel
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">No leave requests yet</p>
+            <div className="text-center text-muted-foreground py-12">
+              <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm">No leave requests found yet</p>
+            </div>
           )}
         </CardContent>
       </Card>

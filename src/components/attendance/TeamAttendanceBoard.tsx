@@ -25,9 +25,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Users, TrendingUp, Download, UserX } from 'lucide-react';
+import { Users, TrendingUp, Download, UserX, Calendar, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { format, isBefore, parseISO } from 'date-fns';
 import { hasAnyRole } from '@/lib/permissions';
+import { cn } from '@/lib/utils';
 import { formatTimeOnly } from '@/lib/date-utils';
 import {
   CheckInPhotoDialog,
@@ -323,19 +324,20 @@ export function TeamAttendanceBoard({
   const getStatusBadge = (status: TeamMemberStatus['status']) => {
     const config: Record<
       TeamMemberStatus['status'],
-      { variant: 'default' | 'destructive' | 'secondary' | 'outline'; label: string; className: string }
+      { label: string; className: string; icon: React.ComponentType<{ className?: string }> }
     > = {
-      present: { variant: 'default', label: 'Present', className: 'bg-green-100 text-green-800' },
-      absent: { variant: 'destructive', label: 'Absent', className: 'bg-red-100 text-red-800' },
-      on_leave: { variant: 'secondary', label: 'On Leave', className: 'bg-purple-100 text-purple-800' },
-      half_day: { variant: 'secondary', label: 'Half Day', className: 'bg-yellow-100 text-yellow-800' },
-      late: { variant: 'secondary', label: 'Late', className: 'bg-orange-100 text-orange-800' },
-      not_marked: { variant: 'outline', label: 'Not Marked', className: 'bg-gray-100 text-gray-600' },
+      present: { label: 'Present', className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20', icon: CheckCircle2 },
+      absent: { label: 'Absent', className: 'bg-rose-500/10 text-rose-700 border-rose-500/20', icon: XCircle },
+      on_leave: { label: 'On Leave', className: 'bg-purple-500/10 text-purple-700 border-purple-500/20', icon: Calendar },
+      half_day: { label: 'Half Day', className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20', icon: Clock },
+      late: { label: 'Late', className: 'bg-amber-500/10 text-amber-700 border-amber-500/20', icon: Clock },
+      not_marked: { label: 'Not Marked', className: 'bg-slate-500/10 text-slate-700 border-slate-500/20', icon: AlertCircle },
     };
 
-    const { variant, label, className } = config[status];
+    const { label, className, icon: Icon } = config[status];
     return (
-      <Badge variant={variant} className={className}>
+      <Badge variant="outline" className={cn("px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none gap-1", className)}>
+        <Icon className="w-3.5 h-3.5 shrink-0" />
         {label}
       </Badge>
     );
@@ -582,78 +584,97 @@ export function TeamAttendanceBoard({
           {isLoading ? (
             <p className="py-8 text-center text-muted-foreground">Loading...</p>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
+            <div className="rounded-md border overflow-hidden">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/40">
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Employee ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Check-in</TableHead>
-                    <TableHead>Check-out</TableHead>
-                    <TableHead>Photos</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Date</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Employee</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Role</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Status</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Check-in</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Check-out</TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Photos</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredMembers.length > 0 ? (
-                    filteredMembers.map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell className="whitespace-nowrap font-medium text-muted-foreground">
-                          {formatDateDisplay(member.date)}
-                        </TableCell>
-                        <TableCell className="font-medium">{member.user.employeeId || '-'}</TableCell>
-                        <TableCell>
-                          {member.user.firstName} {member.user.lastName}
-                        </TableCell>
-                        <TableCell>{member.user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{member.user.role}</Badge>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(member.status)}</TableCell>
-                        <TableCell>
-                          <AttendancePunchCell
-                            time={member.attendance?.checkIn}
-                            latitude={member.attendance?.checkInLat}
-                            longitude={member.attendance?.checkInLng}
-                            locationLabel={member.attendance?.checkInLocationLabel}
-                            showLocation={showLocationColumns}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <AttendancePunchCell
-                            time={member.attendance?.checkOut}
-                            latitude={member.attendance?.checkOutLat}
-                            longitude={member.attendance?.checkOutLng}
-                            locationLabel={member.attendance?.checkOutLocationLabel}
-                            showLocation={showLocationColumns}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {member.attendance?.checkIn || member.attendance?.checkOut ? (
-                            <AttendancePhotoButtons
-                              attendanceId={member.attendance._id}
-                              employeeName={`${member.user.firstName} ${member.user.lastName}`}
-                              date={member.attendance.date}
-                              checkIn={member.attendance.checkIn}
-                              checkOut={member.attendance.checkOut}
-                              hasCheckInPhoto={member.attendance.hasCheckInPhoto}
-                              hasCheckOutPhoto={member.attendance.hasCheckOutPhoto}
-                              photoUrl={member.attendance.photoUrl}
-                              checkOutPhotoUrl={member.attendance.checkOutPhotoUrl}
-                              onView={setPhotoTarget}
+                    filteredMembers.map((member) => {
+                      const initials = `${member.user.firstName?.[0] || ''}${member.user.lastName?.[0] || ''}`.toUpperCase() || 'EE';
+                      
+                      return (
+                        <TableRow key={member.id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="whitespace-nowrap font-medium text-muted-foreground py-4">
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              {formatDateDisplay(member.date)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-xs font-semibold text-primary shrink-0">
+                                {initials}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm text-foreground leading-tight">
+                                  {member.user.firstName} {member.user.lastName}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5 max-w-[180px] truncate" title={member.user.email}>
+                                  {member.user.email}
+                                </p>
+                                {member.user.employeeId && (
+                                  <p className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">ID: {member.user.employeeId}</p>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Badge variant="outline" className="capitalize text-xs font-semibold">{member.user.role}</Badge>
+                          </TableCell>
+                          <TableCell className="py-4">{getStatusBadge(member.status)}</TableCell>
+                          <TableCell className="py-4">
+                            <AttendancePunchCell
+                              time={member.attendance?.checkIn}
+                              latitude={member.attendance?.checkInLat}
+                              longitude={member.attendance?.checkInLng}
+                              locationLabel={member.attendance?.checkInLocationLabel}
+                              showLocation={showLocationColumns}
                             />
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <AttendancePunchCell
+                              time={member.attendance?.checkOut}
+                              latitude={member.attendance?.checkOutLat}
+                              longitude={member.attendance?.checkOutLng}
+                              locationLabel={member.attendance?.checkOutLocationLabel}
+                              showLocation={showLocationColumns}
+                            />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            {member.attendance?.checkIn || member.attendance?.checkOut ? (
+                              <AttendancePhotoButtons
+                                attendanceId={member.attendance._id}
+                                employeeName={`${member.user.firstName} ${member.user.lastName}`}
+                                date={member.attendance.date}
+                                checkIn={member.attendance.checkIn}
+                                checkOut={member.attendance.checkOut}
+                                hasCheckInPhoto={member.attendance.hasCheckInPhoto}
+                                hasCheckOutPhoto={member.attendance.hasCheckOutPhoto}
+                                photoUrl={member.attendance.photoUrl}
+                                checkOutPhotoUrl={member.attendance.checkOutPhotoUrl}
+                                onView={setPhotoTarget}
+                              />
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                        <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
                         No employees found
                       </TableCell>
                     </TableRow>
