@@ -26,10 +26,6 @@ export function SupervisorDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboardStats();
-  }, []);
-
   const loadDashboardStats = async () => {
     try {
       setIsLoading(true);
@@ -42,9 +38,31 @@ export function SupervisorDashboard() {
     }
   };
 
+  useEffect(() => {
+    void loadDashboardStats();
+    const intervalId = window.setInterval(() => {
+      void loadDashboardStats();
+    }, 60000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const attendancePercentage = stats?.todayAttendance
     ? Math.round((stats.todayAttendance.present / (stats.todayAttendance.total || 1)) * 100)
     : 0;
+
+  const formatTrialDate = (value?: string) => {
+    if (!value) return '—';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  };
 
   return (
     <DashboardShell
@@ -94,7 +112,13 @@ export function SupervisorDashboard() {
             title="Free Trial"
             value={`${stats.trialSummary.daysRemaining} days remaining`}
             icon={ShieldCheck}
-            description={`${stats.trialSummary.employeeLimit} employee limit · ${stats.trialSummary.activeEmployees}/${stats.trialSummary.employeeLimit} employees used`}
+            description={
+              <div className="space-y-1 text-[11px] text-muted-foreground">
+                <div>{`${stats.trialSummary.employeeLimit} employee limit · ${stats.trialSummary.activeEmployees}/${stats.trialSummary.employeeLimit} employees used`}</div>
+                <div>Started: {formatTrialDate(stats.trialSummary.trialStartAt)}</div>
+                <div>Ends: {formatTrialDate(stats.trialSummary.trialEndAt)}</div>
+              </div>
+            }
             color="purple"
           />
         )}

@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { attendanceApi } from '@/lib/api';
-import { Attendance, AttendanceStats } from '@/lib/types';
+import { attendanceApi, dashboardApi } from '@/lib/api';
+import { Attendance, AttendanceStats, DashboardStats } from '@/lib/types';
 import { StatCard } from './StatCard';
 import { QuickActions } from './QuickActions';
 import { RecentAttendanceWidget } from './RecentAttendanceWidget';
 import { DashboardShell } from './DashboardShell';
 import { UserRole } from '@/lib/types';
-import { Building2, Calendar, Clock, TrendingUp, X, AlertTriangle } from 'lucide-react';
+import { Building2, Calendar, Clock, TrendingUp, X, AlertTriangle, Shield } from 'lucide-react';
 import { formatWorkingHours } from '@/lib/format';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,7 @@ export function EmployeeDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState<AttendanceStats | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [recentRecords, setRecentRecords] = useState<Attendance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
@@ -38,13 +39,15 @@ export function EmployeeDashboard() {
       const currentMonth = new Date().getMonth() + 1;
       const currentYear = new Date().getFullYear();
 
-      const [monthStats, attendanceHistory, todayStatus] = await Promise.all([
+      const [monthStats, attendanceHistory, todayStatus, stats] = await Promise.all([
         attendanceApi.getMyStats(currentMonth, currentYear),
         attendanceApi.getMyAttendance({ page: 1, limit: 5 }),
         attendanceApi.getTodayStatus(),
+        dashboardApi.getStats().catch(() => null),
       ]);
 
       setStats(monthStats);
+      setDashboardStats(stats);
       setRecentRecords(attendanceHistory.records || []);
       setTodayAttendance(todayStatus);
     } catch (error) {
@@ -84,6 +87,19 @@ export function EmployeeDashboard() {
     : 0;
   const organizationLabel = user?.organization?.name || 'Organization not available';
 
+  const formatTrialDate = (value?: string) => {
+    if (!value) return '—';
+    try {
+      return new Date(value).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {
+      return '—';
+    }
+  };
+
   // Calculate live checkout time and total hours for the modal
   const checkInTime = todayAttendance?.checkIn
     ? format(new Date(todayAttendance.checkIn), 'hh:mm a')
@@ -103,7 +119,7 @@ export function EmployeeDashboard() {
       title={`Welcome, ${user?.firstName || 'there'}!`}
       subtitle="Your attendance overview for this month — stay on track with quick stats and shortcuts."
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className={`grid gap-4 sm:grid-cols-2 ${dashboardStats?.trialSummary ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>
         <StatCard
           title="Attendance rate"
           value={isLoading ? '…' : `${attendancePercentage}%`}
@@ -129,15 +145,29 @@ export function EmployeeDashboard() {
           value={isLoading ? '…' : `${stats?.presentDays ?? 0}/${stats?.totalDays ?? 0}`}
           icon={Calendar}
           description="This month"
-          className="sm:col-span-2 xl:col-span-1"
           color="orange"
         />
+        {dashboardStats?.trialSummary && (
+          <StatCard
+            title="Free Trial"
+            value={`${dashboardStats.trialSummary.daysRemaining} days remaining`}
+            icon={Shield}
+            description={
+              <div className="space-y-0.5 text-xs">
+                <div>{`${dashboardStats.trialSummary.employeeLimit} employee limit · ${dashboardStats.trialSummary.activeEmployees}/${dashboardStats.trialSummary.employeeLimit} employees used`}</div>
+                <div>Started: {formatTrialDate(dashboardStats.trialSummary.trialStartAt)}</div>
+                <div>Ends: {formatTrialDate(dashboardStats.trialSummary.trialEndAt)}</div>
+              </div>
+            }
+            color="purple"
+          />
+        )}
         <StatCard
           title="Organization"
           value={organizationLabel}
           icon={Building2}
           description={user?.organization?.name ? 'Your company' : 'Unable to resolve organization name'}
-          className="sm:col-span-2 xl:col-span-3"
+          className={dashboardStats?.trialSummary ? 'sm:col-span-2 xl:col-span-3' : 'sm:col-span-2 xl:col-span-3'}
         />
       </div>
 

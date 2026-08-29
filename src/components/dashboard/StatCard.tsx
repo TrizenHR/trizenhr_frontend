@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
@@ -10,7 +11,7 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
-  description?: string;
+  description?: ReactNode;
   className?: string;
   color?: 'blue' | 'green' | 'orange' | 'purple' | 'red' | 'default';
 }

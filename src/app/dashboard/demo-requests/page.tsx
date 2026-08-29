@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Clock3, Loader2, Search, ShieldAlert, Trash2, Users, XCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, Search, ShieldAlert, Trash2, Users, XCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,29 @@ function formatDate(value?: string) {
     hour: 'numeric',
     minute: '2-digit',
   });
+}
+
+function formatDemoPeriod(value?: string) {
+  if (!value) return '—';
+
+  const start = new Date(value);
+  if (Number.isNaN(start.getTime())) return '—';
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 30);
+
+  const startLabel = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+  }).format(start);
+
+  const endLabel = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(end);
+
+  return `${startLabel} – ${endLabel}`;
 }
 
 function planLabel(planId?: string) {
@@ -84,15 +107,18 @@ export default function DemoAccessPage() {
     );
   }, [accounts, search]);
 
-  const stats = useMemo(
-    () => ({
+  const stats = useMemo(() => {
+    const configuredLimit = Number(globalLimit);
+    const fallbackTotal = accounts.reduce((sum, account) => sum + (account.employeeLimit ?? 0), 0);
+
+    return {
       total: accounts.length,
       opened: accounts.filter((account) => account.opened).length,
       unopened: accounts.filter((account) => !account.opened).length,
-      activeUsers: accounts.reduce((sum, account) => sum + (account.employeeLimit ?? 0), 0),
-    }),
-    [accounts]
-  );
+      activeUsers:
+        Number.isFinite(configuredLimit) && configuredLimit > 0 ? configuredLimit : fallbackTotal,
+    };
+  }, [accounts, globalLimit]);
 
   const handleLimitSave = async (account: DemoAccessAccount) => {
     if (!account.organizationId) return;
@@ -139,6 +165,23 @@ export default function DemoAccessPage() {
       setSavingGlobal(true);
       const updated = await platformApi.updateDemoAccessLimitSettings(employeeLimit);
       setGlobalLimit(String(updated.employeeLimit));
+
+      const refreshedAccounts = accounts.map((account) =>
+        account.organizationId && !account.individualLimitOverride
+          ? { ...account, employeeLimit }
+          : account
+      );
+      setAccounts(refreshedAccounts);
+      setDraftLimits((previous) => {
+        const next = { ...previous };
+        refreshedAccounts.forEach((account) => {
+          if (account.organizationId && !account.individualLimitOverride) {
+            next[account.organizationId] = String(employeeLimit);
+          }
+        });
+        return next;
+      });
+
       await loadAccounts();
       toast({ title: 'Global limit updated', description: 'All demo accounts without an individual override now use this limit.' });
     } catch (error: unknown) {
@@ -222,15 +265,16 @@ export default function DemoAccessPage() {
           {loading && accounts.length === 0 ? <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : filteredAccounts.length === 0 ? <div className="py-16 text-center text-sm text-muted-foreground">No OTP demo accounts found.</div> : (
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-left text-sm">
-                <thead className="bg-muted/50 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><tr><th className="px-4 py-3">Account</th><th className="px-4 py-3">Requested</th><th className="px-4 py-3">Access</th><th className="px-4 py-3">Plan</th><th className="px-4 py-3">User limit</th><th className="px-4 py-3">Action</th></tr></thead>
+                <thead className="bg-muted/50 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><tr><th className="px-4 py-3">Account</th><th className="px-4 py-3">Employees</th><th className="px-4 py-3">Demo Period</th><th className="px-4 py-3">Plan</th><th className="px-4 py-3">User limit</th><th className="px-4 py-3">Action</th></tr></thead>
                 <tbody className="divide-y">
                   {filteredAccounts.map((account) => {
                     const rowId = account.organizationId || account.id;
                     const busy = savingId === account.organizationId;
+                    const demoPeriod = formatDemoPeriod(account.requestedAt);
                     return <tr key={rowId} className="hover:bg-muted/30">
                       <td className="px-4 py-4"><div className="font-semibold">{account.name || 'Unnamed admin'}</div><div className="text-xs text-primary">{account.email || 'No email'}</div><div className="mt-1 text-xs text-muted-foreground">{account.organizationName}</div></td>
-                      <td className="px-4 py-4"><div>{account.requestedEmployeeCount || '—'} employees</div><div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Clock3 className="h-3 w-3" />{formatDate(account.requestedAt)}</div></td>
-                      <td className="px-4 py-4">{account.opened ? <><Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Opened</Badge><div className="mt-1 text-xs text-muted-foreground">{formatDate(account.openedAt)}</div></> : <Badge variant="outline" className="border-amber-300 text-amber-700">Not opened</Badge>}</td>
+                      <td className="px-4 py-4"><div>{account.requestedEmployeeCount ?? '—'} employees</div></td>
+                      <td className="px-4 py-4"><div className="text-sm text-muted-foreground">{demoPeriod}</div></td>
                       <td className="px-4 py-4"><Badge variant="secondary">{planLabel(account.planId)}</Badge></td>
                       <td className="px-4 py-4">{account.organizationId ? <div className="space-y-1"><div className="flex items-center gap-2"><Label className="sr-only" htmlFor={`limit-${rowId}`}>User limit</Label><Input id={`limit-${rowId}`} type="number" min={1} max={99999} className="w-28" value={draftLimits[account.organizationId] ?? account.employeeLimit ?? ''} onChange={(event) => setDraftLimits((previous) => ({ ...previous, [account.organizationId!]: event.target.value }))} /></div><span className="text-[11px] text-muted-foreground">{account.individualLimitOverride ? 'Individual override' : 'Global limit'}</span></div> : <span className="text-xs text-muted-foreground">Complete registration first</span>}</td>
                       <td className="px-4 py-4">{account.organizationId ? <div className="flex items-center gap-2"><Button size="sm" onClick={() => void handleLimitSave(account)} disabled={busy || Boolean(deletingId)}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{busy ? 'Saving' : 'Save limit'}</Button><Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" title="Delete demo account" onClick={() => void handleDelete(account)} disabled={busy || deletingId === rowId}><Trash2 className="h-4 w-4" /></Button></div> : <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" title="Delete OTP request" onClick={() => void handleDelete(account)} disabled={deletingId === rowId}><Trash2 className="h-4 w-4" /></Button>}</td>

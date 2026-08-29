@@ -843,6 +843,8 @@ export interface DashboardStats {
     employeeLimit: number;
     activeEmployees: number;
     isDemoAccount: boolean;
+    trialStartAt?: string;
+    trialEndAt?: string;
   };
   todayAttendance: {
     present: number;

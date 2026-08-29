@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, Menu, Users, UserRoundPlus } from 'lucide-react';
+import { LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
@@ -69,10 +69,6 @@ export function Header({ title, onMenuClick }: HeaderProps) {
   const initials = user
     ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
     : 'U';
-  const canViewTrial = Boolean(
-    user && [UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR].includes(user.role)
-  );
-  const trialSummary = canViewTrial ? dashboardStats?.trialSummary : undefined;
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border/70 bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 md:px-6">
@@ -97,31 +93,6 @@ export function Header({ title, onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-4">
-        {trialSummary?.isDemoAccount && (
-          <div className="hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex">
-            <div className="min-w-32 border-l border-border/70 px-4">
-              <p className="text-[11px] font-semibold text-muted-foreground">Free Trial</p>
-              <p className="text-lg font-bold leading-tight text-primary">
-                {trialSummary.daysRemaining}
-                <span className="ml-1 text-xs font-medium text-muted-foreground">days remaining</span>
-              </p>
-            </div>
-            <div className="min-w-36 border-l border-border/70 px-4">
-              <p className="text-[11px] font-semibold text-muted-foreground">Employee limit</p>
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <Users className="size-3.5 text-primary" />
-                {trialSummary.employeeLimit}
-              </p>
-            </div>
-            <div className="min-w-40 border-l border-border/70 px-4">
-              <p className="text-[11px] font-semibold text-muted-foreground">Employees used</p>
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <UserRoundPlus className="size-3.5 text-primary" />
-                {trialSummary.activeEmployees}/{trialSummary.employeeLimit}
-              </p>
-            </div>
-          </div>
-        )}
         <NotificationBell />
 
         {/* User Menu */}
