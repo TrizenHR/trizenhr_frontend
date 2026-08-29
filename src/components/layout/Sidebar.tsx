@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -31,12 +31,15 @@ import {
   GitBranch,
   MapPin,
   UserCheck,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { UserRole, type User } from '@/lib/types';
 import { hasAnyRole } from '@/lib/permissions';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NavItem {
@@ -419,6 +422,22 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebar-collapsed');
+    if (stored === 'true') {
+      setIsCollapsed(true);
+    }
+  }, []);
+
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('sidebar-collapsed', String(next));
+      return next;
+    });
+  }, []);
 
   const visibleSections = useMemo(() => {
     return navigationSections
@@ -449,10 +468,13 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                 aria-hidden
               />
             )}
-            {section.title && (
-              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            {section.title && !isCollapsed && (
+              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground truncate">
                 {section.title}
               </h3>
+            )}
+            {section.title && isCollapsed && (
+              <div className="my-2 h-px bg-border/40" aria-hidden />
             )}
             <ul className="flex flex-col gap-2" role="list">
               {section.items.map((item) => (
@@ -461,6 +483,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
                     item={item}
                     isActive={isNavItemActive(pathname, item.href)}
                     onNavigate={closeAfterNavigate}
+                    isCollapsed={!isMobile && isCollapsed}
                   />
                 </li>
               ))}
@@ -473,9 +496,11 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
 
   const accountNav = (
     <div className="shrink-0 border-t border-border/70 bg-background/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm sm:px-4">
-      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        Account
-      </p>
+      {!isCollapsed && (
+        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground truncate">
+          Account
+        </p>
+      )}
       <ul className="flex flex-col gap-2" role="list" aria-label="Account links">
         {visibleBottomItems.map((item) => (
           <li key={item.href}>
@@ -483,6 +508,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
               item={item}
               isActive={isNavItemActive(pathname, item.href)}
               onNavigate={closeAfterNavigate}
+              isCollapsed={!isMobile && isCollapsed}
             />
           </li>
         ))}
@@ -491,14 +517,35 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   );
 
   const header = (
-    <header className="flex shrink-0 items-center gap-3 border-b border-border/70 bg-background/80 px-4 py-4 backdrop-blur-sm sm:px-5">
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl">
-        <Image src="/assets/logo.png" alt="TrizenHR logo" width={32} height={32} priority className="size-8 object-contain" />
+    <header className={cn(
+      "relative flex shrink-0 items-center justify-between border-b border-border/70 bg-background/80 px-4 py-4 backdrop-blur-sm sm:px-5",
+      isCollapsed && "px-2 justify-center"
+    )}>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/5 border border-primary/10">
+          <Image src="/assets/logo.png" alt="TrizenHR logo" width={32} height={32} priority className="size-8 object-contain" />
+        </div>
+        {!isCollapsed && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-bold tracking-tight text-foreground">TrizenHR</p>
+            <p className="truncate text-xs font-medium text-muted-foreground">Admin console</p>
+          </div>
+        )}
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold tracking-tight text-foreground">TrizenHR</p>
-        <p className="truncate text-xs font-medium text-muted-foreground">Admin console</p>
-      </div>
+      {!isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleCollapse}
+          className={cn(
+            "size-8 text-muted-foreground hover:text-foreground shrink-0 rounded-lg hover:bg-muted",
+            isCollapsed && "absolute top-5 left-14 z-50 border bg-background shadow-sm hover:bg-muted"
+          )}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+        </Button>
+      )}
     </header>
   );
 
@@ -526,7 +573,10 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden h-screen w-64 shrink-0 border-r border-border/70 bg-background/90 shadow-[6px_0_28px_-18px_rgba(15,23,42,0.08)] backdrop-blur-sm md:flex md:flex-col">
+    <aside className={cn(
+      "hidden h-screen shrink-0 border-r border-border/70 bg-background/90 shadow-[6px_0_28px_-18px_rgba(15,23,42,0.08)] backdrop-blur-sm md:flex md:flex-col transition-all duration-300 ease-in-out",
+      isCollapsed ? "w-20" : "w-64"
+    )}>
       {column}
     </aside>
   );
@@ -536,9 +586,10 @@ interface NavLinkProps {
   item: NavItem;
   isActive: boolean;
   onNavigate?: () => void;
+  isCollapsed?: boolean;
 }
 
-const NavLink = memo(function NavLink({ item, isActive, onNavigate }: NavLinkProps) {
+const NavLink = memo(function NavLink({ item, isActive, onNavigate, isCollapsed }: NavLinkProps) {
   const Icon = item.icon;
 
   return (
@@ -546,10 +597,12 @@ const NavLink = memo(function NavLink({ item, isActive, onNavigate }: NavLinkPro
       href={item.href}
       prefetch
       onClick={onNavigate}
+      title={isCollapsed ? item.label : undefined}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         'group relative flex min-h-[44px] items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors duration-100 ease-out sm:min-h-0 sm:py-1',
         'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        isCollapsed && 'justify-center px-1',
         isActive
           ? 'bg-primary/15 text-foreground ring-1 ring-primary/20 shadow-sm'
           : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
@@ -571,9 +624,11 @@ const NavLink = memo(function NavLink({ item, isActive, onNavigate }: NavLinkPro
       >
         <Icon className="size-[18px]" strokeWidth={2} aria-hidden />
       </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug sm:text-sm">
-        {item.label}
-      </span>
+      {!isCollapsed && (
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug sm:text-sm">
+          {item.label}
+        </span>
+      )}
     </Link>
   );
 });

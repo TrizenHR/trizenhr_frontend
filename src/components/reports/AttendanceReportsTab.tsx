@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { CalendarIcon, Download, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarIcon, Download, Filter, X, ChevronLeft, ChevronRight, CheckCircle2, Clock, XCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { formatAttendanceDate, formatTimeOnly } from '@/lib/date-utils';
@@ -27,22 +27,6 @@ import { AttendancePunchCell, punchExportLabel } from '@/components/attendance/A
 
 type AttendanceReportsTabProps = {
   showLocationColumns?: boolean;
-};
-
-const statusColors: Partial<Record<AttendanceStatus, string>> = {
-  [AttendanceStatus.PRESENT]: 'bg-green-100 text-green-800',
-  [AttendanceStatus.LATE]: 'bg-orange-100 text-orange-800',
-  [AttendanceStatus.ABSENT]: 'bg-red-100 text-red-800',
-  [AttendanceStatus.HALF_DAY]: 'bg-yellow-100 text-yellow-800',
-  [AttendanceStatus.ON_LEAVE]: 'bg-blue-100 text-blue-800',
-};
-
-const statusLabels: Partial<Record<AttendanceStatus, string>> = {
-  [AttendanceStatus.PRESENT]: 'Present',
-  [AttendanceStatus.LATE]: 'Late',
-  [AttendanceStatus.ABSENT]: 'Absent',
-  [AttendanceStatus.HALF_DAY]: 'Half Day',
-  [AttendanceStatus.ON_LEAVE]: 'On Leave',
 };
 
 export default function AttendanceReportsTab({
@@ -193,6 +177,18 @@ export default function AttendanceReportsTab({
   };
 
   const exportToCSV = (attendanceRecords: Attendance[], leaveRecords: Leave[]) => {
+    const statusLabels: Record<AttendanceStatus, string> = {
+      [AttendanceStatus.PRESENT]: 'Present',
+      [AttendanceStatus.LATE]: 'Late',
+      [AttendanceStatus.ABSENT]: 'Absent',
+      [AttendanceStatus.HALF_DAY]: 'Half Day',
+      [AttendanceStatus.ON_LEAVE]: 'On Leave',
+      [AttendanceStatus.WEEKLY_OFF]: 'Weekly Off',
+      [AttendanceStatus.HOLIDAY]: 'Holiday',
+      [AttendanceStatus.NOT_JOINED]: 'Not Joined',
+      [AttendanceStatus.PRESENT_WITH_LATE]: 'Present with Late',
+    };
+
     const headers = [
       'Type',
       'Date',
@@ -325,6 +321,28 @@ export default function AttendanceReportsTab({
         return name.includes(query) || empId.includes(query);
       })
     : attendanceRecords;
+
+  const getStatusBadge = (status: AttendanceStatus) => {
+    const config: Partial<Record<
+      AttendanceStatus,
+      { label: string; className: string; icon: React.ComponentType<{ className?: string }> }
+    >> = {
+      [AttendanceStatus.PRESENT]: { label: 'Present', className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20', icon: CheckCircle2 },
+      [AttendanceStatus.ABSENT]: { label: 'Absent', className: 'bg-rose-500/10 text-rose-700 border-rose-500/20', icon: XCircle },
+      [AttendanceStatus.ON_LEAVE]: { label: 'On Leave', className: 'bg-purple-500/10 text-purple-700 border-purple-500/20', icon: CalendarIcon },
+      [AttendanceStatus.HALF_DAY]: { label: 'Half Day', className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20', icon: Clock },
+      [AttendanceStatus.LATE]: { label: 'Late', className: 'bg-amber-500/10 text-amber-700 border-amber-500/20', icon: Clock },
+    };
+
+    const item = config[status] || { label: status, className: 'bg-slate-500/10 text-slate-700 border-slate-500/20', icon: AlertCircle };
+    const Icon = item.icon;
+    return (
+      <Badge variant="outline" className={cn("px-2.5 py-1 rounded-full text-xs font-medium flex items-center w-fit shadow-none gap-1", item.className)}>
+        <Icon className="w-3.5 h-3.5 shrink-0" />
+        {item.label}
+      </Badge>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -538,33 +556,61 @@ export default function AttendanceReportsTab({
             <div className="text-center py-12 text-gray-500">No attendance records found</div>
           ) : (
             <>
-              <div className="rounded-md border overflow-x-auto">
+              <div className="rounded-md border overflow-hidden">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-muted/40">
                     <TableRow>
-                      <TableHead className="min-w-[100px]">Date</TableHead>
-                      <TableHead className="min-w-[120px]">Employee</TableHead>
-                      <TableHead className="min-w-[100px]">Employee ID</TableHead>
-                      <TableHead className="min-w-[120px]">Department</TableHead>
-                      <TableHead className="min-w-[100px]">Check In</TableHead>
-                      <TableHead className="min-w-[100px]">Check Out</TableHead>
-                      <TableHead className="min-w-[100px]">Status</TableHead>
-                      <TableHead className="min-w-[100px]">Working Hours</TableHead>
-                      <TableHead className="min-w-[100px]">Photos</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Date</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Employee</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Check In</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Check Out</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Status</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Working Hours</TableHead>
+                      <TableHead className="text-xs font-semibold tracking-wider text-muted-foreground uppercase py-3.5">Photos</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRecords.map((record) => {
                       const user = typeof record.userId === 'object' ? record.userId : null;
+                      const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() : 'EE';
+
                       return (
-                        <TableRow key={record._id}>
-                          <TableCell className="whitespace-nowrap">{formatAttendanceDate(record.date)}</TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            {user ? `${user.firstName} ${user.lastName}` : 'N/A'}
+                        <TableRow key={record._id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="whitespace-nowrap font-medium text-muted-foreground py-4">
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              {formatAttendanceDate(record.date)}
+                            </div>
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">{user?.employeeId || 'N/A'}</TableCell>
-                          <TableCell className="whitespace-nowrap">{user?.department || 'N/A'}</TableCell>
-                          <TableCell>
+                          <TableCell className="py-4">
+                            {user ? (
+                              <div className="flex items-center gap-3">
+                                <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-xs font-semibold text-primary shrink-0">
+                                  {initials}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-foreground leading-tight">
+                                    {user.firstName} {user.lastName}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-0.5 max-w-[180px] truncate" title={user.email}>
+                                    {user.email}
+                                  </p>
+                                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    {user.employeeId && (
+                                      <span className="text-[10px] text-muted-foreground/80 font-mono">ID: {user.employeeId}</span>
+                                    )}
+                                    {user.employeeId && user.department && <span className="text-[10px] text-muted-foreground/40">•</span>}
+                                    {user.department && (
+                                      <span className="text-[10px] text-muted-foreground/80">{user.department}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              'N/A'
+                            )}
+                          </TableCell>
+                          <TableCell className="py-4">
                             <AttendancePunchCell
                               time={record.checkIn}
                               latitude={record.checkInLat}
@@ -573,7 +619,7 @@ export default function AttendanceReportsTab({
                               showLocation={showLocationColumns}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="py-4">
                             <AttendancePunchCell
                               time={record.checkOut}
                               latitude={record.checkOutLat}
@@ -582,15 +628,13 @@ export default function AttendanceReportsTab({
                               showLocation={showLocationColumns}
                             />
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            <Badge className={statusColors[record.status]}>
-                              {statusLabels[record.status]}
-                            </Badge>
+                          <TableCell className="py-4 whitespace-nowrap">
+                            {getStatusBadge(record.status)}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
+                          <TableCell className="py-4 whitespace-nowrap text-sm">
                             {record.workingHours ? formatWorkingHours(record.workingHours) : '-'}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
+                          <TableCell className="py-4">
                             <AttendancePhotoButtons
                               attendanceId={record._id}
                               employeeName={

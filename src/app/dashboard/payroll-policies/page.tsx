@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,38 +10,135 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { IndianRupee, Save, Percent, Clock, Briefcase, HelpCircle } from 'lucide-react';
 
+type Policies = {
+  lopCalculationBasis: string;
+  autoDeductLopOnAbsent: boolean;
+  lateCheckInPenalty: boolean;
+  lateDaysThreshold: number;
+  penaltyLopDays: number;
+
+  enableOvertime: boolean;
+  minOtMinsPerDay: number;
+  otMultiplier: number;
+  maxOtHoursPerMonth: number;
+
+  holidayPayMultiplier: number;
+  weeklyOffPayMultiplier: number;
+
+  enablePfContribution: boolean;
+  pfEmployerPercent: number;
+  pfEmployeePercent: number;
+  enableEsiContribution: boolean;
+  esiEmployerPercent: number;
+  esiEmployeePercent: number;
+};
+
+const DEFAULT_POLICIES: Policies = {
+  lopCalculationBasis: 'calendar_days',
+  autoDeductLopOnAbsent: true,
+  lateCheckInPenalty: true,
+  lateDaysThreshold: 3,
+  penaltyLopDays: 0.5,
+
+  enableOvertime: true,
+  minOtMinsPerDay: 60,
+  otMultiplier: 1.5,
+  maxOtHoursPerMonth: 40,
+
+  holidayPayMultiplier: 2.0,
+  weeklyOffPayMultiplier: 1.5,
+
+  enablePfContribution: true,
+  pfEmployerPercent: 12.0,
+  pfEmployeePercent: 12.0,
+  enableEsiContribution: false,
+  esiEmployerPercent: 3.25,
+  esiEmployeePercent: 0.75,
+};
+
+/** Switch + label + helper text, used for every on/off policy toggle. */
+function PolicyToggleRow({
+  id,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between space-x-2">
+      <div className="space-y-0.5">
+        <Label htmlFor={id}>{label}</Label>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
+/** Number input + label + unit suffix, used for every numeric policy value. */
+function PolicyNumberField({
+  id,
+  label,
+  value,
+  suffix,
+  step,
+  helperText,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  suffix?: string;
+  step?: string;
+  helperText?: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          id={id}
+          step={step}
+          value={value}
+          onChange={e => onChange(Number(e.target.value))}
+        />
+        {suffix && <span className="shrink-0 text-xs font-semibold text-muted-foreground">{suffix}</span>}
+      </div>
+      {helperText && <p className="text-xs text-muted-foreground">{helperText}</p>}
+    </div>
+  );
+}
+
+/** Indented sub-section shown only while its parent toggle is enabled. */
+function ExpandableSection({ show, children }: { show: boolean; children: ReactNode }) {
+  if (!show) return null;
+  return <div className="space-y-4 border-l-2 border-primary/20 pl-6">{children}</div>;
+}
+
 export default function PayrollPoliciesPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [policies, setPolicies] = useState<Policies>(DEFAULT_POLICIES);
+  const [savedPolicies, setSavedPolicies] = useState<Policies>(DEFAULT_POLICIES);
 
-  // Policy Form State
-  const [policies, setPolicies] = useState({
-    lopCalculationBasis: 'calendar_days',
-    autoDeductLopOnAbsent: true,
-    lateCheckInPenalty: true,
-    lateDaysThreshold: 3,
-    penaltyLopDays: 0.5,
-    
-    enableOvertime: true,
-    minOtMinsPerDay: 60,
-    otMultiplier: 1.5,
-    maxOtHoursPerMonth: 40,
-    
-    holidayPayMultiplier: 2.0,
-    weeklyOffPayMultiplier: 1.5,
+  const isDirty = JSON.stringify(policies) !== JSON.stringify(savedPolicies);
 
-    enablePfContribution: true,
-    pfEmployerPercent: 12.0,
-    pfEmployeePercent: 12.0,
-    enableEsiContribution: false,
-    esiEmployerPercent: 3.25,
-    esiEmployeePercent: 0.75,
-  });
+  const set = <K extends keyof Policies>(key: K, value: Policies[K]) =>
+    setPolicies(p => ({ ...p, [key]: value }));
 
   const handleSave = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
+      setSavedPolicies(policies);
       toast({
         title: 'Payroll Policy Saved',
         description: 'Payroll configurations stored locally. Backend integration pending.',
@@ -49,14 +146,20 @@ export default function PayrollPoliciesPage() {
     }, 600);
   };
 
+  const handleRevert = () => {
+    setPolicies(savedPolicies);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold md:text-3xl">Payroll Policies</h1>
-          <p className="text-sm text-muted-foreground mt-1">Configure Loss of Pay (LOP) calculations, overtime multipliers, and statutory tax parameters</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Configure Loss of Pay (LOP) calculations, overtime multipliers, and statutory tax parameters
+          </p>
         </div>
-        <Button onClick={handleSave} disabled={isLoading} className="shadow-md">
+        <Button onClick={handleSave} disabled={isLoading || !isDirty} className="shadow-md">
           <Save className="mr-2 h-4 w-4" />
           {isLoading ? 'Saving...' : 'Save Policies'}
         </Button>
@@ -70,14 +173,16 @@ export default function PayrollPoliciesPage() {
               <Briefcase className="h-5 w-5 text-red-500" />
               Loss of Pay (LOP) Settings
             </CardTitle>
-            <CardDescription>Establish deduction guidelines for unmarked days and late attendance penalties</CardDescription>
+            <CardDescription>
+              Establish deduction guidelines for unmarked days and late attendance penalties
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="lopBasis">Deduction Calculation Month-Basis</Label>
               <Select
                 value={policies.lopCalculationBasis}
-                onValueChange={val => setPolicies(p => ({ ...p, lopCalculationBasis: val }))}
+                onValueChange={val => set('lopCalculationBasis', val)}
               >
                 <SelectTrigger id="lopBasis">
                   <SelectValue />
@@ -92,41 +197,33 @@ export default function PayrollPoliciesPage() {
 
             <hr className="border-border/60" />
 
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="autoLop">Auto-Deduct LOP on Absents</Label>
-                <p className="text-xs text-muted-foreground">Automatically trigger salary deductions for days flagged as 'Absent' without approved leaves.</p>
-              </div>
-              <Switch
-                id="autoLop"
-                checked={policies.autoDeductLopOnAbsent}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, autoDeductLopOnAbsent: checked }))}
-              />
-            </div>
+            <PolicyToggleRow
+              id="autoLop"
+              label="Auto-Deduct LOP on Absents"
+              description="Automatically trigger salary deductions for days flagged as 'Absent' without approved leaves."
+              checked={policies.autoDeductLopOnAbsent}
+              onCheckedChange={v => set('autoDeductLopOnAbsent', v)}
+            />
 
             <hr className="border-border/60" />
 
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="latePenalty">Late Check-In Penalties</Label>
-                <p className="text-xs text-muted-foreground">Apply fractional LOP deductions for repetitive late check-in behaviors.</p>
-              </div>
-              <Switch
-                id="latePenalty"
-                checked={policies.lateCheckInPenalty}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, lateCheckInPenalty: checked }))}
-              />
-            </div>
+            <PolicyToggleRow
+              id="latePenalty"
+              label="Late Check-In Penalties"
+              description="Apply fractional LOP deductions for repetitive late check-in behaviors."
+              checked={policies.lateCheckInPenalty}
+              onCheckedChange={v => set('lateCheckInPenalty', v)}
+            />
 
             {policies.lateCheckInPenalty && (
-              <div className="rounded-lg bg-muted/40 p-4 space-y-4 text-sm pl-6 border-l-2 border-primary/20">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="space-y-4 rounded-lg border-l-2 border-primary/20 bg-muted/40 p-4 pl-6 text-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="flex-1 space-y-1">
                     <Label className="text-xs">Late Check-Ins Count</Label>
                     <Input
                       type="number"
                       value={policies.lateDaysThreshold}
-                      onChange={e => setPolicies(p => ({ ...p, lateDaysThreshold: Number(e.target.value) }))}
+                      onChange={e => set('lateDaysThreshold', Number(e.target.value))}
                     />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -135,11 +232,14 @@ export default function PayrollPoliciesPage() {
                       type="number"
                       step="0.1"
                       value={policies.penaltyLopDays}
-                      onChange={e => setPolicies(p => ({ ...p, penaltyLopDays: Number(e.target.value) }))}
+                      onChange={e => set('penaltyLopDays', Number(e.target.value))}
                     />
                   </div>
                 </div>
-                <p className="text-[11px] text-amber-700 font-medium">Currently: {policies.lateDaysThreshold} late check-ins will lead to {policies.penaltyLopDays} LOP day deduction.</p>
+                <p className="text-[11px] font-medium text-amber-700">
+                  Currently: {policies.lateDaysThreshold} late check-ins will lead to {policies.penaltyLopDays} LOP
+                  day deduction.
+                </p>
               </div>
             )}
           </CardContent>
@@ -155,63 +255,42 @@ export default function PayrollPoliciesPage() {
             <CardDescription>Determine pay calculations for hours worked outside standard shift times</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="otEnable">Calculate & Compensate Overtime</Label>
-                <p className="text-xs text-muted-foreground">Approve OT requests on hours worked past scheduled shift bounds.</p>
-              </div>
-              <Switch
-                id="otEnable"
-                checked={policies.enableOvertime}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, enableOvertime: checked }))}
+            <PolicyToggleRow
+              id="otEnable"
+              label="Calculate & Compensate Overtime"
+              description="Approve OT requests on hours worked past scheduled shift bounds."
+              checked={policies.enableOvertime}
+              onCheckedChange={v => set('enableOvertime', v)}
+            />
+
+            <ExpandableSection show={policies.enableOvertime}>
+              <PolicyNumberField
+                id="otMins"
+                label="Min OT Duration / Day (Minutes)"
+                value={policies.minOtMinsPerDay}
+                suffix="mins"
+                helperText="Minimum overtime duration per shift to qualify for OT benefits."
+                onChange={v => set('minOtMinsPerDay', v)}
               />
-            </div>
 
-            {policies.enableOvertime && (
-              <div className="space-y-4 pl-6 border-l-2 border-primary/20">
-                <div className="space-y-1.5">
-                  <Label htmlFor="otMins">Min OT Duration / Day (Minutes)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      id="otMins"
-                      value={policies.minOtMinsPerDay}
-                      onChange={e => setPolicies(p => ({ ...p, minOtMinsPerDay: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs text-muted-foreground">mins</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Minimum overtime duration per shift to qualify for OT benefits.</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="otMultiplier">Compensation Multiplier</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        step="0.1"
-                        id="otMultiplier"
-                        value={policies.otMultiplier}
-                        onChange={e => setPolicies(p => ({ ...p, otMultiplier: Number(e.target.value) }))}
-                      />
-                      <span className="text-xs text-muted-foreground">x</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="maxOtHours">Max OT Limit / Month</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        id="maxOtHours"
-                        value={policies.maxOtHoursPerMonth}
-                        onChange={e => setPolicies(p => ({ ...p, maxOtHoursPerMonth: Number(e.target.value) }))}
-                      />
-                      <span className="text-xs text-muted-foreground">hrs</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                <PolicyNumberField
+                  id="otMultiplier"
+                  label="Compensation Multiplier"
+                  value={policies.otMultiplier}
+                  step="0.1"
+                  suffix="x"
+                  onChange={v => set('otMultiplier', v)}
+                />
+                <PolicyNumberField
+                  id="maxOtHours"
+                  label="Max OT Limit / Month"
+                  value={policies.maxOtHoursPerMonth}
+                  suffix="hrs"
+                  onChange={v => set('maxOtHoursPerMonth', v)}
+                />
               </div>
-            )}
+            </ExpandableSection>
           </CardContent>
         </Card>
 
@@ -226,35 +305,24 @@ export default function PayrollPoliciesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="holidayMultiplier">Company Holiday Multiplier</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    step="0.1"
-                    id="holidayMultiplier"
-                    value={policies.holidayPayMultiplier}
-                    onChange={e => setPolicies(p => ({ ...p, holidayPayMultiplier: Number(e.target.value) }))}
-                  />
-                  <span className="text-xs font-semibold text-muted-foreground">x rate</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Multiplies base daily compensation when working on holidays.</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="weeklyOffMultiplier">Weekly Off-Day Multiplier</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    step="0.1"
-                    id="weeklyOffMultiplier"
-                    value={policies.weeklyOffPayMultiplier}
-                    onChange={e => setPolicies(p => ({ ...p, weeklyOffPayMultiplier: Number(e.target.value) }))}
-                  />
-                  <span className="text-xs font-semibold text-muted-foreground">x rate</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Multiplies base daily compensation when working on rest days.</p>
-              </div>
+              <PolicyNumberField
+                id="holidayMultiplier"
+                label="Company Holiday Multiplier"
+                value={policies.holidayPayMultiplier}
+                step="0.1"
+                suffix="x rate"
+                helperText="Multiplies base daily compensation when working on holidays."
+                onChange={v => set('holidayPayMultiplier', v)}
+              />
+              <PolicyNumberField
+                id="weeklyOffMultiplier"
+                label="Weekly Off-Day Multiplier"
+                value={policies.weeklyOffPayMultiplier}
+                step="0.1"
+                suffix="x rate"
+                helperText="Multiplies base daily compensation when working on rest days."
+                onChange={v => set('weeklyOffPayMultiplier', v)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -269,105 +337,80 @@ export default function PayrollPoliciesPage() {
             <CardDescription>Configure default deductions for Provident Fund (PF) and State Insurance (ESI)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="pfEnable">Calculate Provident Fund (PF)</Label>
-                <p className="text-xs text-muted-foreground">Enable auto deductions and contributions for Employee Provident Fund.</p>
-              </div>
-              <Switch
-                id="pfEnable"
-                checked={policies.enablePfContribution}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, enablePfContribution: checked }))}
-              />
-            </div>
+            <PolicyToggleRow
+              id="pfEnable"
+              label="Calculate Provident Fund (PF)"
+              description="Enable auto deductions and contributions for Employee Provident Fund."
+              checked={policies.enablePfContribution}
+              onCheckedChange={v => set('enablePfContribution', v)}
+            />
 
-            {policies.enablePfContribution && (
-              <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
-                <div className="space-y-1.5">
-                  <Label htmlFor="pfEmployer">Employer PF Contribution (%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      id="pfEmployer"
-                      value={policies.pfEmployerPercent}
-                      onChange={e => setPolicies(p => ({ ...p, pfEmployerPercent: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs text-muted-foreground font-semibold">%</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pfEmployee">Employee PF Contribution (%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      id="pfEmployee"
-                      value={policies.pfEmployeePercent}
-                      onChange={e => setPolicies(p => ({ ...p, pfEmployeePercent: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs text-muted-foreground font-semibold">%</span>
-                  </div>
-                </div>
+            <ExpandableSection show={policies.enablePfContribution}>
+              <div className="grid grid-cols-2 gap-4">
+                <PolicyNumberField
+                  id="pfEmployer"
+                  label="Employer PF Contribution (%)"
+                  value={policies.pfEmployerPercent}
+                  step="0.01"
+                  suffix="%"
+                  onChange={v => set('pfEmployerPercent', v)}
+                />
+                <PolicyNumberField
+                  id="pfEmployee"
+                  label="Employee PF Contribution (%)"
+                  value={policies.pfEmployeePercent}
+                  step="0.01"
+                  suffix="%"
+                  onChange={v => set('pfEmployeePercent', v)}
+                />
               </div>
-            )}
+            </ExpandableSection>
 
             <hr className="border-border/60" />
 
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="esiEnable">Calculate State Insurance (ESIC)</Label>
-                <p className="text-xs text-muted-foreground">Enable state insurance deductions based on wage brackets.</p>
-              </div>
-              <Switch
-                id="esiEnable"
-                checked={policies.enableEsiContribution}
-                onCheckedChange={checked => setPolicies(p => ({ ...p, enableEsiContribution: checked }))}
-              />
-            </div>
+            <PolicyToggleRow
+              id="esiEnable"
+              label="Calculate State Insurance (ESIC)"
+              description="Enable state insurance deductions based on wage brackets."
+              checked={policies.enableEsiContribution}
+              onCheckedChange={v => set('enableEsiContribution', v)}
+            />
 
-            {policies.enableEsiContribution && (
-              <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
-                <div className="space-y-1.5">
-                  <Label htmlFor="esiEmployer">Employer ESIC (%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      id="esiEmployer"
-                      value={policies.esiEmployerPercent}
-                      onChange={e => setPolicies(p => ({ ...p, esiEmployerPercent: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs text-muted-foreground font-semibold">%</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="esiEmployee">Employee ESIC (%)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      id="esiEmployee"
-                      value={policies.esiEmployeePercent}
-                      onChange={e => setPolicies(p => ({ ...p, esiEmployeePercent: Number(e.target.value) }))}
-                    />
-                    <span className="text-xs text-muted-foreground font-semibold">%</span>
-                  </div>
-                </div>
+            <ExpandableSection show={policies.enableEsiContribution}>
+              <div className="grid grid-cols-2 gap-4">
+                <PolicyNumberField
+                  id="esiEmployer"
+                  label="Employer ESIC (%)"
+                  value={policies.esiEmployerPercent}
+                  step="0.01"
+                  suffix="%"
+                  onChange={v => set('esiEmployerPercent', v)}
+                />
+                <PolicyNumberField
+                  id="esiEmployee"
+                  label="Employee ESIC (%)"
+                  value={policies.esiEmployeePercent}
+                  step="0.01"
+                  suffix="%"
+                  onChange={v => set('esiEmployeePercent', v)}
+                />
               </div>
-            )}
+            </ExpandableSection>
 
-            <div className="flex gap-2 items-start bg-blue-500/10 text-blue-800 rounded-lg p-3 text-xs border border-blue-500/20 font-medium">
-              <HelpCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 p-3 text-xs font-medium text-blue-800">
+              <HelpCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>PF deductions are calculated against Basic salary components only (deducted before tax calculations).</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4">
-        <Button variant="outline" onClick={() => window.location.reload()}>Revert Changes</Button>
-        <Button onClick={handleSave} disabled={isLoading}>
+      <div className="sticky bottom-4 z-10 flex justify-end gap-3 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        {isDirty && <p className="mr-auto self-center text-xs text-muted-foreground">You have unsaved changes</p>}
+        <Button variant="outline" onClick={handleRevert} disabled={!isDirty || isLoading}>
+          Revert Changes
+        </Button>
+        <Button onClick={handleSave} disabled={isLoading || !isDirty}>
           <Save className="mr-2 h-4 w-4" />
           {isLoading ? 'Saving...' : 'Save Policies'}
         </Button>

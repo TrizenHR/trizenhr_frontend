@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Pin the Turbopack root to this package — sibling repos (backend, mobile,
+  // email service) under the parent folder confuse Next's workspace-root inference
+  turbopack: {
+    root: path.join(__dirname),
+  },
+
   // Enable standalone output for Docker
   output: 'standalone',
 
