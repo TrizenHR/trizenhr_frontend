@@ -10,7 +10,7 @@ import { StatCard } from './StatCard';
 import { DashboardShell } from './DashboardShell';
 import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
-import { Users, UserCheck, Calendar, TrendingUp, Building2 } from 'lucide-react';
+import { Users, UserCheck, Calendar, TrendingUp, Building2, ShieldCheck } from 'lucide-react';
 
 export function SupervisorDashboard() {
   const { user } = useAuth();
@@ -52,7 +52,11 @@ export function SupervisorDashboard() {
       title="Team dashboard"
       subtitle={`Monitor your team's attendance and approvals in ${organizationName}${user?.firstName ? ` — hi ${user.firstName}` : ''}.`}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-5">
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+          stats?.trialSummary ? '2xl:grid-cols-6' : '2xl:grid-cols-5'
+        }`}
+      >
         <StatCard
           title="Organization"
           value={organizationName}
@@ -85,6 +89,15 @@ export function SupervisorDashboard() {
           description="Leave requests"
           color="orange"
         />
+        {stats?.trialSummary && (
+          <StatCard
+            title="Free Trial"
+            value={`${stats.trialSummary.daysRemaining} days remaining`}
+            icon={ShieldCheck}
+            description={`${stats.trialSummary.employeeLimit} employee limit · ${stats.trialSummary.activeEmployees}/${stats.trialSummary.employeeLimit} employees used`}
+            color="purple"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">

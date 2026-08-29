@@ -310,8 +310,8 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.SUPER_ADMIN],
       },
       {
-        label: 'Demo Requests',
-        href: '/dashboard/demo-requests',
+        label: 'Demo Access',
+        href: '/dashboard/demo-access',
         icon: UserCheck,
         roles: [UserRole.SUPER_ADMIN],
         allowedEmails: ['demo@trizenventures.com'],

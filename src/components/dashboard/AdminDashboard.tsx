@@ -10,7 +10,7 @@ import { StatCard } from './StatCard';
 import { DashboardShell } from './DashboardShell';
 import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
-import { Users, Building2, Calendar, TrendingUp } from 'lucide-react';
+import { Users, Building2, Calendar, TrendingUp, ShieldCheck } from 'lucide-react';
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -52,7 +52,11 @@ export function AdminDashboard() {
       title="Admin dashboard"
       subtitle={`Organization-wide snapshot — ${organizationName}. Monitor users, attendance, and pending actions.`}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-5">
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+          stats?.trialSummary ? '2xl:grid-cols-6' : '2xl:grid-cols-5'
+        }`}
+      >
         <StatCard
           title="Organization"
           value={organizationName}
@@ -86,6 +90,15 @@ export function AdminDashboard() {
           description="Leave requests"
           color="orange"
         />
+        {stats?.trialSummary && (
+          <StatCard
+            title="Free Trial"
+            value={`${stats.trialSummary.daysRemaining} days remaining`}
+            icon={ShieldCheck}
+            description={`${stats.trialSummary.employeeLimit} employee limit · ${stats.trialSummary.activeEmployees}/${stats.trialSummary.employeeLimit} employees used`}
+            color="purple"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">

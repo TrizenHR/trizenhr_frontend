@@ -781,6 +781,7 @@ export interface BillingOverview {
   subscriptionPlan: SubscriptionPlan | string;
   planName?: string;
   employeeLimit?: number;
+  individualLimitOverride?: boolean;
   trialEmployeeLimit?: number;
   pricePerUserPerDay: number;
   pricePerUserPerMonth?: number;
@@ -837,6 +838,12 @@ export interface DashboardStats {
   totalDepartments?: number;
   teamSize?: number;
   pendingLeaveApprovals?: number;
+  trialSummary?: {
+    daysRemaining: number;
+    employeeLimit: number;
+    activeEmployees: number;
+    isDemoAccount: boolean;
+  };
   todayAttendance: {
     present: number;
     late: number;
@@ -950,6 +957,27 @@ export enum DemoInvitationStatus {
 export interface DemoInvitationDefaults {
   inviteLinkTtlHours: number;
   demoAccessTtlDays: number;
+}
+
+export interface DemoAccessAccount {
+  id: string;
+  organizationId?: string;
+  organizationName: string;
+  prospectLabel: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  requestedAt: string;
+  requestedEmployeeCount?: number;
+  employeeLimit?: number;
+  planId?: string;
+  opened: boolean;
+  openedAt?: string;
+  adminUserId?: string;
+}
+
+export interface DemoAccessLimitSettings {
+  employeeLimit: number;
 }
 
 export interface DemoInvitation {

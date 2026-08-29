@@ -48,6 +48,8 @@ import {
   BillingInvoice,
   DemoInvitationDefaults,
   DemoInvitation,
+  DemoAccessAccount,
+  DemoAccessLimitSettings,
   DemoInvitationStatus,
   CreateDemoInvitationPayload,
   ValidatedDemoInvite,
@@ -343,6 +345,10 @@ export const userApi = {
   updateUserStatus: async (id: string, payload: { isActive: boolean }): Promise<User> => {
     const response = await api.patch<ApiResponse<User>>(`/users/${id}/status`, payload);
     return response.data.data!;
+  },
+
+  resetUserPassword: async (id: string, password: string): Promise<void> => {
+    await api.post(`/users/${id}/reset-password`, { password });
   },
 
   /** Enable/disable field tracking for a user (Admin/HR). */
@@ -1345,6 +1351,46 @@ export const platformApi = {
       `/platform/demo-invites/${id}/resend`
     );
     return response.data.data!;
+  },
+
+  listDemoAccess: async (params?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ items: DemoAccessAccount[]; meta: ApiResponse['meta'] }> => {
+    const response = await api.get<ApiResponse<DemoAccessAccount[]>>('/platform/demo-access', {
+      params,
+    });
+    return { items: response.data.data ?? [], meta: response.data.meta };
+  },
+
+  updateDemoAccessLimit: async (
+    organizationId: string,
+    employeeLimit: number
+  ): Promise<{ organizationId: string; employeeLimit: number; planId?: string }> => {
+    const response = await api.patch<
+      ApiResponse<{ organizationId: string; employeeLimit: number; planId?: string }>
+    >(`/platform/demo-access/${organizationId}/limit`, { employeeLimit });
+    return response.data.data!;
+  },
+
+  getDemoAccessLimitSettings: async (): Promise<DemoAccessLimitSettings> => {
+    const response = await api.get<ApiResponse<DemoAccessLimitSettings>>('/platform/demo-access/settings');
+    return response.data.data!;
+  },
+
+  updateDemoAccessLimitSettings: async (
+    employeeLimit: number
+  ): Promise<DemoAccessLimitSettings> => {
+    const response = await api.patch<ApiResponse<DemoAccessLimitSettings>>(
+      '/platform/demo-access/settings',
+      { employeeLimit }
+    );
+    return response.data.data!;
+  },
+
+  deleteDemoAccess: async (id: string): Promise<void> => {
+    await api.delete(`/platform/demo-access/${id}`);
   },
 
   listDemoRequests: async (params?: {

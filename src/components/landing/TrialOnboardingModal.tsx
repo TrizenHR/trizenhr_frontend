@@ -19,7 +19,8 @@ interface TrialOnboardingModalProps {
   defaultPlan?: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 }
 
-const FREE_TRIAL_EMPLOYEE_LIMIT = 25;
+const DEFAULT_TRIAL_EMPLOYEE_COUNT = 25;
+const MAX_EMPLOYEE_COUNT = 99999;
 
 export function TrialOnboardingModal({
   open,
@@ -42,7 +43,7 @@ export function TrialOnboardingModal({
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [organizationName, setOrganizationName] = useState('');
-  const [employeeCount, setEmployeeCount] = useState<number | ''>(FREE_TRIAL_EMPLOYEE_LIMIT);
+  const [employeeCount, setEmployeeCount] = useState<number | ''>(DEFAULT_TRIAL_EMPLOYEE_COUNT);
   const [selectedPlan, setSelectedPlan] = useState<'STARTER' | 'GROWTH' | 'ENTERPRISE'>(defaultPlan);
 
   // Auto-recommend plan based on employee count
@@ -142,14 +143,6 @@ export function TrialOnboardingModal({
       toast({ title: 'Validation error', description: 'Please enter a valid employee count.', variant: 'destructive' });
       return;
     }
-    if (Number(employeeCount) > FREE_TRIAL_EMPLOYEE_LIMIT) {
-      toast({
-        title: 'Free trial limit exceeded',
-        description: `Free trial supports up to ${FREE_TRIAL_EMPLOYEE_LIMIT} employees.`,
-        variant: 'destructive',
-      });
-      return;
-    }
     setStep(4); // Move to Plan Selection
   };
 
@@ -166,7 +159,7 @@ export function TrialOnboardingModal({
         phone: phone || undefined,
         password,
         organizationName,
-        employeeCount: Number(employeeCount) || FREE_TRIAL_EMPLOYEE_LIMIT,
+        employeeCount: Number(employeeCount) || DEFAULT_TRIAL_EMPLOYEE_COUNT,
         planId: selectedPlan,
         billingCycle: 'MONTHLY',
       });
@@ -445,8 +438,8 @@ export function TrialOnboardingModal({
                     <Input
                       type="number"
                       min={1}
-                      max={FREE_TRIAL_EMPLOYEE_LIMIT}
-                      placeholder="e.g. 25"
+                      max={MAX_EMPLOYEE_COUNT}
+                      placeholder="e.g. 100"
                       value={employeeCount}
                       onChange={(e) => {
                         if (!e.target.value) {
@@ -460,13 +453,13 @@ export function TrialOnboardingModal({
                           return;
                         }
 
-                        setEmployeeCount(Math.min(parsed, FREE_TRIAL_EMPLOYEE_LIMIT));
+                        setEmployeeCount(Math.min(parsed, MAX_EMPLOYEE_COUNT));
                       }}
                       className="pl-10 bg-white border-slate-300 text-slate-900 text-lg font-semibold focus:border-indigo-500 h-12"
                     />
                   </div>
                   <p className="text-xs text-slate-400 mt-1.5">
-                    Free trial supports up to {FREE_TRIAL_EMPLOYEE_LIMIT} active employees.
+                    Your recommended plan is based on your employee count.
                   </p>
                 </div>
 
@@ -694,7 +687,7 @@ export function TrialOnboardingModal({
 
                     <div>
                       <span className="text-slate-400 text-xs block">Employees</span>
-                      <span className="font-semibold text-slate-900">{employeeCount || FREE_TRIAL_EMPLOYEE_LIMIT}</span>
+                      <span className="font-semibold text-slate-900">{employeeCount || DEFAULT_TRIAL_EMPLOYEE_COUNT}</span>
                     </div>
 
                     <div>
@@ -711,7 +704,9 @@ export function TrialOnboardingModal({
 
                     <div>
                       <span className="text-slate-400 text-xs block">Trial Employee Limit</span>
-                      <span className="font-semibold text-slate-900">Up to {FREE_TRIAL_EMPLOYEE_LIMIT} employees</span>
+                      <span className="font-semibold text-slate-900">
+                        {selectedPlan === 'STARTER' ? 'Up to 50 employees' : selectedPlan === 'GROWTH' ? 'Up to 200 employees' : 'Custom limit'}
+                      </span>
                     </div>
 
                     <div>

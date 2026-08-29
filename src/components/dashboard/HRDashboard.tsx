@@ -11,7 +11,7 @@ import { StatCard } from './StatCard';
 import { DashboardShell } from './DashboardShell';
 import { DashboardLoadingCard } from './DashboardLoadingCard';
 import { UserRole } from '@/lib/types';
-import { Users, UserPlus, Calendar, FileText, Building2 } from 'lucide-react';
+import { Users, UserPlus, Calendar, FileText, Building2, ShieldCheck } from 'lucide-react';
 
 export function HRDashboard() {
   const { user } = useAuth();
@@ -58,7 +58,11 @@ export function HRDashboard() {
       title="HR dashboard"
       subtitle={`People operations and attendance visibility for ${organizationName}.`}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-5">
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+          stats?.trialSummary ? '2xl:grid-cols-6' : '2xl:grid-cols-5'
+        }`}
+      >
         <StatCard
           title="Organization"
           value={organizationName}
@@ -90,6 +94,15 @@ export function HRDashboard() {
         <Link href="/dashboard/reports" className="block transition-opacity hover:opacity-90">
           <StatCard title="Reports" value="View" icon={FileText} description="Analytics & exports" />
         </Link>
+        {stats?.trialSummary && (
+          <StatCard
+            title="Free Trial"
+            value={`${stats.trialSummary.daysRemaining} days remaining`}
+            icon={ShieldCheck}
+            description={`${stats.trialSummary.employeeLimit} employee limit · ${stats.trialSummary.activeEmployees}/${stats.trialSummary.employeeLimit} employees used`}
+            color="purple"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
