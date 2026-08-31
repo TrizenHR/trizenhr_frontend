@@ -973,6 +973,7 @@ export interface DemoAccessAccount {
   requestedEmployeeCount?: number;
   employeeLimit?: number;
   planId?: string;
+  individualLimitOverride?: boolean;
   opened: boolean;
   openedAt?: string;
   adminUserId?: string;

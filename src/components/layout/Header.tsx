@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useCallback, useEffect, useState } from 'react';
+import { startTransition, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -16,8 +16,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
 import { NotificationBell } from '@/components/layout/NotificationBell';
-import { dashboardApi } from '@/lib/api';
-import { DashboardStats, UserRole } from '@/lib/types';
 
 interface HeaderProps {
   /** Page title in the header bar; omit for a minimal bar (e.g. dashboard). */
@@ -28,27 +26,7 @@ interface HeaderProps {
 export function Header({ title, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
 
-  useEffect(() => {
-    if (!user || ![UserRole.ADMIN, UserRole.HR, UserRole.SUPERVISOR].includes(user.role)) {
-      return;
-    }
-
-    let isCurrent = true;
-    void dashboardApi
-      .getStats()
-      .then((stats) => {
-        if (isCurrent) setDashboardStats(stats);
-      })
-      .catch(() => {
-        if (isCurrent) setDashboardStats(null);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [user]);
 
   const handleLogout = useCallback(() => {
     logout();

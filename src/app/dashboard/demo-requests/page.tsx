@@ -15,17 +15,6 @@ import type { DemoAccessAccount } from '@/lib/types';
 
 const ALLOWED_EMAIL = 'demo@trizenventures.com';
 
-function formatDate(value?: string) {
-  if (!value) return 'Never';
-  return new Date(value).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
 function formatDemoPeriod(value?: string) {
   if (!value) return '—';
 
