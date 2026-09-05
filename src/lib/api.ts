@@ -141,7 +141,7 @@ api.interceptors.request.use(
       // Inject organizationId override for Super Admin on the platform domain only.
       // For tenant subdomains, organization is derived from subdomain on the backend.
       if (selectedOrgId && userRole === 'super_admin' && isPlatformHost()) {
-        config.params = { ...config.params, organizationId: selectedOrgId };
+        config.params = { organizationId: selectedOrgId, ...config.params };
       }
     }
     return config;

@@ -31,7 +31,11 @@ export interface User {
   fullName: string;
   role: UserRole;
   department?: string;
+  designation?: string;
   employeeId?: string;
+  joiningDate?: string;
+  employmentStatus?: string;
+  invitationPending?: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -138,16 +142,22 @@ export interface CreateUserPayload {
   lastName: string;
   role: UserRole;
   department?: string;
+  designation?: string;
   supervisorId?: string;
   employeeId?: string;
+  joiningDate?: string;
+  employmentStatus?: string;
 }
 
 export interface UpdateUserPayload {
   firstName?: string;
   lastName?: string;
   department?: string;
+  designation?: string;
   supervisorId?: string;
   employeeId?: string;
+  joiningDate?: string;
+  employmentStatus?: string;
 }
 
 export interface ChangePasswordPayload {
