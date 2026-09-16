@@ -32,13 +32,11 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
-  Edit,
   Globe,
   Loader2,
   Mail,
   Plus,
   Search,
-  Send,
   SlidersHorizontal,
   UserCheck,
   UserPlus,
@@ -59,7 +57,6 @@ export default function CompanyDetailsPage() {
   const [employees, setEmployees] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [resendingId, setResendingId] = useState<string | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -195,35 +192,6 @@ export default function CompanyDetailsPage() {
     setDepartmentFilter('all');
     setStatusFilter('all');
     setRoleFilter('all');
-  };
-
-  const handleResendInvitation = async (employee: User) => {
-    const id = employee.id || employee._id;
-    if (employee.role === UserRole.SUPER_ADMIN) {
-      toast({
-        title: 'Not allowed',
-        description: 'Cannot resend invitation for system admins',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      setResendingId(id);
-      const res = await userApi.resendInvitation(id);
-      toast({
-        title: 'Invitation Sent',
-        description: res.message || `Invitation successfully sent to ${employee.email}`,
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err?.response?.data?.message || 'Failed to resend invitation',
-        variant: 'destructive',
-      });
-    } finally {
-      setResendingId(null);
-    }
   };
 
   const getPlanBadgeClass = (plan?: SubscriptionPlan | string) => {
@@ -643,9 +611,6 @@ export default function CompanyDetailsPage() {
                     <TableHead className="h-10 min-w-[130px] bg-muted/30 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Employment Status
                     </TableHead>
-                    <TableHead className="h-10 bg-muted/30 px-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Actions
-                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -743,44 +708,6 @@ export default function CompanyDetailsPage() {
                               Inactive
                             </Badge>
                           )}
-                        </TableCell>
-
-                        {/* Actions */}
-                        <TableCell className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {emp.invitationPending && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 rounded-lg text-xs"
-                                disabled={resendingId === empUserId}
-                                onClick={() => handleResendInvitation(emp)}
-                                title="Resend invitation email"
-                              >
-                                {resendingId === empUserId ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Send className="mr-1 h-3.5 w-3.5" />
-                                    Resend
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-                              asChild
-                            >
-                              <Link
-                                href={`/dashboard/users/${empUserId}`}
-                                title="Edit employee"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                          </div>
                         </TableCell>
                       </TableRow>
                     );
