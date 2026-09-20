@@ -1,6 +1,7 @@
 'use client';
 
 import { startTransition, useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -13,9 +14,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
 import { getRoleDisplayName } from '@/lib/permissions';
 import { NotificationBell } from '@/components/layout/NotificationBell';
+import { UserRole } from '@/lib/types';
 
 interface HeaderProps {
   /** Page title in the header bar; omit for a minimal bar (e.g. dashboard). */
@@ -26,7 +27,11 @@ interface HeaderProps {
 export function Header({ title, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
+  // Super Admin home shows its own greeting + circular bell
+  const hideHeaderBell =
+    user?.role === UserRole.SUPER_ADMIN && pathname === '/dashboard';
 
   const handleLogout = useCallback(() => {
     logout();
@@ -43,7 +48,6 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     startTransition(() => router.push('/dashboard/settings'));
   }, [router]);
 
-  // Get user initials
   const initials = user
     ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
     : 'U';
@@ -51,36 +55,33 @@ export function Header({ title, onMenuClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border/70 bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 md:px-6">
       <div className="flex min-w-0 items-center gap-3">
-        {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden"
+          className="rounded-full md:hidden"
           onClick={onMenuClick}
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5" strokeWidth={1.75} />
         </Button>
         {title ? (
           <div className="min-w-0">
             <h1 className="truncate text-lg font-semibold tracking-tight text-foreground md:text-xl">
               {title}
             </h1>
-            <div aria-hidden className="mt-0.5 h-px w-12 rounded-full bg-gradient-to-r from-primary/60 to-transparent" />
           </div>
         ) : null}
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-4">
-        <NotificationBell />
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-3">
+        {!hideHeaderBell && <NotificationBell variant="circle" />}
 
-        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-2 hover:bg-muted/80"
+              className="flex cursor-pointer items-center gap-2 rounded-full px-1.5 hover:bg-muted/80 md:px-2"
             >
-              <Avatar className="h-9 w-9 ring-1 ring-border/60">
+              <Avatar className="h-9 w-9">
                 {user?.profilePicture && (
                   <AvatarImage src={user.profilePicture} alt={user.fullName} className="object-cover" />
                 )}

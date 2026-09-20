@@ -85,9 +85,10 @@ const roleActions: Record<UserRole, ActionItem[]> = {
     { label: 'Company Attendance', href: '/dashboard/attendance', icon: FileText, color: 'orange' },
   ],
   [UserRole.SUPER_ADMIN]: [
-    { label: 'Create Organization', href: '/dashboard/organizations', icon: Building2, color: 'blue' },
-    { label: 'View All Orgs', href: '/dashboard/organizations', icon: Building2, color: 'green' },
-    { label: 'System Settings', href: '/dashboard/settings', icon: Settings, color: 'orange' },
+    { label: 'Organizations', href: '/dashboard/organizations', icon: Building2, color: 'blue' },
+    { label: 'Demo Access', href: '/dashboard/demo-requests', icon: ClipboardCheck, color: 'purple' },
+    { label: 'Analytics', href: '/dashboard/analytics', icon: FileText, color: 'green' },
+    { label: 'Settings', href: '/dashboard/settings', icon: Settings, color: 'orange' },
   ],
 };
 

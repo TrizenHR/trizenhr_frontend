@@ -82,9 +82,10 @@ export function EmployeeDashboard() {
     }
   };
 
-  const attendancePercentage = stats
-    ? Math.round(((stats.presentDays + stats.lateDays) / (stats.totalDays || 1)) * 100)
-    : 0;
+  const presentOrLate = (stats?.presentDays ?? 0) + (stats?.lateDays ?? 0);
+  const evaluatedDays = stats?.totalDays || 0;
+  const attendancePercentage =
+    evaluatedDays > 0 ? Math.round((presentOrLate / evaluatedDays) * 100) : 0;
   const organizationLabel = user?.organization?.name || 'Organization not available';
 
   const formatTrialDate = (value?: string) => {
@@ -132,9 +133,9 @@ export function EmployeeDashboard() {
           value={
             isLoading
               ? '…'
-              : stats?.totalWorkingHours
-              ? formatWorkingHours(stats.totalWorkingHours)
-              : 'No hours logged'
+              : stats != null && typeof stats.totalWorkingHours === 'number'
+                ? formatWorkingHours(stats.totalWorkingHours)
+                : 'No hours logged'
           }
           icon={Clock}
           description="This month"
@@ -142,9 +143,13 @@ export function EmployeeDashboard() {
         />
         <StatCard
           title="Days present"
-          value={isLoading ? '…' : `${stats?.presentDays ?? 0}/${stats?.totalDays ?? 0}`}
+          value={
+            isLoading
+              ? '…'
+              : `${presentOrLate}/${evaluatedDays || 0}`
+          }
           icon={Calendar}
-          description="This month"
+          description="Present + late / working days"
           color="orange"
         />
         {dashboardStats?.trialSummary && (

@@ -62,7 +62,12 @@ function iconForType(type: string) {
   }
 }
 
-export function NotificationBell() {
+export function NotificationBell({
+  variant = 'default',
+}: {
+  /** `circle` = full circular control (dashboard greeting). `default` = header icon button. */
+  variant?: 'default' | 'circle';
+}) {
   const { user } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -152,12 +157,17 @@ export function NotificationBell() {
           type="button"
           variant="ghost"
           size="icon"
-          className="relative shrink-0"
+          className={cn(
+            'relative shrink-0 text-foreground hover:bg-muted/80',
+            variant === 'circle'
+              ? 'h-10 w-10 rounded-full border-0 bg-muted/60 hover:bg-muted'
+              : 'h-10 w-10 rounded-full'
+          )}
           aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         >
-          <Bell className="h-5 w-5 text-gray-600" />
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
           {showUnreadBadge && unreadCount > 0 && (
-            <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
