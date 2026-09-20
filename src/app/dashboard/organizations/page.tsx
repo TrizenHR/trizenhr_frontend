@@ -35,7 +35,6 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,8 +72,6 @@ export default function OrganizationsPage() {
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [viewedOrg, setViewedOrg] = useState<Organization | null>(null);
   const [deleteOrg, setDeleteOrg] = useState<Organization | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -149,26 +146,51 @@ export default function OrganizationsPage() {
       setOrganizations(data);
 
       // For System Admin view: resolve company admin for each organization
-      const adminEntries = await Promise.all(
-        data.map(async (org) => {
-          try {
-            const admins = await userApi.getAllUsers({
-              role: UserRole.ADMIN,
-              isActive: true,
-              organizationId: org._id,
-            });
-            const admin = admins[0];
-            const name = admin
-              ? admin.fullName || `${admin.firstName} ${admin.lastName}`.trim() || admin.email
-              : '-';
-            return [org._id, name] as const;
-          } catch {
-            return [org._id, '-'] as const;
-          }
-        })
-      );
+      try {
+        const allAdmins = await userApi.getAllUsers({
+          role: UserRole.ADMIN,
+        });
 
-      setCompanyAdminNames(Object.fromEntries(adminEntries));
+        const mapping: Record<string, string> = {};
+        for (const org of data) {
+          const orgIdStr = String(org._id);
+          const orgAdmins = allAdmins.filter((u) => {
+            const uOrgId =
+              typeof u.organizationId === 'object' && u.organizationId !== null
+                ? (u.organizationId as any)._id || (u.organizationId as any).id
+                : u.organizationId || (u.organization && u.organization._id);
+            return String(uOrgId) === orgIdStr;
+          });
+
+          const admin = orgAdmins.find((a) => a.isActive) || orgAdmins[0];
+          mapping[org._id] = admin
+            ? admin.fullName || `${admin.firstName} ${admin.lastName}`.trim() || admin.email
+            : '—';
+        }
+
+        setCompanyAdminNames(mapping);
+      } catch {
+        // Fallback: resolve per organization if batch fetch fails
+        const adminEntries = await Promise.all(
+          data.map(async (org) => {
+            try {
+              const admins = await userApi.getAllUsers({
+                role: UserRole.ADMIN,
+                organizationId: org._id,
+              });
+              const admin = admins.find((a) => a.isActive) || admins[0];
+              const name = admin
+                ? admin.fullName || `${admin.firstName} ${admin.lastName}`.trim() || admin.email
+                : '—';
+              return [org._id, name] as const;
+            } catch {
+              return [org._id, '—'] as const;
+            }
+          })
+        );
+
+        setCompanyAdminNames(Object.fromEntries(adminEntries));
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -262,14 +284,7 @@ export default function OrganizationsPage() {
     }
   };
 
-  const handleView = (org: Organization) => {
-    setViewedOrg(org);
-    setIsViewDialogOpen(true);
-  };
-
   const handleEdit = (org: Organization) => {
-    setIsViewDialogOpen(false);
-    setViewedOrg(null);
     setIsEditing(true);
     setCurrentOrgId(org._id);
     setFormData({
@@ -621,13 +636,12 @@ export default function OrganizationsPage() {
                   {filteredOrganizations.map((org) => (
                     <TableRow key={org._id} className="border-border/60 transition-colors hover:bg-muted/35">
                       <TableCell className="px-3 py-2.5">
-                        <button
-                          type="button"
-                          className="max-w-[min(100%,18rem)] cursor-pointer text-left text-sm font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          onClick={() => handleView(org)}
+                        <Link
+                          href={`/dashboard/organizations/${org._id}`}
+                          className="max-w-[min(100%,18rem)] cursor-pointer text-left text-sm font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring inline-block truncate"
                         >
                           {org.name}
-                        </button>
+                        </Link>
                       </TableCell>
                       <TableCell className="px-3 py-2.5 text-sm text-muted-foreground">
                         {companyAdminNames[org._id] || '—'}
@@ -710,172 +724,7 @@ export default function OrganizationsPage() {
         </CardContent>
       </Card>
 
-      {/* View details */}
-      <Dialog
-        open={isViewDialogOpen}
-        onOpenChange={(open) => {
-          setIsViewDialogOpen(open);
-          if (!open) setViewedOrg(null);
-        }}
-      >
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-2xl border-border/80 bg-card shadow-lg ring-1 ring-border/40">
-          {viewedOrg ? (
-            <>
-              <DialogHeader>
-                <DialogTitle className="pr-8">{viewedOrg.name}</DialogTitle>
-                <DialogDescription>
-                  Read-only summary. Use Edit to change details or Create admin to add a company
-                  administrator.
-                </DialogDescription>
-              </DialogHeader>
 
-              <div className="space-y-4 py-2">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Status
-                    </p>
-                    <div className="mt-1">
-                      {viewedOrg.isActive ? (
-                        <Badge className="border border-primary/25 bg-primary/10 font-medium text-primary">Active</Badge>
-                      ) : (
-                        <Badge className="border border-border bg-muted font-medium text-muted-foreground">Inactive</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Subscription plan
-                    </p>
-                    <div className="mt-1">
-                      <Badge
-                        className={cn(
-                          'border font-medium uppercase tracking-wide shadow-none',
-                          getPlanBadgeClass(viewedOrg.subscriptionPlan)
-                        )}
-                        variant="outline"
-                      >
-                        {viewedOrg.subscriptionPlan}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Subdomain
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-foreground">{viewedOrg.subdomain || '—'}</p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Company admin
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-foreground">
-                      {companyAdminNames[viewedOrg._id] || '—'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Created
-                    </p>
-                    <p className="mt-1 text-sm text-foreground">
-                      {format(new Date(viewedOrg.createdAt), 'MMM d, yyyy')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Last updated
-                    </p>
-                    <p className="mt-1 text-sm text-foreground">
-                      {format(new Date(viewedOrg.updatedAt), 'MMM d, yyyy')}
-                    </p>
-                  </div>
-                  {viewedOrg.subscriptionExpiry && (
-                    <div className="sm:col-span-2">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Subscription renews / expires
-                      </p>
-                      <p className="mt-1 text-sm text-foreground">
-                        {format(new Date(viewedOrg.subscriptionExpiry), 'MMM d, yyyy')}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Working hours and timezone
-                  </p>
-                  <p className="mt-1 text-sm text-foreground">
-                    {viewedOrg.settings?.workingHours?.startTime ?? '—'} –{' '}
-                    {viewedOrg.settings?.workingHours?.endTime ?? '—'} ·{' '}
-                    {viewedOrg.settings?.timezone ?? '—'}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Fiscal year starts month {viewedOrg.settings?.fiscalYearStart ?? '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Authentication
-                  </p>
-                  <ul className="mt-2 space-y-1 text-sm text-foreground">
-                    <li>
-                      Microsoft sign-in:{' '}
-                      <span className="font-medium">
-                        {viewedOrg.microsoftAuth?.allowMicrosoftAuth ? 'Enabled' : 'Disabled'}
-                      </span>
-                    </li>
-                    <li>
-                      Email / password login:{' '}
-                      <span className="font-medium">
-                        {viewedOrg.microsoftAuth?.allowLocalAuth !== false ? 'Enabled' : 'Disabled'}
-                      </span>
-                    </li>
-                    {viewedOrg.microsoftAuth?.domain ? (
-                      <li className="text-muted-foreground">Domain: {viewedOrg.microsoftAuth.domain}</li>
-                    ) : null}
-                  </ul>
-                </div>
-              </div>
-
-              <DialogFooter className="mt-2 flex-col gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={() => setIsViewDialogOpen(false)}
-                >
-                  Close
-                </Button>
-                <Button variant="secondary" className="rounded-xl" asChild>
-                  <Link
-                    href={`/dashboard/users/create?orgId=${encodeURIComponent(viewedOrg._id)}&staff=1`}
-                    prefetch={false}
-                  >
-                    <Users className="mr-2 h-4 w-4" />
-                    Add user
-                  </Link>
-                </Button>
-                <Button variant="outline" className="rounded-xl" asChild>
-                  <Link
-                    href={`/dashboard/users/create?orgId=${encodeURIComponent(viewedOrg._id)}`}
-                    prefetch={false}
-                  >
-                    Invite company admin
-                  </Link>
-                </Button>
-                <Button type="button" className="rounded-xl" onClick={() => handleEdit(viewedOrg)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit organization
-                </Button>
-              </DialogFooter>
-            </>
-          ) : null}
-        </DialogContent>
-      </Dialog>
 
       {/* Create/Edit Dialog */}
       <Dialog

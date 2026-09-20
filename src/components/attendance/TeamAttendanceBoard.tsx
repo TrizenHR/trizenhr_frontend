@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Users, TrendingUp, Download, UserX, Calendar, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
-import { format, isBefore, parseISO } from 'date-fns';
+import { format, isBefore, parseISO, eachDayOfInterval } from 'date-fns';
 import { hasAnyRole } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import { formatTimeOnly } from '@/lib/date-utils';
@@ -128,7 +128,9 @@ export function TeamAttendanceBoard({
       }
 
       const isSupervisor = user?.role === UserRole.SUPERVISOR;
-      const users = await userApi.getAllUsers({ isActive: true });
+      const users = isSupervisor
+        ? await userApi.getTeamMembers(currentUserId)
+        : await userApi.getAllUsers({ isActive: true });
       const userMap = new Map<string, User>();
       users.forEach((u) => {
         const uId = String(u._id || u.id);
@@ -217,54 +219,73 @@ export function TeamAttendanceBoard({
           };
         });
       } else {
-        list = fetchedRecords.map((record) => {
+        // Build a lookup: "userId-YYYY-MM-DD" → attendance record
+        const attendanceByUserDate = new Map<string, Attendance>();
+        for (const record of fetchedRecords) {
           const recordUserId =
             typeof record.userId === 'object' && record.userId
-              ? String((record.userId as { _id?: string; id?: string })._id || (record.userId as { id?: string }).id)
+              ? String(
+                  (record.userId as { _id?: string; id?: string })._id ||
+                    (record.userId as { id?: string }).id
+                )
               : String(record.userId);
-
-          const memberObj = (typeof record.userId === 'object' && record.userId
-            ? record.userId
-            : userMap.get(recordUserId)) as User;
-
-          let status: TeamMemberStatus['status'] = 'not_marked';
-          switch (record.status) {
-            case AttendanceStatus.PRESENT:
-              status = 'present';
-              break;
-            case AttendanceStatus.ABSENT:
-              status = 'absent';
-              break;
-            case AttendanceStatus.ON_LEAVE:
-              status = 'on_leave';
-              break;
-            case AttendanceStatus.HALF_DAY:
-              status = 'half_day';
-              break;
-            case AttendanceStatus.LATE:
-              status = 'late';
-              break;
+          const recordDateStr =
+            typeof record.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(record.date)
+              ? record.date.slice(0, 10)
+              : record.date
+              ? format(new Date(record.date), 'yyyy-MM-dd')
+              : effectiveStartDate;
+          if (recordUserId && recordDateStr) {
+            attendanceByUserDate.set(`${recordUserId}-${recordDateStr}`, record);
           }
+        }
 
-          const recordDateStr = record.date
-            ? format(new Date(record.date), 'yyyy-MM-dd')
-            : effectiveStartDate;
-
-          return {
-            id: record._id || `${recordUserId}-${recordDateStr}`,
-            date: recordDateStr,
-            user: memberObj || {
-              _id: recordUserId,
-              firstName: 'Unknown',
-              lastName: 'User',
-              email: '-',
-              role: UserRole.EMPLOYEE,
-            },
-            attendance: record,
-            status,
-          };
+        // Generate every calendar date in the range
+        const dateRange = eachDayOfInterval({
+          start: parseISO(effectiveStartDate),
+          end: parseISO(effectiveEndDate),
         });
 
+        // For each date × member create an entry (not_marked when no record)
+        list = [];
+        for (const date of dateRange) {
+          const dateStr = format(date, 'yyyy-MM-dd');
+          for (const member of users) {
+            const memberKey = String(member._id || member.id);
+            const attendance = attendanceByUserDate.get(`${memberKey}-${dateStr}`);
+            let status: TeamMemberStatus['status'] = 'not_marked';
+
+            if (attendance) {
+              switch (attendance.status) {
+                case AttendanceStatus.PRESENT:
+                  status = 'present';
+                  break;
+                case AttendanceStatus.ABSENT:
+                  status = 'absent';
+                  break;
+                case AttendanceStatus.ON_LEAVE:
+                  status = 'on_leave';
+                  break;
+                case AttendanceStatus.HALF_DAY:
+                  status = 'half_day';
+                  break;
+                case AttendanceStatus.LATE:
+                  status = 'late';
+                  break;
+              }
+            }
+
+            list.push({
+              id: attendance?._id || `${memberKey}-${dateStr}`,
+              date: dateStr,
+              user: member,
+              attendance,
+              status,
+            });
+          }
+        }
+
+        // Sort by date descending, then alphabetically by name
         list.sort((a, b) => {
           const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
           if (dateDiff !== 0) return dateDiff;

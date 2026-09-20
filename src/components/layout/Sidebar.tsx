@@ -60,7 +60,15 @@ interface NavSection {
 const navigationSections: NavSection[] = [
   // ── Dashboard (all roles) ──────────────────────────────────────
   {
-    items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      {
+        label: 'Users',
+        href: '/dashboard/users',
+        icon: UserCog,
+        roles: [UserRole.ADMIN],
+      },
+    ],
   },
 
   // ── Attendance (Employee, Supervisor, HR) ────────────────────────
@@ -296,12 +304,6 @@ const navigationSections: NavSection[] = [
         roles: [UserRole.ADMIN],
       },
       {
-        label: 'Users',
-        href: '/dashboard/users',
-        icon: UserCog,
-        roles: [UserRole.ADMIN],
-      },
-      {
         label: 'Holidays',
         href: '/dashboard/manage-holidays',
         icon: Calendar,
@@ -324,6 +326,12 @@ const navigationSections: NavSection[] = [
         label: 'Demo Invitations',
         href: '/dashboard/demo-invitations',
         icon: Mail,
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        label: 'Organizations',
+        href: '/dashboard/organizations',
+        icon: Building2,
         roles: [UserRole.SUPER_ADMIN],
       },
       {
